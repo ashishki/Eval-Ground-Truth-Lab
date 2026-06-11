@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 6
+# ARCH_REPORT - Cycle 7
 
 Date: 2026-06-11
 
@@ -6,26 +6,27 @@ Date: 2026-06-11
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| Judge layer | PASS | Matches architecture/spec responsibility for optional, budgeted, non-authoritative judge scoring. |
-| Cost telemetry | PASS | Provider-agnostic JSONL sink records attribution, token, cost, latency, retry, and quality outcome fields. |
-| Human review queue | PASS | Small queue primitive routes judge explanations into review entries without changing deterministic gate authority. |
-| Phase state/evidence docs | PASS | `CODEX_PROMPT`, cost budget, implementation journal, and evidence index reflect T09 and next T10 state. |
-| Audit continuity | PASS | Cycle 5 review artifacts are archived before active review artifacts are overwritten for Cycle 6. |
+| Report layer | PASS | Markdown reports render from canonical run and comparison data instead of creating a separate source of truth. |
+| Failure taxonomy | PASS | Required labels cover unsafe auto-approval, invalid structured output, missing evidence, low confidence, accuracy regression, cost regression, and latency regression. |
+| Human review notes | PASS | Decisions append JSONL notes with reviewer, timestamp, case ID, decision, and rationale. |
+| Ignore policy | PASS | Generated root `/reports/` output remains ignored while source/test report packages are trackable. |
+| Phase state/evidence docs | PASS | `CODEX_PROMPT`, implementation journal, and evidence index reflect T10 and next T11 state. |
+| Audit continuity | PASS | Cycle 6 review artifacts are archived before active review artifacts are overwritten for Cycle 7. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | PASS | T09 adds no SQL or database calls. |
-| Credentials and secrets | PASS | T09 stores no credentials; scoped scan found no hardcoded real secrets. |
+| SQL safety | PASS | T10 adds no SQL or database calls. |
+| Credentials and secrets | PASS | T10 adds no credentials; scoped scan found no hardcoded secrets. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, pytest. |
 | No self-review | PASS | Review artifacts record findings and evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | Evidence index and journal point to canonical tests and review reports. |
-| Deterministic gates own blocking decisions | PASS | `final_case_decision` keeps deterministic blocking validator failures authoritative over judge scores. |
-| Dataset and run identity are immutable | n/a | T09 does not modify dataset or run identity. |
+| Repository authority | PASS | Reports consume canonical run/comparison records, and evidence index points to canonical tests/review. |
+| Deterministic gates own blocking decisions | PASS | Reporting and taxonomy do not alter threshold or validator authority. |
+| Dataset and run identity are immutable | PASS | T10 reads run records and appends review notes; it does not mutate completed runs or dataset hashes. |
 | Synthetic data only in v1 | PASS | Test data is synthetic. |
-| Explicit candidate adapter boundary | n/a | T09 does not modify candidate adapters. |
-| Optional judge is budgeted and non-authoritative | PASS | Judge mode is disabled without credentials/budget, uses injected providers only, reserves per-call budget before invocation, and cannot override deterministic failures. |
+| Explicit candidate adapter boundary | n/a | T10 does not modify candidate adapters. |
+| Optional judge is budgeted and non-authoritative | n/a | T10 does not modify judge execution or authority. |
 
 ## ADR Compliance
 
@@ -41,14 +42,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | Optional judge remains a narrow provider-injected boundary around an otherwise deterministic eval workflow. |
-| Deterministic-owned areas remain deterministic | PASS | Judge output can inform review but cannot convert deterministic blocking failures to pass. |
-| Runtime tier unchanged / justified | PASS | T09 adds no direct model SDK, worker, package mutation, or privileged runtime path. |
-| Human approval boundaries still valid | PASS | CI judge enablement, model escalation, fan-out, retry expansion, and budget overrun still require approval. |
-| Minimum viable control surface still proportionate | PASS | The implementation adds the smallest useful config, runner, telemetry sink, and review queue for T09 acceptance. |
+| Solution shape still appropriate | PASS | Reporting remains a library-level renderer around existing fixed eval data structures. |
+| Deterministic-owned areas remain deterministic | PASS | Reports summarize deterministic status and taxonomy labels without changing decisions. |
+| Runtime tier unchanged / justified | PASS | T10 adds no service, worker, model SDK/API call, package mutation, or privileged runtime path. |
+| Human approval boundaries still valid | PASS | T10 does not change judge authority, threshold policy, budget policy, or seeded regression gates. |
+| Minimum viable control surface still proportionate | PASS | Markdown rendering, taxonomy constants, and append-only notes satisfy T10 without a dashboard. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T09. |
+| none | n/a | No architecture/spec patch required for T10. |

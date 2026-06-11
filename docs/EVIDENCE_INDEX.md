@@ -34,7 +34,9 @@ Maintain this file for:
 | T08 candidate adapters | test | `tests/adapters/` | Synthetic deterministic adapter, HTTP destination-boundary rejection, CLI command-boundary execution, process result capture, and adapter trace stamping | 2026-06-11 | Yes |
 | T08 deep review | review | `docs/audit/archive/CYCLE5_REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T08 | 2026-06-11 | Yes |
 | T09 optional judge and telemetry | test | `tests/judging/` | Judge disabled config, budget precheck, deterministic validator authority, telemetry fields, and positive cost reservation validation | 2026-06-11 | Yes |
-| T09 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, cost-budget, and consolidated review gate for T09 | 2026-06-11 | Yes |
+| T09 deep review | review | `docs/audit/archive/CYCLE6_REVIEW_REPORT.md` | META, ARCH, CODE, cost-budget, and consolidated review gate for T09 | 2026-06-11 | Yes |
+| T10 reports and failure taxonomy | test | `tests/reports/`, `tests/review/` | Markdown report sections and raw links, required failure taxonomy labels, and append-only human review decision notes | 2026-06-11 | Yes |
+| T10 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T10 | 2026-06-11 | Yes |
 
 ## Retrieval Rules
 

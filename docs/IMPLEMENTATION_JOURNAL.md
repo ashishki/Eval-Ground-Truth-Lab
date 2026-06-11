@@ -131,3 +131,24 @@ the source of truth for architecture or policy.
   positive budget, uses an injected provider rather than direct model SDK calls,
   reserves a positive per-call cost estimate before each call, and cannot
   override deterministic blocking validator failures.
+
+### 2026-06-11 - T10 - Reports and Failure Taxonomy
+
+- Scope: `src/eval_ground_truth_lab/reports/`,
+  `src/eval_ground_truth_lab/review/notes.py`, `tests/reports/`,
+  `tests/review/`, `.gitignore`, `docs/CODEX_PROMPT.md`,
+  `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add canonical markdown reporting, required failure
+  taxonomy labels, and append-only human review decision notes before seeded
+  regression CI smoke-gate work.
+- Decisions applied: `D-002`
+- Evidence collected: `tests/reports/`, `tests/review/`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T11 seeded regression CI smoke gate.
+- Notes for next agent: Markdown reports render from `RunRecord` and
+  `ComparisonReport`, top failure categories include case-level validator
+  failures and threshold regression labels, and human review notes append JSONL
+  entries with reviewer, timestamp, case ID, decision, and rationale. `.gitignore`
+  ignores only root `/reports/` generated output so package/test report modules
+  remain tracked.
