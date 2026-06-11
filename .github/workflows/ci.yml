@@ -31,3 +31,13 @@ jobs:
 
       - name: Run tests
         run: python -m pytest tests -q --tb=short
+
+      - name: Seeded smoke gate fixture
+        run: |
+          set +e
+          python -m eval_ground_truth_lab.cli seeded-smoke \
+            --dataset datasets/smoke/seeded_regressions.jsonl \
+            --report reports/seeded-smoke.md
+          status=$?
+          set -e
+          test "$status" -eq 1

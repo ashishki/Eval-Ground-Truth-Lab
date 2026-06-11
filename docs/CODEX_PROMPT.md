@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 4
-- Baseline: 34 passing tests
+- Baseline: 37 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-11
@@ -55,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-T11: Seeded Regression CI Smoke Gate
+T12: V1 Evidence Pack and 100-Case Dataset
 
 ## Fix Queue
 

@@ -152,3 +152,22 @@ the source of truth for architecture or policy.
   entries with reviewer, timestamp, case ID, decision, and rationale. `.gitignore`
   ignores only root `/reports/` generated output so package/test report modules
   remain tracked.
+
+### 2026-06-11 - T11 - Seeded Regression CI Smoke Gate
+
+- Scope: `datasets/smoke/`, `src/eval_ground_truth_lab/cli.py`,
+  `.github/workflows/ci.yml`, `tests/eval/`, `docs/CODEX_PROMPT.md`,
+  `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add a seeded smoke dataset and CI-verifiable command
+  that proves the gate fails on unsafe auto-approval, invalid structured output,
+  excessive cost increase, and material accuracy drop.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/eval/`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`,
+  `python -m pytest tests -q --tb=short`, and direct seeded smoke command
+  verification that exit code is `1`.
+- Follow-ups: T12 v1 evidence pack and 100-case dataset.
+- Notes for next agent: `python -m eval_ground_truth_lab.cli seeded-smoke`
+  writes baseline/candidate raw run artifacts plus a markdown report and returns
+  `1` for the seeded regression candidate. CI asserts that expected failure code
+  so the workflow remains green while proving the gate catches seeded regressions.
