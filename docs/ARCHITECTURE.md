@@ -23,7 +23,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Concrete operational pain | Prompt, model, adapter, and guardrail changes can silently reduce quality, increase unsafe auto-approval, raise cost, or worsen latency. |
 | Current workaround | Small pytest sets, manual prompt checks, ad hoc spreadsheets, one-off eval scripts, and subjective sample review. |
 | Why existing process is insufficient | The current process lacks versioned datasets, baseline comparison, failure taxonomy, CI gating, cost/latency tracking, and a clear split between deterministic validation and judge-based scoring. |
-| First user / operator who feels the pain | The portfolio owner maintaining gdev-agent and related LLM workflows; secondarily, AI platform/eval reviewers inspecting the project. |
+| First user / operator who feels the pain | The operator maintaining gdev-agent and related LLM workflows; secondarily, AI platform/eval reviewers inspecting the project. |
 | What would make v1 not worth adopting | A generic score without failure explanations, pass/fail controlled only by an uncalibrated judge, missing baseline comparison, or inability to catch seeded regressions. |
 | First proof of value | At least 100 eval cases, at least 5 seeded regressions, and CI failure for unsafe regression, invalid structured output, excessive cost increase, and material accuracy drop. |
 
@@ -41,7 +41,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Decision | Selection | Justification |
 |----------|-----------|---------------|
 | Primary shape | Hybrid decomposition: deterministic subsystem plus fixed workflow orchestration | The core problem is formalizable with schemas, validators, thresholds, run records, and reports. A fixed workflow coordinates dataset registration, baseline run, candidate run, comparison, reporting, and human review. Optional judge calls are a bounded subpath, not the system authority. |
-| Governance level | Standard | The project is an internal/portfolio operational system with recurring evidence, CI gates, optional paid model use, and reviewable audit needs. It does not handle real PII, compliance evidence, privileged autonomous execution, or production customer risk in v1. |
+| Governance level | Standard | The project is an internal operational system with recurring evidence, CI gates, optional paid model use, and reviewable audit needs. It does not handle real PII, compliance evidence, privileged autonomous execution, or production customer risk in v1. |
 | Runtime tier | T1 | The v1 target is local CLI plus Docker Compose and GitHub Actions. Containerized Postgres/SQLite-backed runs and explicit candidate adapters need bounded service boundaries, but no ephemeral microVM or persistent privileged worker is justified. |
 
 ### Rejected Lower-Complexity Options
@@ -172,7 +172,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 
 | Integration | Required in v1? | Credentials | Boundary |
 |-------------|-----------------|-------------|----------|
-| gdev-agent HTTP/CLI candidate | Yes for portfolio proof; adapter can be stubbed first | Optional local token from environment | Explicit configured endpoint or command only. |
+| gdev-agent HTTP/CLI candidate | Yes for v1 proof; adapter can be stubbed first | Optional local token from environment | Explicit configured endpoint or command only. |
 | Synthetic demo candidate | Yes | None | Local deterministic fixture. |
 | LLM judge provider | Optional | API key from environment | Disabled unless budget and provider settings are configured. |
 | GitHub Actions | Yes | Repository CI token managed by GitHub | Runs lint, format, tests, and later smoke eval gates. |
@@ -259,4 +259,3 @@ Scoped retrieval rules:
   package mutation from dataset files.
 - Do not add RAG, agent loops, compliance evidence, or privileged runtime
   infrastructure for speculative future flexibility.
-

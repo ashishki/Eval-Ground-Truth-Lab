@@ -17,9 +17,9 @@ increase unsafe auto-approval, increase cost, or worsen latency. Current
 workarounds rely on small pytest sets, manual prompt checks, ad hoc spreadsheets,
 one-off eval scripts, and subjective sample review.
 
-The first operator is the portfolio owner maintaining gdev-agent and other LLM
-workflows. A secondary reader is an AI platform or eval reviewer checking whether
-the project demonstrates rigorous evaluation infrastructure.
+The first operator maintains gdev-agent and other LLM workflows. A secondary
+reader is an AI platform or eval reviewer checking whether the project
+demonstrates rigorous evaluation infrastructure.
 
 ## V1 Success
 
@@ -67,4 +67,3 @@ log writes.
 Human ownership remains required for rubric design, ground-truth creation, final
 adjudication for ambiguous cases, risk thresholds, and acceptance of production
 changes.
-
