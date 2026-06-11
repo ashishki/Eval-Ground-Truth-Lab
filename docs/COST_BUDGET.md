@@ -9,7 +9,7 @@ Last updated: 2026-06-11
 | Scope | Limit | Window | Enforcement |
 |-------|-------|--------|-------------|
 | Deterministic eval run | 0 USD model spend | per run | block model calls unless judge mode is configured |
-| Judge-enabled benchmark run | 2.00 USD recommended cap | per run | block before overrun once telemetry exists; manual approval until T09 |
+| Judge-enabled benchmark run | 2.00 USD recommended cap | per run | block before overrun through judge budget precheck; manual approval for scheduled runs or escalation |
 | Operator | 10.00 USD | per day | approval before additional judge runs |
 | Project | 25.00 USD provisional cap | per month | approval before exceeding cap |
 | Agent / workflow | 300 judge calls, 1 retry per failed call | per run | approval before fan-out or retry expansion |
@@ -62,14 +62,17 @@ Judge-capable code paths must measure:
 
 ## Telemetry
 
-- Telemetry file: planned `docs/ai_cost_telemetry.jsonl`
-- Telemetry status: not implemented in Phase 1
-- Rollup command status: planned for T09
-- CI threshold status: not enabled until telemetry source and rollup command exist
+- Telemetry file: `docs/ai_cost_telemetry.jsonl` by convention; runtime sinks are
+  configurable per run.
+- Telemetry status: provider-agnostic JSONL telemetry sink implemented in T09.
+- Rollup command status: not implemented yet; manual review remains required
+  until a rollup task/tool is added.
+- CI threshold status: not enabled until telemetry rollup exists and CI policy is
+  explicitly approved.
 
-T09 owns the provider-agnostic telemetry adapter. Until then, cost thresholds are
-manual-review policy and judge-enabled tasks must record projected spend before
-execution.
+T09 provides budget-capped optional judge execution through an injected provider
+boundary. It does not store credentials, call a model provider directly, or allow
+judge scores to override deterministic blocking validator failures.
 
 ## Approval Triggers
 
@@ -88,4 +91,3 @@ Approval is required before:
 A cost-saving change is acceptable only when quality and latency stay within the
 declared thresholds. A cheaper route that causes retries, rework, or lower pass
 rate is not a real saving.
-

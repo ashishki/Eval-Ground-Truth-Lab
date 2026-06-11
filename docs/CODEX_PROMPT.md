@@ -10,8 +10,8 @@ summaries.
 
 ## Current State
 
-- Phase: 2
-- Baseline: 26 passing tests
+- Phase: 3
+- Baseline: 31 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-11
@@ -19,7 +19,8 @@ summaries.
 - Cumulative phase tokens (approx): not tracked
 - Session cost (approx): not tracked
 - Cumulative phase cost (approx): not tracked
-- Budget status: within budget; deterministic mode is 0 USD model spend
+- Budget status: within budget; T09 judge path uses injected providers only and
+  no real model spend has been recorded
 
 ## Continuity Pointers
 
@@ -54,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-T09: Optional Judge, Human Review Queue, and Cost Telemetry
+T10: Reports and Failure Taxonomy
 
 ## Fix Queue
 
@@ -73,14 +74,15 @@ empty
 ## Cost Budget State
 
 - Budget artifact: `docs/COST_BUDGET.md`
-- Telemetry source: planned `docs/ai_cost_telemetry.jsonl`; manual review until T09
+- Telemetry source: provider-agnostic JSONL sink implemented in T09;
+  conventional path is `docs/ai_cost_telemetry.jsonl`
 - Last rollup: not run
 - Per-task budget: deterministic tasks use 0 USD model spend
 - Per-run budget: judge-enabled benchmark cap is 2 USD unless approved
 - Monthly project budget: provisional 25 USD until revised
 - Approval required before: model escalation, judge fan-out increase, retry
   expansion, tool-call expansion, scheduled judge runs, or budget overrun
-- Last recorded AI/model cost: none
+- Last recorded AI/model cost: none; T09 tests used synthetic injected providers
 
 If the next task would exceed the declared budget, increase model class, increase
 retry/fan-out/tool-call limits, or add recurring AI usage, stop for approval

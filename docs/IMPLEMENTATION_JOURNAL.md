@@ -112,3 +112,22 @@ the source of truth for architecture or policy.
 - Notes for next agent: HTTP adapters reject case-provided destination fields;
   CLI adapters reject case-provided command fields and execute only the configured
   argument list; HTTP/CLI adapter results include trace ID and operation name.
+
+### 2026-06-11 - T09 - Optional Judge, Human Review Queue, and Cost Telemetry
+
+- Scope: `src/eval_ground_truth_lab/judging/`,
+  `src/eval_ground_truth_lab/review/`, `tests/judging/`,
+  `docs/COST_BUDGET.md`, `docs/CODEX_PROMPT.md`,
+  `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add the optional judge boundary, budget precheck,
+  non-authoritative judge decision handling, human review queue primitive, and
+  provider-agnostic cost telemetry required before reporting and taxonomy work.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/judging/`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T10 reports and failure taxonomy.
+- Notes for next agent: Judge execution is disabled without credentials and a
+  positive budget, uses an injected provider rather than direct model SDK calls,
+  reserves a positive per-call cost estimate before each call, and cannot
+  override deterministic blocking validator failures.

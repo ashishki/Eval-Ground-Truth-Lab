@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 5
+# ARCH_REPORT - Cycle 6
 
 Date: 2026-06-11
 
@@ -6,25 +6,26 @@ Date: 2026-06-11
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| Adapter layer | PASS | Matches architecture/spec responsibility for explicit synthetic, HTTP, and CLI candidate invocation boundaries. |
-| Trace helper | PASS | Small shared helper supports adapter trace IDs and operation names without adding external tracing dependency. |
-| Phase state/evidence docs | PASS | `CODEX_PROMPT`, implementation journal, and evidence index reflect T08 and next T09 state. |
-| Audit continuity | PASS | Cycle 4 review artifacts are archived before active review artifacts are overwritten for Cycle 5. |
+| Judge layer | PASS | Matches architecture/spec responsibility for optional, budgeted, non-authoritative judge scoring. |
+| Cost telemetry | PASS | Provider-agnostic JSONL sink records attribution, token, cost, latency, retry, and quality outcome fields. |
+| Human review queue | PASS | Small queue primitive routes judge explanations into review entries without changing deterministic gate authority. |
+| Phase state/evidence docs | PASS | `CODEX_PROMPT`, cost budget, implementation journal, and evidence index reflect T09 and next T10 state. |
+| Audit continuity | PASS | Cycle 5 review artifacts are archived before active review artifacts are overwritten for Cycle 6. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | PASS | T08 adds no SQL or database calls. |
-| Credentials and secrets | PASS | T08 adds no credentials; scoped scan found no hardcoded secrets. |
+| SQL safety | PASS | T09 adds no SQL or database calls. |
+| Credentials and secrets | PASS | T09 stores no credentials; scoped scan found no hardcoded real secrets. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, pytest. |
 | No self-review | PASS | Review artifacts record findings and evidence; no P1/P2 finding is self-closed because none exist. |
 | Repository authority | PASS | Evidence index and journal point to canonical tests and review reports. |
-| Deterministic gates own blocking decisions | PASS | Adapters only invoke configured candidates; no judge/model authority added. |
-| Dataset and run identity are immutable | n/a | T08 does not modify dataset or run identity. |
+| Deterministic gates own blocking decisions | PASS | `final_case_decision` keeps deterministic blocking validator failures authoritative over judge scores. |
+| Dataset and run identity are immutable | n/a | T09 does not modify dataset or run identity. |
 | Synthetic data only in v1 | PASS | Test data is synthetic. |
-| Explicit candidate adapter boundary | PASS | HTTP rejects case-provided destination fields; CLI rejects case-provided command fields and executes only the configured argument list. |
-| Optional judge is budgeted and non-authoritative | PASS | T08 adds no judge path or model call. |
+| Explicit candidate adapter boundary | n/a | T09 does not modify candidate adapters. |
+| Optional judge is budgeted and non-authoritative | PASS | Judge mode is disabled without credentials/budget, uses injected providers only, reserves per-call budget before invocation, and cannot override deterministic failures. |
 
 ## ADR Compliance
 
@@ -40,15 +41,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | Adapter calls remain bounded deterministic integration points in the fixed eval workflow. |
-| Deterministic-owned areas remain deterministic | PASS | Candidate invocation does not alter deterministic validation or threshold ownership. |
-| Runtime tier unchanged / justified | PASS | T08 uses configured HTTP/CLI calls within T1; no privileged runtime, package mutation, or persistent worker added. |
-| Human approval boundaries still valid | PASS | T08 does not change threshold policy, judge authority, or safety acceptance boundaries. |
-| Minimum viable control surface still proportionate | PASS | Case-provided network/command fields are rejected before adapter execution. |
+| Solution shape still appropriate | PASS | Optional judge remains a narrow provider-injected boundary around an otherwise deterministic eval workflow. |
+| Deterministic-owned areas remain deterministic | PASS | Judge output can inform review but cannot convert deterministic blocking failures to pass. |
+| Runtime tier unchanged / justified | PASS | T09 adds no direct model SDK, worker, package mutation, or privileged runtime path. |
+| Human approval boundaries still valid | PASS | CI judge enablement, model escalation, fan-out, retry expansion, and budget overrun still require approval. |
+| Minimum viable control surface still proportionate | PASS | The implementation adds the smallest useful config, runner, telemetry sink, and review queue for T09 acceptance. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T08. |
-
+| none | n/a | No architecture/spec patch required for T09. |

@@ -32,7 +32,9 @@ Maintain this file for:
 | T07 comparison policy | test | `tests/compare/` | Dataset hash mismatch rejection, comparison metric output, threshold status, and CI exit-code mapping | 2026-06-11 | Yes |
 | T07 deep review | review | `docs/audit/archive/CYCLE4_REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T07 | 2026-06-11 | Yes |
 | T08 candidate adapters | test | `tests/adapters/` | Synthetic deterministic adapter, HTTP destination-boundary rejection, CLI command-boundary execution, process result capture, and adapter trace stamping | 2026-06-11 | Yes |
-| T08 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T08 | 2026-06-11 | Yes |
+| T08 deep review | review | `docs/audit/archive/CYCLE5_REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T08 | 2026-06-11 | Yes |
+| T09 optional judge and telemetry | test | `tests/judging/` | Judge disabled config, budget precheck, deterministic validator authority, telemetry fields, and positive cost reservation validation | 2026-06-11 | Yes |
+| T09 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, cost-budget, and consolidated review gate for T09 | 2026-06-11 | Yes |
 
 ## Retrieval Rules
 
