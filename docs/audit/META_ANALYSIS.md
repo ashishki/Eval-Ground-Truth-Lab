@@ -1,50 +1,51 @@
-# META_ANALYSIS - Cycle 2
+# META_ANALYSIS - Cycle 3
 
 Date: 2026-06-11
 Type: targeted
 
 ## Project State
 
-Phase 2 is in progress. T04 Dataset Schema and Hashing was committed and pushed
-as `d51c17d`; T05 Run Store and Idempotent Case Results is implemented locally.
-Next: T06 - Deterministic Validator Engine.
+Phase 2 is in progress. T04 and T05 are committed and pushed; T06 Deterministic
+Validator Engine is implemented locally. Next: T07 - Baseline Candidate
+Comparison and Regression Policy.
 
-Baseline: 15 pass, 0 skip.
+Baseline: 20 pass, 0 skip.
 
 ## Open Findings
 
 | ID | Sev | Description | Files | Status |
 |----|-----|-------------|-------|--------|
-| none | n/a | No open findings in `docs/CODEX_PROMPT.md`; Cycle 1 review had no P0/P1/P2 findings. | n/a | n/a |
+| none | n/a | No open findings in `docs/CODEX_PROMPT.md`; Cycle 2 review had no P0/P1/P2 findings. | n/a | n/a |
 
 ## PROMPT_1 Scope (architecture)
 
-- Run store: new `src/eval_ground_truth_lab/runs/` component for local JSON run
-  persistence, run metadata, case results, terminal status, duplicate run ID
-  rejection, and duplicate case result rejection.
+- Validator engine: new `src/eval_ground_truth_lab/validators/` component for
+  structured output validation, unsafe auto-approval validation, and cost/latency
+  regression metric validation.
 - Phase state/evidence docs: updates to `docs/CODEX_PROMPT.md`,
   `docs/EVIDENCE_INDEX.md`, and `docs/IMPLEMENTATION_JOURNAL.md`.
-- Audit continuity: Cycle 1 active review artifacts archived under
+- Audit continuity: Cycle 2 active review artifacts archived under
   `docs/audit/archive/`.
 
 ## PROMPT_2 Scope (code, priority order)
 
-1. `src/eval_ground_truth_lab/runs/store.py` (new)
-2. `src/eval_ground_truth_lab/runs/__init__.py` (new)
-3. `tests/runs/test_run_store.py` (new)
-4. `docs/CODEX_PROMPT.md` (changed)
-5. `docs/EVIDENCE_INDEX.md` (changed)
-6. `docs/IMPLEMENTATION_JOURNAL.md` (changed)
-7. `docs/audit/` review artifacts (changed/new)
+1. `src/eval_ground_truth_lab/validators/structured_output.py` (new)
+2. `src/eval_ground_truth_lab/validators/safety.py` (new)
+3. `src/eval_ground_truth_lab/validators/regression.py` (new)
+4. `src/eval_ground_truth_lab/validators/result.py` (new)
+5. `tests/validators/` (new)
+6. `docs/CODEX_PROMPT.md` (changed)
+7. `docs/EVIDENCE_INDEX.md` (changed)
+8. `docs/IMPLEMENTATION_JOURNAL.md` (changed)
+9. `docs/audit/` review artifacts (changed/new)
 
 ## Cycle Type
 
-Targeted - requested ongoing development loop review, scoped to T05 because
-Phase 2 is not complete.
+Targeted - ongoing development loop review, scoped to T06 because Phase 2 is not
+complete.
 
 ## Notes for PROMPT_3
 
-Focus on run immutability, duplicate identity protection, local persistence,
-runtime-tier discipline, and whether each T05 acceptance criterion has test
-evidence.
+Focus on deterministic ownership, validator result shape, threshold evidence,
+unsafe auto-approval behavior, and absence of model/judge authority.
 

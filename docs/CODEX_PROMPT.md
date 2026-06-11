@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 2
-- Baseline: 15 passing tests
+- Baseline: 20 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-11
@@ -54,7 +54,7 @@ Implementation rules:
 
 ## Next Task
 
-T06: Deterministic Validator Engine
+T07: Baseline Candidate Comparison and Regression Policy
 
 ## Fix Queue
 

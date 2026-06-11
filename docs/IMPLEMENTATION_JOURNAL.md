@@ -65,3 +65,18 @@ the source of truth for architecture or policy.
 - Notes for next agent: Run records are JSON files keyed by `run_id`; duplicate
   run IDs and duplicate case results are rejected; completed and interrupted
   runs are immutable.
+
+### 2026-06-11 - T06 - Deterministic Validator Engine
+
+- Scope: `src/eval_ground_truth_lab/validators/`, `tests/validators/`,
+  `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add deterministic validation primitives required by
+  regression comparison and CI gate decisions.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/validators/`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T07 baseline/candidate comparison and regression policy.
+- Notes for next agent: `ValidationResult` is the shared result shape; structured
+  output, unsafe auto-approval, cost, and latency validators are deterministic
+  and do not call models.
