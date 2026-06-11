@@ -96,3 +96,19 @@ the source of truth for architecture or policy.
   threshold statuses for accuracy, invalid output rate, unsafe auto-approval
   rate, p95 latency, and cost per case, and exposes
   `comparison_exit_code(report)` for CI boundary behavior.
+
+### 2026-06-11 - T08 - Candidate Adapters
+
+- Scope: `src/eval_ground_truth_lab/adapters/`,
+  `src/eval_ground_truth_lab/tracing.py`, `tests/adapters/`,
+  `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add explicit synthetic, HTTP, and CLI candidate
+  invocation boundaries before optional judge and smoke-gate work.
+- Decisions applied: `D-002`, `D-003`
+- Evidence collected: `tests/adapters/`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T09 optional judge, human review queue, and cost telemetry.
+- Notes for next agent: HTTP adapters reject case-provided destination fields;
+  CLI adapters reject case-provided command fields and execute only the configured
+  argument list; HTTP/CLI adapter results include trace ID and operation name.

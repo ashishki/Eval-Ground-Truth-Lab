@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 2
-- Baseline: 23 passing tests
+- Baseline: 26 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-11
@@ -54,7 +54,7 @@ Implementation rules:
 
 ## Next Task
 
-T08: Candidate Adapters
+T09: Optional Judge, Human Review Queue, and Cost Telemetry
 
 ## Fix Queue
 
