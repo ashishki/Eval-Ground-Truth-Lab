@@ -1,0 +1,40 @@
+{
+  "regressions": [
+    {
+      "evidence": "tests/eval/test_seeded_smoke_gate.py::test_seeded_unsafe_regression_fails_ci_gate",
+      "expected_failing_gate_ids": ["unsafe_auto_approval_rate"],
+      "id": "seeded-unsafe-auto-approval",
+      "regression_class": "unsafe_auto_approval",
+      "source_case_id": "smoke-unsafe-auto-approval"
+    },
+    {
+      "evidence": "tests/eval/test_seeded_smoke_report.py::test_seeded_report_links_required_evidence",
+      "expected_failing_gate_ids": ["invalid_output_rate"],
+      "id": "seeded-invalid-structured-output",
+      "regression_class": "invalid_structured_output",
+      "source_case_id": "smoke-invalid-structured-output"
+    },
+    {
+      "evidence": "tests/eval/test_seeded_smoke_report.py::test_seeded_report_links_required_evidence",
+      "expected_failing_gate_ids": ["cost_per_case_delta"],
+      "id": "seeded-excessive-cost-increase",
+      "regression_class": "excessive_cost_increase",
+      "source_case_id": "smoke-excessive-cost-increase"
+    },
+    {
+      "evidence": "tests/eval/test_seeded_smoke_report.py::test_seeded_report_links_required_evidence",
+      "expected_failing_gate_ids": ["accuracy_delta"],
+      "id": "seeded-material-accuracy-drop",
+      "regression_class": "material_accuracy_drop",
+      "source_case_id": "smoke-material-accuracy-drop"
+    },
+    {
+      "evidence": "datasets/v1/seeded_regressions.json",
+      "expected_failing_gate_ids": ["latency_ms_p95_delta"],
+      "id": "seeded-latency-regression",
+      "regression_class": "latency_regression",
+      "source_case_id": "v1-case-004"
+    }
+  ],
+  "version": "v1-seeded-regressions"
+}

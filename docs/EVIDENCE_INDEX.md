@@ -38,7 +38,11 @@ Maintain this file for:
 | T10 reports and failure taxonomy | test | `tests/reports/`, `tests/review/` | Markdown report sections and raw links, required failure taxonomy labels, and append-only human review decision notes | 2026-06-11 | Yes |
 | T10 deep review | review | `docs/audit/archive/CYCLE7_REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T10 | 2026-06-11 | Yes |
 | T11 seeded smoke gate | test | `tests/eval/` | Seeded smoke dataset coverage, unsafe regression exit code 1, and report links to dataset hash, run artifacts, threshold config, and failure taxonomy evidence | 2026-06-11 | Yes |
-| T11 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, CI, and consolidated review gate for T11 | 2026-06-11 | Yes |
+| T11 deep review | review | `docs/audit/archive/CYCLE8_REVIEW_REPORT.md` | META, ARCH, CODE, CI, and consolidated review gate for T11 | 2026-06-11 | Yes |
+| T12 v1 evidence pack | test | `tests/eval/test_v1_evidence_pack.py` | V1 manifest 100-case/hash evidence, seeded regression manifest with 5 expected failing gates, and v1 evidence report CI-failure links | 2026-06-11 | Yes |
+| T12 v1 dataset manifest | eval evidence | `datasets/v1/manifest.json` | 100-case synthetic v1 dataset manifest with canonical dataset hash | 2026-06-11 | Yes |
+| T12 v1 evidence report | report | `reports/v1/evidence_report.md` | Adoption proof links for unsafe regression, invalid structured output, excessive cost increase, and material accuracy drop CI evidence | 2026-06-11 | Yes |
+| T12 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, evidence-pack, and consolidated review gate for T12 | 2026-06-11 | Yes |
 
 ## Retrieval Rules
 

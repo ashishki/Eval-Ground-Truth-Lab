@@ -7,5 +7,7 @@ __pycache__/
 dist/
 build/
 *.egg-info/
-/reports/
+/reports/*
+!/reports/v1/
+!/reports/v1/**
 docs/ai_cost_telemetry.jsonl

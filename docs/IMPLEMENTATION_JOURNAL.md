@@ -171,3 +171,22 @@ the source of truth for architecture or policy.
   writes baseline/candidate raw run artifacts plus a markdown report and returns
   `1` for the seeded regression candidate. CI asserts that expected failure code
   so the workflow remains green while proving the gate catches seeded regressions.
+
+### 2026-06-11 - T12 - V1 Evidence Pack and 100-Case Dataset
+
+- Scope: `datasets/v1/`, `reports/v1/`, `.gitignore`,
+  `tests/eval/test_v1_evidence_pack.py`, `docs/CODEX_PROMPT.md`,
+  `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Complete the v1 adoption proof with at least 100
+  synthetic eval cases, at least 5 known seeded regressions, and an evidence
+  report linking CI failure evidence for the required regression classes.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/eval/test_v1_evidence_pack.py`; full gate passed
+  with `ruff check src tests`, `ruff format --check src tests`,
+  `python -m pytest tests -q --tb=short`, and direct seeded smoke command
+  verification that exit code is `1`.
+- Follow-ups: none in `docs/tasks.md`.
+- Notes for next agent: V1 manifest records 100 cases and dataset hash
+  `bfffb49cdc8fb2420ff9a499d795d84eadfc1e526a08bbe0a10a154acc2a54f7`.
+  `.gitignore` keeps generated root report outputs ignored while allowing
+  tracked `reports/v1/` evidence artifacts.

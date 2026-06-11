@@ -1,0 +1,14 @@
+{
+  "case_count": 100,
+  "cases_path": "datasets/v1/cases.jsonl",
+  "dataset_hash": "bfffb49cdc8fb2420ff9a499d795d84eadfc1e526a08bbe0a10a154acc2a54f7",
+  "dataset_id": "v1-gdev-agent-synthetic",
+  "schema_version": "1.0",
+  "slices": [
+    "planning",
+    "testing",
+    "review",
+    "reporting",
+    "safety"
+  ]
+}
