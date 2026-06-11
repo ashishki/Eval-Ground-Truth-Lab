@@ -10,8 +10,8 @@ summaries.
 
 ## Current State
 
-- Phase: 1
-- Baseline: 0 passing tests (pre-implementation)
+- Phase: 2
+- Baseline: 10 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-11
@@ -54,7 +54,7 @@ Implementation rules:
 
 ## Next Task
 
-T01: Project Skeleton
+T05: Run Store and Idempotent Case Results
 
 ## Fix Queue
 
@@ -132,4 +132,3 @@ none
 - Controls not started: n/a
 - Evidence artifact: n/a
 - Open compliance findings: none
-

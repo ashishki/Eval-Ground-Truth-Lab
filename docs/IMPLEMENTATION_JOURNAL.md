@@ -35,3 +35,18 @@ the source of truth for architecture or policy.
 - Notes for next agent: Product capability profiles are OFF; optional judge
   work starts only at T09 and remains non-authoritative.
 
+### 2026-06-11 - T04 - Dataset Schema and Hashing
+
+- Scope: `src/eval_ground_truth_lab/datasets/`, `tests/datasets/`,
+  `requirements.txt`, `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Start Phase 2 product implementation with the dataset
+  registry required by baseline/candidate comparison.
+- Decisions applied: `D-002`, `D-003`
+- Evidence collected: `tests/datasets/test_registry.py`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T05 run store implementation; formal review gate still required
+  before treating T04 as independently approved.
+- Notes for next agent: JSONL uses one case object per line with default schema
+  version `1.0`; YAML supports either a list of cases or
+  `dataset_id/schema_version/cases`.
