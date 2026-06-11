@@ -10,7 +10,7 @@ summaries.
 
 ## Current State
 
-- Phase: 4
+- Phase: 5
 - Baseline: 40 passing tests
 - Ruff: configured
 - Last CI run: not yet run
@@ -55,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-none - `docs/tasks.md` task list complete through T12
+T13: Truth Surface and Packaging Cleanup
 
 ## Fix Queue
 

@@ -185,8 +185,27 @@ the source of truth for architecture or policy.
   with `ruff check src tests`, `ruff format --check src tests`,
   `python -m pytest tests -q --tb=short`, and direct seeded smoke command
   verification that exit code is `1`.
-- Follow-ups: none in `docs/tasks.md`.
+- Follow-ups: T13 truth surface and packaging cleanup, then the Phase 5
+  gdev-agent integration roadmap in `docs/tasks.md`.
 - Notes for next agent: V1 manifest records 100 cases and dataset hash
   `bfffb49cdc8fb2420ff9a499d795d84eadfc1e526a08bbe0a10a154acc2a54f7`.
   `.gitignore` keeps generated root report outputs ignored while allowing
   tracked `reports/v1/` evidence artifacts.
+
+### 2026-06-11 - Roadmap - Real gdev-agent Integration Tasks
+
+- Scope: `docs/tasks.md`, `docs/CODEX_PROMPT.md`,
+  `docs/IMPLEMENTATION_JOURNAL.md`
+- Why this work happened: Convert the next-stage plan into executable tasks
+  that prove Eval Lab can evaluate a real local AI workflow system, starting
+  with gdev-agent.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/test_phase1_docs.py`,
+  `python -m pytest tests -q --tb=short`, `ruff check src tests`, and
+  `ruff format --check src tests`.
+- Follow-ups: Start T13.
+- Notes for next agent: T13-T24 prioritize README/evidence packaging,
+  gdev-agent dataset, normalizer, adapter, validators, CLI, baseline report,
+  mocked CI smoke, cost rollup, optional provider, file-backed review, and final
+  static evidence pack. Dashboard, continuous eval, and extra provider work are
+  intentionally later than the real gdev-agent proof.

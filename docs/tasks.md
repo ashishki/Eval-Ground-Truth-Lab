@@ -394,3 +394,506 @@ Context-Refs:
   - docs/PROJECT_BRIEF.md#v1-success
   - docs/spec.md#feature-area-ci-integration
   - docs/EVIDENCE_INDEX.md
+
+## Next Stage: Real gdev-agent Integration
+
+Goal:
+  Prove that Eval Ground Truth Lab can evaluate a real local AI workflow system,
+  not only synthetic fixtures. The first real proof target is
+  `~/Documents/dev/ai-stack/projects/gdev-agent`, run locally in deterministic
+  demo mode.
+
+Reviewer path:
+  1. Start gdev-agent locally:
+     `LLM_MODE=demo docker compose up --build -d && make demo`
+  2. Run Eval Lab against gdev-agent:
+     `python -m eval_ground_truth_lab.cli run-gdev-agent --dataset datasets/gdev_agent/triage_v1.jsonl --base-url http://localhost:8000 --report reports/gdev-agent/baseline_report.md`
+  3. Inspect `reports/gdev-agent/baseline_report.md` for dataset hash, case
+     count, candidate version, classification accuracy, risk-routing recall,
+     unsafe auto-approval rate, invalid structured output rate, guard block rate,
+     human escalation recall, cost per case, latency p95, failure taxonomy, and
+     case-level failures.
+
+Ordering rule:
+  Prioritize real gdev-agent integration before HTML, dashboard, scheduled eval,
+  continuous eval, Kubernetes, or additional judge providers.
+
+## T13: Truth Surface and Packaging Cleanup
+
+Owner: codex
+Phase: 5
+Type: docs
+Depends-On: T12
+
+Objective: |
+  Add a root-level explanation and quickstart path so a reviewer can understand
+  the project and run the existing seeded smoke proof in 5-10 minutes, while
+  clearly separating current synthetic evidence from the upcoming local
+  gdev-agent integration proof.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Root README explains what Eval Lab is, why eval-first matters, what works today, seeded smoke quickstart, gdev-agent quickstart path, architecture, known gaps, and roadmap."
+    test: "tests/docs/test_readme_quickstart.py::test_root_readme_covers_required_sections"
+  - id: AC-2
+    description: "README links architecture, evidence index, v1 evidence report, and known gaps."
+    test: "tests/docs/test_readme_quickstart.py::test_root_readme_links_core_evidence"
+  - id: AC-3
+    description: "Docs state that the gdev-agent path is a local integration proof, not a production eval platform or hosted SaaS claim."
+    test: "tests/docs/test_readme_quickstart.py::test_readme_avoids_production_overclaim"
+
+Files:
+  - README.md
+  - docs/README.md
+  - docs/EVIDENCE_INDEX.md
+  - docs/PROJECT_BRIEF.md
+  - docs/ARCHITECTURE.md
+  - reports/v1/evidence_report.md
+  - tests/docs/test_readme_quickstart.py
+
+Context-Refs:
+  - docs/ARCHITECTURE.md
+  - docs/EVIDENCE_INDEX.md
+  - reports/v1/evidence_report.md
+
+## T14: gdev-agent Eval Dataset v1
+
+Owner: codex
+Phase: 5
+Type: none
+Depends-On: T13
+
+Objective: |
+  Add the first real integration dataset for gdev-agent triage behavior with
+  stable synthetic cases, slice coverage, thresholds, and a manifest containing
+  the canonical dataset hash.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "The gdev-agent dataset contains at least 50 synthetic cases with stable unique IDs."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_dataset_has_50_unique_synthetic_cases"
+  - id: AC-2
+    description: "Every case has input, expected, and metadata with required gdev-agent triage fields."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_dataset_case_shape"
+  - id: AC-3
+    description: "Dataset covers billing_refund, account_access, bug_report, moderation_report, legal_gdpr, low_confidence, prompt_injection, unsafe_url, secret_leak_attempt, duplicate_webhook, and cross_tenant_boundary slices."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_dataset_slice_coverage"
+  - id: AC-4
+    description: "Manifest records case count and dataset hash matching dataset-inspect output."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_manifest_hash_matches_dataset"
+  - id: AC-5
+    description: "No cases contain secrets, real user data, or non-synthetic metadata."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_dataset_contains_no_real_data"
+
+Files:
+  - datasets/gdev_agent/triage_v1.jsonl
+  - datasets/gdev_agent/manifest.json
+  - datasets/gdev_agent/thresholds.json
+  - docs/GDEV_AGENT_EVAL_DATASET.md
+  - tests/datasets/test_gdev_agent_dataset.py
+  - src/eval_ground_truth_lab/cli.py
+
+Context-Refs:
+  - docs/PROJECT_BRIEF.md#v1-success
+  - docs/ARCHITECTURE.md#component-map
+  - docs/EVIDENCE_INDEX.md
+
+## T15: gdev-agent Output Normalizer
+
+Owner: codex
+Phase: 5
+Type: none
+Depends-On: T14
+
+Objective: |
+  Normalize gdev-agent HTTP responses into a canonical eval output before
+  validators or reports inspect them.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Normalizer supports executed, pending, blocked, and error paths."
+    test: "tests/adapters/test_gdev_agent_normalizer.py::test_normalizer_supports_core_paths"
+  - id: AC-2
+    description: "Missing required fields fail closed into invalid_structured_output."
+    test: "tests/adapters/test_gdev_agent_normalizer.py::test_missing_fields_fail_closed"
+  - id: AC-3
+    description: "HTTP errors become normalized eval failures rather than uncaught crashes."
+    test: "tests/adapters/test_gdev_agent_normalizer.py::test_http_error_response_normalizes_to_eval_failure"
+  - id: AC-4
+    description: "Latency and cost fields are preserved when available."
+    test: "tests/adapters/test_gdev_agent_normalizer.py::test_latency_and_cost_are_preserved"
+
+Files:
+  - src/eval_ground_truth_lab/adapters/gdev_normalizer.py
+  - tests/adapters/test_gdev_agent_normalizer.py
+  - docs/GDEV_AGENT_ADAPTER.md
+
+Context-Refs:
+  - docs/IMPLEMENTATION_CONTRACT.md#deterministic-gates-own-blocking-decisions
+  - docs/ARCHITECTURE.md#component-map
+
+## T16: Real GDevAgentHttpAdapter
+
+Owner: codex
+Phase: 5
+Type: none
+Depends-On: T08 T15
+
+Objective: |
+  Add a configured HTTP adapter that can call a locally running gdev-agent
+  instance in `LLM_MODE=demo` without allowing eval cases to control network
+  destinations, secrets, or commands.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Adapter calls only the configured gdev-agent base URL and `/webhook` path."
+    test: "tests/adapters/test_gdev_agent_adapter.py::test_adapter_uses_configured_base_url_only"
+  - id: AC-2
+    description: "Case input cannot override base_url, host, endpoint, webhook_secret, tenant secret, auth token, or command."
+    test: "tests/adapters/test_gdev_agent_adapter.py::test_case_cannot_override_network_or_secret_boundary"
+  - id: AC-3
+    description: "Webhook signature is generated from adapter config, not case input."
+    test: "tests/adapters/test_gdev_agent_adapter.py::test_webhook_signature_uses_configured_secret"
+  - id: AC-4
+    description: "Unit tests use mocked transport and do not require live gdev-agent."
+    test: "tests/adapters/test_gdev_agent_adapter.py::test_adapter_uses_mocked_transport"
+  - id: AC-5
+    description: "Integration doc explains how to run live local gdev-agent in demo mode."
+    verify: "rg -n \"LLM_MODE=demo|docker compose|run-gdev-agent|localhost:8000\" docs/GDEV_AGENT_ADAPTER.md README.md"
+
+Files:
+  - src/eval_ground_truth_lab/adapters/gdev_agent.py
+  - src/eval_ground_truth_lab/adapters/gdev_normalizer.py
+  - tests/adapters/test_gdev_agent_adapter.py
+  - docs/GDEV_AGENT_ADAPTER.md
+  - README.md
+
+Context-Refs:
+  - docs/IMPLEMENTATION_CONTRACT.md#explicit-candidate-adapter-boundary
+  - docs/ARCHITECTURE.md#security-boundaries
+
+## T17: gdev-agent Deterministic Validators
+
+Owner: codex
+Phase: 5
+Type: none
+Depends-On: T15
+
+Objective: |
+  Replace synthetic self-reported correctness with deterministic gdev-agent
+  validators that derive pass/fail from expected values and normalized actual
+  outputs.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Candidate output cannot mark itself correct; correctness is derived from expected vs normalized actual."
+    test: "tests/validators/test_gdev_agent_validators.py::test_candidate_cannot_self_report_correctness"
+  - id: AC-2
+    description: "Expected category, expected status, requires_human, and guard behavior mismatches produce blocking validator failures."
+    test: "tests/validators/test_gdev_agent_validators.py::test_routing_and_guard_mismatches_block"
+  - id: AC-3
+    description: "Unsafe auto-approval is blocking."
+    test: "tests/validators/test_gdev_agent_validators.py::test_unsafe_auto_approval_blocks"
+  - id: AC-4
+    description: "Confidence, cost, and latency validators produce deterministic threshold failures."
+    test: "tests/validators/test_gdev_agent_validators.py::test_confidence_cost_latency_thresholds"
+  - id: AC-5
+    description: "Each ValidationResult includes case_id, validator_id, passed, category, message, and evidence."
+    test: "tests/validators/test_gdev_agent_validators.py::test_gdev_validator_result_shape"
+
+Files:
+  - src/eval_ground_truth_lab/validators/gdev_agent.py
+  - tests/validators/test_gdev_agent_validators.py
+  - docs/GDEV_AGENT_ADAPTER.md
+  - docs/FAILURE_TAXONOMY.md
+
+Context-Refs:
+  - docs/spec.md#feature-area-deterministic-validators
+  - docs/IMPLEMENTATION_CONTRACT.md#deterministic-gates-own-blocking-decisions
+
+## T18: CLI Commands for Real External Eval
+
+Owner: codex
+Phase: 5
+Type: none
+Depends-On: T14 T16 T17
+
+Objective: |
+  Make Eval Lab usable as a local CLI tool for dataset inspection, running
+  gdev-agent evals, writing run artifacts, generating reports, and comparing
+  baseline/candidate runs.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "CLI exposes help for dataset-inspect, run-gdev-agent, compare, and existing seeded-smoke commands."
+    test: "tests/test_cli.py::test_cli_help_includes_real_eval_commands"
+  - id: AC-2
+    description: "dataset-inspect prints dataset ID, schema version, case count, and dataset hash."
+    test: "tests/test_cli.py::test_dataset_inspect_outputs_dataset_metadata"
+  - id: AC-3
+    description: "run-gdev-agent exits 0 on passing eval, writes run artifacts, and writes a report."
+    test: "tests/test_cli.py::test_run_gdev_agent_writes_artifacts_and_report"
+  - id: AC-4
+    description: "compare exits 1 on blocking regression and writes a comparison report."
+    test: "tests/test_cli.py::test_compare_command_returns_one_on_blocking_regression"
+  - id: AC-5
+    description: "README command examples match implemented CLI commands."
+    test: "tests/docs/test_readme_quickstart.py::test_readme_cli_examples_are_supported"
+
+Files:
+  - src/eval_ground_truth_lab/cli.py
+  - tests/test_cli.py
+  - docs/CLI.md
+  - README.md
+
+Context-Refs:
+  - docs/ARCHITECTURE.md#runtime-contract
+  - docs/EVIDENCE_INDEX.md
+
+## T19: gdev-agent Baseline Report
+
+Owner: codex
+Phase: 5
+Type: none
+Depends-On: T18
+
+Objective: |
+  Generate the primary local gdev-agent baseline evidence report from canonical
+  run artifacts without claiming production quality.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Baseline report is generated from canonical run artifacts."
+    test: "tests/eval/test_gdev_agent_baseline_report.py::test_baseline_report_generated_from_run_artifact"
+  - id: AC-2
+    description: "Report includes reproduction command, dataset hash, environment, candidate version, metrics, threshold summary, failure taxonomy, case-level failures, and known limits."
+    test: "tests/eval/test_gdev_agent_baseline_report.py::test_baseline_report_contains_required_sections"
+  - id: AC-3
+    description: "Report labels data as synthetic/local deterministic and avoids production quality claims."
+    test: "tests/eval/test_gdev_agent_baseline_report.py::test_baseline_report_labels_scope_and_limits"
+  - id: AC-4
+    description: "Evidence index links to the gdev-agent baseline report."
+    test: "tests/eval/test_gdev_agent_baseline_report.py::test_evidence_index_links_baseline_report"
+
+Files:
+  - reports/gdev-agent/baseline_report.md
+  - reports/gdev-agent/baseline_run.json
+  - reports/gdev-agent/README.md
+  - docs/EVIDENCE_INDEX.md
+  - README.md
+  - tests/eval/test_gdev_agent_baseline_report.py
+
+Context-Refs:
+  - docs/EVIDENCE_INDEX.md
+  - docs/spec.md#feature-area-reporting-and-failure-taxonomy
+
+## T20: CI Smoke for gdev Adapter Without Live gdev
+
+Owner: codex
+Phase: 5
+Type: none
+Depends-On: T16 T17 T18
+
+Objective: |
+  Add a CI-safe mocked gdev-agent smoke eval that checks adapter logic,
+  validators, report generation, and threshold gate behavior without requiring a
+  live Docker Compose gdev-agent service.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "CI runs mocked gdev eval smoke without Docker Compose or live gdev-agent."
+    test: "tests/eval/test_gdev_agent_smoke.py::test_mocked_gdev_eval_smoke_passes_in_ci"
+  - id: AC-2
+    description: "Mocked unsafe auto-approval regression exits 1."
+    test: "tests/eval/test_gdev_agent_smoke.py::test_mocked_unsafe_regression_exits_one"
+  - id: AC-3
+    description: "Docs clearly separate CI mocked smoke from live local gdev-agent integration."
+    test: "tests/eval/test_gdev_agent_smoke.py::test_docs_separate_ci_smoke_from_live_integration"
+
+Files:
+  - tests/eval/test_gdev_agent_smoke.py
+  - tests/adapters/test_gdev_agent_adapter.py
+  - .github/workflows/ci.yml
+  - datasets/gdev_agent/triage_v1.jsonl
+  - reports/gdev-agent/
+  - docs/GDEV_AGENT_ADAPTER.md
+
+Context-Refs:
+  - docs/spec.md#feature-area-ci-integration
+  - docs/IMPLEMENTATION_CONTRACT.md#ci-gate
+
+## T21: Cost Rollup and Budget Check
+
+Owner: codex
+Phase: 6
+Type: cost:telemetry
+Depends-On: T09 T18
+
+Objective: |
+  Turn provider-agnostic telemetry JSONL into cost rollups and enforceable
+  budget checks for CI fixtures and local eval runs.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Cost rollup reads JSONL telemetry and outputs total cost, total tokens, cost by model, cost by workflow, cost by case, latency p95, retry count, and quality outcome distribution."
+    test: "tests/cost/test_rollup.py::test_cost_rollup_reads_jsonl_telemetry"
+  - id: AC-2
+    description: "Budget check exits 1 on per-run, monthly, cost-per-case, or judge-call-count overrun."
+    test: "tests/cost/test_budget_check.py::test_budget_check_exits_one_on_overrun"
+  - id: AC-3
+    description: "CI can run budget check against fixture telemetry without real model calls."
+    test: "tests/cost/test_budget_check.py::test_budget_check_uses_fixture_telemetry"
+  - id: AC-4
+    description: "Docs state live judge cost gates require telemetry rollup."
+    verify: "rg -n \"cost-rollup|budget-check|telemetry rollup|live judge\" docs/COST_BUDGET.md docs/CLI.md"
+
+Files:
+  - src/eval_ground_truth_lab/cost/rollup.py
+  - src/eval_ground_truth_lab/cost/policy.py
+  - tests/cost/test_rollup.py
+  - tests/cost/test_budget_check.py
+  - docs/COST_BUDGET.md
+  - docs/CLI.md
+  - src/eval_ground_truth_lab/cli.py
+
+Context-Refs:
+  - docs/COST_BUDGET.md
+  - docs/IMPLEMENTATION_CONTRACT.md#cost-budget-rules
+
+Cost-Budget:
+  scope: workflow
+  max_cost_usd: 0
+  max_model_calls: 0
+  max_tool_calls: n/a
+  max_retries: 0
+  approval_required_when: "adding live model calls, changing budget thresholds, or enabling CI cost gates on non-fixture telemetry"
+
+## T22: Optional Real Judge Provider
+
+Owner: codex
+Phase: 6
+Type: cost:model
+Depends-On: T09 T21
+
+Objective: |
+  Add one real optional judge provider behind the existing injected-provider
+  boundary while preserving non-authoritative judge behavior and budget
+  prechecks.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Provider is disabled without API key and positive budget."
+    test: "tests/judging/test_provider_contract.py::test_provider_disabled_without_api_key_or_budget"
+  - id: AC-2
+    description: "Provider uses structured output and validates provider result shape."
+    test: "tests/judging/test_provider_contract.py::test_provider_uses_structured_output_contract"
+  - id: AC-3
+    description: "Budget precheck happens before provider call."
+    test: "tests/judging/test_provider_contract.py::test_budget_precheck_happens_before_provider_call"
+  - id: AC-4
+    description: "Telemetry records tokens, cost, latency, retry count, model, and quality outcome."
+    test: "tests/judging/test_provider_contract.py::test_provider_records_telemetry"
+  - id: AC-5
+    description: "Judge result creates human review item for ambiguous cases, and deterministic failures remain blocking."
+    test: "tests/judging/test_provider_contract.py::test_judge_routes_ambiguous_cases_without_overriding_deterministic_failure"
+
+Files:
+  - src/eval_ground_truth_lab/judging/providers/
+  - tests/judging/test_provider_contract.py
+  - docs/JUDGE_CALIBRATION.md
+  - datasets/judge_calibration/ambiguous_cases.jsonl
+  - reports/judge_calibration/report.md
+
+Context-Refs:
+  - docs/COST_BUDGET.md
+  - docs/ARCHITECTURE.md#inference--model-strategy
+  - docs/IMPLEMENTATION_CONTRACT.md#optional-judge-is-budgeted-and-non-authoritative
+
+Cost-Budget:
+  scope: task
+  max_cost_usd: 0
+  max_model_calls: 0
+  max_tool_calls: n/a
+  max_retries: 0
+  approval_required_when: "running live provider calls, adding provider credentials, model escalation, retry expansion, or budget overrun"
+
+## T23: File-Backed Human Review Queue
+
+Owner: codex
+Phase: 6
+Type: none
+Depends-On: T09 T10
+
+Objective: |
+  Replace in-memory-only human review queue usage with append-only file-backed
+  review entries and auditable decisions, without mutating original judge
+  evidence.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Review entries append only and include review_id, case_id, candidate_version, rubric_version, judge_explanation, reviewer_status, and created_at."
+    test: "tests/review/test_review_store.py::test_review_entries_are_append_only"
+  - id: AC-2
+    description: "Review decisions append reviewer, decision, rationale, and reviewed_at without mutating original review entry."
+    test: "tests/review/test_review_store.py::test_review_decisions_do_not_mutate_original_evidence"
+  - id: AC-3
+    description: "Report can link unresolved review items."
+    test: "tests/review/test_review_store.py::test_report_links_unresolved_review_items"
+
+Files:
+  - src/eval_ground_truth_lab/review/store.py
+  - tests/review/test_review_store.py
+  - docs/HUMAN_REVIEW.md
+  - src/eval_ground_truth_lab/reports/
+
+Context-Refs:
+  - docs/spec.md#feature-area-optional-llm-judge-and-human-review
+  - docs/IMPLEMENTATION_CONTRACT.md#repository-authority
+
+## T24: Static HTML Report and Final Evidence Pack
+
+Owner: codex
+Phase: 6
+Type: none
+Depends-On: T19 T20 T21 T23
+
+Objective: |
+  Add a derivative static HTML report and final case-study evidence pack while
+  keeping markdown/run artifacts as the canonical source of truth.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "HTML report is generated from the same canonical report data as markdown and has no separate metrics logic."
+    test: "tests/reports/test_html_report.py::test_html_report_uses_markdown_report_data"
+  - id: AC-2
+    description: "HTML report includes clear local/synthetic evidence labels and links canonical markdown/run artifacts."
+    test: "tests/reports/test_html_report.py::test_html_report_links_canonical_artifacts"
+  - id: AC-3
+    description: "README gives a 5-minute reviewer path and links seeded smoke, gdev-agent eval, known limits, and evidence index."
+    test: "tests/docs/test_final_evidence_pack.py::test_readme_has_5_minute_reviewer_path"
+  - id: AC-4
+    description: "Case study explains what Eval Lab evaluates, dataset versioning, baseline/candidate comparison, deterministic validators, unsafe auto-approval, gdev-agent eval, synthetic vs real integration, cost/latency handling, non-authoritative judge, and known limits."
+    test: "tests/docs/test_final_evidence_pack.py::test_case_study_answers_required_questions"
+  - id: AC-5
+    description: "Evidence index maps every final claim to an artifact, test, or report."
+    test: "tests/docs/test_final_evidence_pack.py::test_evidence_index_maps_final_claims"
+  - id: AC-6
+    description: "Docs avoid production SaaS/platform overclaim."
+    test: "tests/docs/test_final_evidence_pack.py::test_docs_avoid_production_overclaim"
+
+Files:
+  - src/eval_ground_truth_lab/reports/html.py
+  - src/eval_ground_truth_lab/reports/templates/eval_report.html
+  - tests/reports/test_html_report.py
+  - tests/docs/test_final_evidence_pack.py
+  - reports/gdev-agent/baseline_report.html
+  - docs/REPORTING.md
+  - docs/CASE_STUDY.md
+  - docs/KNOWN_LIMITS.md
+  - docs/EVIDENCE_INDEX.md
+  - README.md
+
+Context-Refs:
+  - docs/EVIDENCE_INDEX.md
+  - reports/v1/evidence_report.md
+  - docs/ARCHITECTURE.md
