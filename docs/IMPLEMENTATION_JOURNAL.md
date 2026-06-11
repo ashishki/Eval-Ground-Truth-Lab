@@ -80,3 +80,19 @@ the source of truth for architecture or policy.
 - Notes for next agent: `ValidationResult` is the shared result shape; structured
   output, unsafe auto-approval, cost, and latency validators are deterministic
   and do not call models.
+
+### 2026-06-11 - T07 - Baseline Candidate Comparison and Regression Policy
+
+- Scope: `src/eval_ground_truth_lab/compare/`, `src/eval_ground_truth_lab/cli.py`,
+  `tests/compare/`, `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add baseline/candidate comparison metrics and CI
+  exit-code mapping required before candidate adapters and smoke gates.
+- Decisions applied: `D-002`
+- Evidence collected: `tests/compare/`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T08 candidate adapters.
+- Notes for next agent: Comparison rejects mismatched dataset hashes, computes
+  threshold statuses for accuracy, invalid output rate, unsafe auto-approval
+  rate, p95 latency, and cost per case, and exposes
+  `comparison_exit_code(report)` for CI boundary behavior.

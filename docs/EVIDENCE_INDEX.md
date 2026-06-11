@@ -28,7 +28,9 @@ Maintain this file for:
 | T05 run store | test | `tests/runs/test_run_store.py` | Local JSON run persistence, completed/interrupted immutability, duplicate run ID rejection, and duplicate case-result rejection | 2026-06-11 | Yes |
 | T05 deep review | review | `docs/audit/archive/CYCLE2_REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T05 | 2026-06-11 | Yes |
 | T06 deterministic validators | test | `tests/validators/` | Structured output validation, unsafe auto-approval validation, and cost/latency threshold delta validation | 2026-06-11 | Yes |
-| T06 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T06 | 2026-06-11 | Yes |
+| T06 deep review | review | `docs/audit/archive/CYCLE3_REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T06 | 2026-06-11 | Yes |
+| T07 comparison policy | test | `tests/compare/` | Dataset hash mismatch rejection, comparison metric output, threshold status, and CI exit-code mapping | 2026-06-11 | Yes |
+| T07 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T07 | 2026-06-11 | Yes |
 
 ## Retrieval Rules
 

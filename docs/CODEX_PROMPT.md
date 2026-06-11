@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 2
-- Baseline: 20 passing tests
+- Baseline: 23 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-11
@@ -54,7 +54,7 @@ Implementation rules:
 
 ## Next Task
 
-T07: Baseline Candidate Comparison and Regression Policy
+T08: Candidate Adapters
 
 ## Fix Queue
 
