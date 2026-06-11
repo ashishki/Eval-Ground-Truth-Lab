@@ -50,3 +50,18 @@ the source of truth for architecture or policy.
 - Notes for next agent: JSONL uses one case object per line with default schema
   version `1.0`; YAML supports either a list of cases or
   `dataset_id/schema_version/cases`.
+
+### 2026-06-11 - T05 - Run Store and Idempotent Case Results
+
+- Scope: `src/eval_ground_truth_lab/runs/`, `tests/runs/`,
+  `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add local immutable run storage required before
+  baseline/candidate comparison and validator aggregation.
+- Decisions applied: `D-002`
+- Evidence collected: `tests/runs/test_run_store.py`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T06 deterministic validator engine.
+- Notes for next agent: Run records are JSON files keyed by `run_id`; duplicate
+  run IDs and duplicate case results are rejected; completed and interrupted
+  runs are immutable.

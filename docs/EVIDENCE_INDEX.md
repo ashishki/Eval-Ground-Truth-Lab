@@ -24,7 +24,9 @@ Maintain this file for:
 | Phase 1 local verification | test | `tests/test_phase1_docs.py` | Required Standard docs, placeholder removal, CI command declarations, and task verifier fields | 2026-06-11 | Yes |
 | Phase 1 validation | audit | `docs/audit/PHASE1_AUDIT.md` | Standard Phase 1 artifact validation, cross-document consistency, and adoption reality gate | 2026-06-11 | Yes |
 | T04 dataset registry | test | `tests/datasets/test_registry.py` | JSONL/YAML dataset loading, required field validation, structured validation errors, and stable dataset hashing | 2026-06-11 | Yes |
-| T04 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T04 | 2026-06-11 | Yes |
+| T04 deep review | review | `docs/audit/archive/CYCLE1_REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T04 | 2026-06-11 | Yes |
+| T05 run store | test | `tests/runs/test_run_store.py` | Local JSON run persistence, completed/interrupted immutability, duplicate run ID rejection, and duplicate case-result rejection | 2026-06-11 | Yes |
+| T05 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, and consolidated review gate for T05 | 2026-06-11 | Yes |
 
 ## Retrieval Rules
 
