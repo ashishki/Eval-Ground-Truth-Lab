@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 12
+# ARCH_REPORT - Cycle 13
 
 Date: 2026-06-12
 
@@ -6,27 +6,28 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| gdev-agent normalizer | PASS | Maps raw gdev-agent responses into canonical eval fields before validators or reports inspect them. |
-| Fail-closed handling | PASS | Missing required fields and malformed bodies become `invalid_structured_output` outputs with `requires_human=true`. |
-| HTTP error handling | PASS | 4xx/5xx responses normalize to `adapter_error` eval outputs instead of uncaught crashes. |
-| Cost and latency preservation | PASS | Normalizer preserves top-level or usage-derived cost and measured or response-provided latency. |
-| Adapter docs | PASS | Documents current normalizer status and the configured-only live adapter boundary for T16. |
-| Audit continuity | PASS | Cycle 11 review artifacts are archived before active review artifacts are overwritten for Cycle 12. |
+| gdev-agent HTTP adapter | PASS | Adds configured-only `POST /webhook` invocation with injectable transport. |
+| Signature boundary | PASS | HMAC-SHA256 signature is generated over exact body bytes from configured webhook secret, not case input. |
+| Case override guard | PASS | Case-provided destination, tenant ID, secret, auth token, and command keys are rejected recursively. |
+| Normalizer compatibility | PASS | Normalizer now supports real nested gdev-agent response shape and input-guard HTTP 400 mapping. |
+| Test boundary | PASS | Unit tests use mocked transport and require no live gdev-agent or Docker Compose stack. |
+| Docs and README | PASS | Adapter docs explain live local run commands and current CLI limitation; README known gaps are current. |
+| Audit continuity | PASS | Cycle 12 review artifacts are archived before active review artifacts are overwritten for Cycle 13. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T15 adds no SQL or database calls. |
-| Credentials and secrets | PASS | Normalizer introduces no credential handling; docs mention secrets only as prohibited case-controlled fields. |
+| SQL safety | n/a | T16 adds no SQL or database calls. |
+| Credentials and secrets | PASS | No real secret is committed; demo values are documented as local seeded placeholders and tests use obvious placeholder strings. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
 | No self-review | PASS | Review artifacts record findings and evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | Normalizer tests and adapter docs point to canonical repository artifacts. |
-| Deterministic gates own blocking decisions | PASS | Normalizer preserves candidate facts and failure states; it does not compute correctness or override validators. |
-| Dataset and run identity are immutable | n/a | T15 does not modify dataset hashing or run storage. |
-| Synthetic data only in v1 | n/a | T15 adds no dataset cases. |
-| Explicit candidate adapter boundary | PASS | No live call is added; docs preserve the configured-only destination boundary for T16. |
-| Optional judge is budgeted and non-authoritative | n/a | T15 does not modify judge execution or authority. |
+| Repository authority | PASS | Adapter tests, docs, and evidence index point to canonical artifacts. |
+| Deterministic gates own blocking decisions | PASS | Adapter invokes and normalizes; it does not compute correctness or override validators. |
+| Dataset and run identity are immutable | n/a | T16 does not modify dataset hashing or run storage. |
+| Synthetic data only in v1 | n/a | T16 adds no dataset cases. |
+| Explicit candidate adapter boundary | PASS | Adapter calls only configured base URL plus `/webhook`; eval cases cannot define network or command destinations. |
+| Optional judge is budgeted and non-authoritative | n/a | T16 does not modify judge execution or authority. |
 
 ## ADR Compliance
 
@@ -42,14 +43,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T15 adds a small pure normalizer, tests, and docs before live adapter wiring. |
-| Deterministic-owned areas remain deterministic | PASS | Normalization is pure and uses no model, clock, filesystem, network, or subprocess calls. |
-| Runtime tier unchanged / justified | PASS | No service, worker, model SDK/API call, package mutation, or privileged runtime path added. |
+| Solution shape still appropriate | PASS | T16 adds one HTTP adapter and tests, not CLI orchestration, dashboard, provider calls, or scheduler behavior. |
+| Deterministic-owned areas remain deterministic | PASS | Normalization and signature construction are deterministic; live transport is injectable and mocked in unit tests. |
+| Runtime tier unchanged / justified | PASS | Uses standard library HTTP transport only; no package, service, model SDK/API, or privileged runtime path added. |
 | Human approval boundaries still valid | PASS | No threshold loosening, safety-regression acceptance, judge authority increase, or budget change. |
-| Minimum viable control surface still proportionate | PASS | The normalizer isolates response mapping needed by T16 and T17 without premature CLI/report changes. |
+| Minimum viable control surface still proportionate | PASS | Adapter boundary is needed before validators and CLI run command; report/dashboard work remains later. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T15. |
+| none | n/a | No architecture/spec patch required for T16. |

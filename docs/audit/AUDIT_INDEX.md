@@ -16,4 +16,5 @@ Last updated: 2026-06-12
 | Review cycle 9 | 2026-06-11 | PASS | T12 v1 evidence pack deep review | `docs/audit/archive/CYCLE9_REVIEW_REPORT.md` |
 | Review cycle 10 | 2026-06-12 | PASS | T13 truth surface and packaging deep review | `docs/audit/archive/CYCLE10_REVIEW_REPORT.md` |
 | Review cycle 11 | 2026-06-12 | PASS | T14 gdev-agent dataset deep review | `docs/audit/archive/CYCLE11_REVIEW_REPORT.md` |
-| Review cycle 12 | 2026-06-12 | PASS | T15 gdev-agent normalizer deep review | `docs/audit/REVIEW_REPORT.md` |
+| Review cycle 12 | 2026-06-12 | PASS | T15 gdev-agent normalizer deep review | `docs/audit/archive/CYCLE12_REVIEW_REPORT.md` |
+| Review cycle 13 | 2026-06-12 | PASS | T16 gdev-agent adapter deep review | `docs/audit/REVIEW_REPORT.md` |

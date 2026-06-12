@@ -40,7 +40,8 @@ def normalize_gdev_response(
     if http_status >= 400:
         return _adapter_error(case_id=case_id, response=response_body, latency_ms=latency_ms)
 
-    missing = [field for field in REQUIRED_GDEV_FIELDS if field not in response_body]
+    required = _extract_required_fields(response_body)
+    missing = [field for field in REQUIRED_GDEV_FIELDS if field not in required]
     if missing:
         return _invalid_output(
             case_id=case_id,
@@ -49,10 +50,10 @@ def normalize_gdev_response(
             reason=f"missing required fields: {', '.join(missing)}",
         )
 
-    status = response_body["status"]
-    category = response_body["category"]
-    confidence = _required_float(response_body["confidence"])
-    requires_human = response_body["requires_human"]
+    status = required["status"]
+    category = required["category"]
+    confidence = _required_float(required["confidence"])
+    requires_human = required["requires_human"]
 
     if (
         not isinstance(status, str)
@@ -75,7 +76,7 @@ def normalize_gdev_response(
         category=category,
         confidence=confidence,
         requires_human=requires_human,
-        risk_reason=_optional_string(response_body.get("risk_reason")),
+        risk_reason=_extract_risk_reason(response_body),
         guard_blocked=_optional_bool(
             response_body.get("guard_blocked"), default=status == "blocked"
         ),
@@ -95,15 +96,29 @@ def _adapter_error(
     response: Mapping[str, Any],
     latency_ms: float | None,
 ) -> NormalizedGdevOutput:
+    reason = _extract_error_reason(response)
+    if _is_guard_block_reason(reason):
+        return NormalizedGdevOutput(
+            case_id=case_id,
+            status="blocked",
+            category="guard_blocked",
+            confidence=0.0,
+            requires_human=True,
+            risk_reason=reason,
+            guard_blocked=True,
+            invalid_structured_output=False,
+            unsafe_auto_approval=False,
+            cost_usd=_extract_cost(response),
+            latency_ms=_extract_latency(response, latency_ms),
+            adapter_error=False,
+        )
     return NormalizedGdevOutput(
         case_id=case_id,
         status="error",
         category="adapter_error",
         confidence=0.0,
         requires_human=True,
-        risk_reason=_optional_string(
-            response.get("error") or response.get("message") or "http error"
-        ),
+        risk_reason=reason,
         guard_blocked=False,
         invalid_structured_output=False,
         unsafe_auto_approval=False,
@@ -145,6 +160,73 @@ def _extract_cost(response: Mapping[str, Any]) -> float | None:
     if not isinstance(usage, Mapping):
         return None
     return _optional_float(usage.get("estimated_cost_usd"))
+
+
+def _extract_required_fields(response: Mapping[str, Any]) -> dict[str, Any]:
+    required: dict[str, Any] = {}
+    status = response.get("status")
+    if status is not None:
+        required["status"] = status
+
+    classification = response.get("classification")
+    if isinstance(classification, Mapping):
+        category = response.get("category", classification.get("category"))
+        confidence = response.get("confidence", classification.get("confidence"))
+    else:
+        category = response.get("category")
+        confidence = response.get("confidence")
+
+    if category is not None:
+        required["category"] = category
+    if confidence is not None:
+        required["confidence"] = confidence
+
+    if "requires_human" in response:
+        required["requires_human"] = response["requires_human"]
+    elif isinstance(classification, Mapping) and isinstance(status, str):
+        required["requires_human"] = _derive_requires_human(status, response)
+
+    return required
+
+
+def _derive_requires_human(status: str, response: Mapping[str, Any]) -> bool:
+    if status in {"blocked", "error", "pending"}:
+        return True
+    if response.get("pending") is not None:
+        return True
+    action = response.get("action")
+    if isinstance(action, Mapping) and action.get("risky") is True:
+        return True
+    return False
+
+
+def _extract_risk_reason(response: Mapping[str, Any]) -> str:
+    reason = _optional_string(response.get("risk_reason"))
+    if reason:
+        return reason
+    action = response.get("action")
+    if isinstance(action, Mapping):
+        reason = _optional_string(action.get("risk_reason"))
+        if reason:
+            return reason
+    pending = response.get("pending")
+    if isinstance(pending, Mapping):
+        reason = _optional_string(pending.get("reason"))
+        if reason:
+            return reason
+    return ""
+
+
+def _extract_error_reason(response: Mapping[str, Any]) -> str:
+    reason = _optional_string(response.get("detail"))
+    if reason:
+        return reason
+    return _optional_string(response.get("error") or response.get("message") or "http error")
+
+
+def _is_guard_block_reason(reason: str) -> bool:
+    lowered = reason.lower()
+    return "guard" in lowered or "injection" in lowered
 
 
 def _extract_latency(

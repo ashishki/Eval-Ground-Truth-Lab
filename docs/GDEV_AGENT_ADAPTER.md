@@ -6,15 +6,19 @@ validators, comparison, or reports inspect the result.
 
 ## Current Status
 
-Implemented in this phase:
+Implemented:
 
 - deterministic gdev-agent response normalizer
 - fail-closed handling for malformed structured output
 - HTTP error normalization into eval failures
 - cost and latency preservation when the response provides them
+- configured gdev-agent HTTP adapter for `POST /webhook`
+- HMAC webhook signing with `X-Webhook-Signature`
+- mocked-transport unit tests that do not require a live gdev-agent process
 
-The live HTTP adapter is a following task. This document names that boundary so
-the normalizer contract is clear before network integration is added.
+The `run-gdev-agent` CLI command is a following task. The adapter boundary is
+available as Python code and is documented here before CLI orchestration is
+added.
 
 ## Normalized Output
 
@@ -57,7 +61,61 @@ candidate outage visible in the run artifact without crashing the eval loop.
 
 ## Live Adapter Boundary
 
-The future live adapter will call only configured gdev-agent destinations. Eval
-cases must not control the base URL, host, endpoint, webhook secret, auth token,
-or command. That preserves the same safety boundary used by the generic HTTP and
-CLI adapters.
+The live adapter calls only the configured gdev-agent base URL plus `/webhook`.
+Eval cases must not control the base URL, host, endpoint, tenant ID, webhook
+secret, auth token, or command. That preserves the same safety boundary used by
+the generic HTTP and CLI adapters.
+
+The adapter signs the exact request body bytes with HMAC-SHA256 and sends:
+
+- `Content-Type: application/json`
+- `X-Tenant-Slug: <configured tenant slug>`
+- `X-Webhook-Signature: sha256=<hmac>`
+
+The body uses configured tenant identity:
+
+```json
+{
+  "request_id": "gdev-billing-refund-001",
+  "tenant_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "message_id": "eval-billing-refund-001",
+  "user_id": "eval-user-001",
+  "text": "I was charged twice for gems and want a refund.",
+  "metadata": {
+    "eval_case_id": "gdev-billing-refund-001"
+  }
+}
+```
+
+`input.tenant_slug` in a dataset case is descriptive context only. The adapter
+does not use it for the signed request.
+
+## Local Integration
+
+Start gdev-agent in deterministic demo mode:
+
+```bash
+cd ~/Documents/dev/ai-stack/projects/gdev-agent
+LLM_MODE=demo docker compose up --build -d
+make demo
+```
+
+Run Eval Lab once the CLI command is added:
+
+```bash
+cd ~/Documents/dev/ai-stack/projects/Eval-Ground-Truth-Lab
+python -m eval_ground_truth_lab.cli run-gdev-agent \
+  --dataset datasets/gdev_agent/triage_v1.jsonl \
+  --base-url http://localhost:8000 \
+  --report reports/gdev-agent/baseline_report.md
+```
+
+The adapter can also be configured from environment variables:
+
+```bash
+GDEV_AGENT_BASE_URL=http://localhost:8000
+GDEV_AGENT_TENANT_SLUG=test-tenant-a
+GDEV_AGENT_TENANT_ID=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+GDEV_AGENT_WEBHOOK_SECRET=test-webhook-secret-a
+GDEV_AGENT_LLM_MODE=demo
+```

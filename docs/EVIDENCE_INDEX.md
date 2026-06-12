@@ -50,7 +50,10 @@ Maintain this file for:
 | T14 deep review | review | `docs/audit/archive/CYCLE11_REVIEW_REPORT.md` | META, ARCH, CODE, dataset, and consolidated review gate for T14 | 2026-06-12 | Yes |
 | T15 gdev-agent normalizer | test | `tests/adapters/test_gdev_agent_normalizer.py` | Executed, pending, blocked, error, malformed structured output, HTTP error, cost, and latency normalization | 2026-06-12 | Yes |
 | T15 gdev-agent adapter contract | docs | `docs/GDEV_AGENT_ADAPTER.md` | Canonical normalized output shape, fail-closed behavior, adapter error mapping, and live adapter boundary | 2026-06-12 | Yes |
-| T15 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, normalizer, and consolidated review gate for T15 | 2026-06-12 | Yes |
+| T15 deep review | review | `docs/audit/archive/CYCLE12_REVIEW_REPORT.md` | META, ARCH, CODE, normalizer, and consolidated review gate for T15 | 2026-06-12 | Yes |
+| T16 gdev-agent HTTP adapter | test | `tests/adapters/test_gdev_agent_adapter.py` | Configured `/webhook` URL, forbidden case overrides, configured-secret HMAC signature, mocked transport, and normalized adapter output | 2026-06-12 | Yes |
+| T16 gdev-agent adapter docs | docs | `docs/GDEV_AGENT_ADAPTER.md` | Config, signing, payload shape, local demo-mode commands, and CLI limitation | 2026-06-12 | Yes |
+| T16 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, adapter boundary, and consolidated review gate for T16 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

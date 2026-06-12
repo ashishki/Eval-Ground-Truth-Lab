@@ -33,6 +33,7 @@ fixtures.
   and latency.
 - Baseline/candidate comparison with CI-style exit codes.
 - Synthetic, HTTP, and CLI adapter boundaries.
+- gdev-agent dataset, response normalizer, and configured HTTP adapter boundary.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
 - Markdown reports and failure taxonomy.
 - Append-only human review notes.
@@ -98,7 +99,8 @@ Core shape:
 
 ## Known Gaps
 
-- The gdev-agent dataset and real adapter are not implemented yet.
+- The gdev-agent adapter is unit-tested with mocked transport; full CLI
+  orchestration is planned next.
 - The `run-gdev-agent` CLI path is planned in T18.
 - Accuracy for synthetic smoke proof still uses fixture behavior; real
   gdev-agent correctness will come from deterministic validators.

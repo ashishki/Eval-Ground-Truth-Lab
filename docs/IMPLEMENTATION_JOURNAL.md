@@ -263,3 +263,26 @@ the source of truth for architecture or policy.
   blocked, and error statuses; malformed output fails closed into
   `invalid_structured_output`; HTTP 4xx/5xx responses become `adapter_error`;
   cost and latency fields are preserved when available.
+
+### 2026-06-12 - T16 - Real GDevAgentHttpAdapter
+
+- Scope: `src/eval_ground_truth_lab/adapters/gdev_agent.py`,
+  `src/eval_ground_truth_lab/adapters/gdev_normalizer.py`,
+  `tests/adapters/test_gdev_agent_adapter.py`,
+  `tests/adapters/test_gdev_agent_normalizer.py`,
+  `docs/GDEV_AGENT_ADAPTER.md`, `README.md`, `docs/CODEX_PROMPT.md`,
+  `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add the configured local gdev-agent HTTP adapter
+  boundary needed before gdev-agent validators and CLI orchestration can run
+  against the real system under test.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/adapters/test_gdev_agent_adapter.py` and
+  `tests/adapters/test_gdev_agent_normalizer.py`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T17 gdev-agent deterministic validators.
+- Notes for next agent: `GdevAgentHttpAdapter` signs canonical JSON body bytes
+  for configured `/webhook`, rejects case-controlled destination/tenant/secret
+  fields, and returns normalized output. Unit tests use mocked transport. The
+  normalizer now supports nested gdev-agent `classification/action/pending`
+  responses and maps input-guard HTTP errors to blocked guard output.

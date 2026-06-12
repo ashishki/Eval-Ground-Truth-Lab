@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 5
-- Baseline: 53 passing tests
+- Baseline: 59 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-12
@@ -55,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-T16: Real GDevAgentHttpAdapter
+T17: gdev-agent Deterministic Validators
 
 ## Fix Queue
 
@@ -82,8 +82,8 @@ empty
 - Monthly project budget: provisional 25 USD until revised
 - Approval required before: model escalation, judge fan-out increase, retry
   expansion, tool-call expansion, scheduled judge runs, or budget overrun
-- Last recorded AI/model cost: none; T15 used pure deterministic normalization
-  and T09 tests used synthetic injected providers
+- Last recorded AI/model cost: none; T16 used mocked transport for adapter
+  verification and T09 tests used synthetic injected providers
 
 If the next task would exceed the declared budget, increase model class, increase
 retry/fan-out/tool-call limits, or add recurring AI usage, stop for approval

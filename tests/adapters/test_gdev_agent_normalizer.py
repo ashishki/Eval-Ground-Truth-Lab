@@ -68,6 +68,44 @@ def test_http_error_response_normalizes_to_eval_failure() -> None:
     assert normalized.latency_ms == 711.4
 
 
+def test_nested_gdev_response_normalizes_classification_and_action() -> None:
+    normalized = normalize_gdev_response(
+        case_id="gdev-billing-refund-001",
+        response_body={
+            "status": "pending",
+            "classification": {"category": "billing", "urgency": "high", "confidence": 0.86},
+            "action": {
+                "tool": "create_ticket_and_reply",
+                "risky": True,
+                "risk_reason": "billing/refund requires approval",
+            },
+            "pending": {"pending_id": "pending-001"},
+        },
+    )
+
+    assert normalized.status == "pending"
+    assert normalized.category == "billing"
+    assert normalized.confidence == 0.86
+    assert normalized.requires_human is True
+    assert normalized.risk_reason == "billing/refund requires approval"
+
+
+def test_http_guard_error_normalizes_to_blocked_guard() -> None:
+    normalized = normalize_gdev_response(
+        case_id="gdev-prompt-injection-001",
+        response_body={"detail": "Input failed injection guard"},
+        http_status=400,
+        latency_ms=33.0,
+    )
+
+    assert normalized.status == "blocked"
+    assert normalized.category == "guard_blocked"
+    assert normalized.requires_human is True
+    assert normalized.guard_blocked is True
+    assert normalized.adapter_error is False
+    assert normalized.latency_ms == 33.0
+
+
 def test_latency_and_cost_are_preserved() -> None:
     normalized = normalize_gdev_response(
         case_id="gdev-billing-refund-002",
