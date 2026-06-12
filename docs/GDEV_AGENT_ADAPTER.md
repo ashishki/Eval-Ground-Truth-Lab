@@ -15,10 +15,9 @@ Implemented:
 - configured gdev-agent HTTP adapter for `POST /webhook`
 - HMAC webhook signing with `X-Webhook-Signature`
 - mocked-transport unit tests that do not require a live gdev-agent process
-
-The `run-gdev-agent` CLI command is a following task. The adapter boundary is
-available as Python code and is documented here before CLI orchestration is
-added.
+- `run-gdev-agent` CLI orchestration for local gdev-agent eval runs
+- CI mocked smoke tests that exercise adapter logic, validators, report
+  generation, and unsafe-regression exit behavior without a live service
 
 ## Normalized Output
 
@@ -112,7 +111,24 @@ The body uses configured tenant identity:
 `input.tenant_slug` in a dataset case is descriptive context only. The adapter
 does not use it for the signed request.
 
-## Local Integration
+## CI Mocked Smoke
+
+CI runs a mocked gdev-agent smoke path through pytest:
+
+```bash
+python -m pytest tests/eval/test_gdev_agent_smoke.py tests/adapters/test_gdev_agent_adapter.py -q --tb=short
+```
+
+This path uses deterministic fake adapter output and mocked transport. It does
+not require Docker Compose, a running `gdev-agent`, network access, tenant
+secrets, or live LLM calls. It proves the local Eval Lab adapter boundary,
+validators, report generation, and unsafe auto-approval regression gate remain
+wired.
+
+The mocked smoke is not a replacement for live local integration. It is the
+CI-safe proof that can run on every push and pull request.
+
+## Live Local Integration
 
 Start gdev-agent in deterministic demo mode:
 
@@ -122,13 +138,15 @@ LLM_MODE=demo docker compose up --build -d
 make demo
 ```
 
-Run Eval Lab once the CLI command is added:
+This path requires a running `gdev-agent` service and verifies the real local
+HTTP boundary:
 
 ```bash
 cd ~/Documents/dev/ai-stack/projects/Eval-Ground-Truth-Lab
 python -m eval_ground_truth_lab.cli run-gdev-agent \
   --dataset datasets/gdev_agent/triage_v1.jsonl \
   --base-url http://localhost:8000 \
+  --run-id gdev-baseline-v1 \
   --report reports/gdev-agent/baseline_report.md
 ```
 

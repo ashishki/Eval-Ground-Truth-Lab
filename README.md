@@ -35,6 +35,8 @@ fixtures.
 - Synthetic, HTTP, and CLI adapter boundaries.
 - gdev-agent dataset, response normalizer, and configured HTTP adapter boundary.
 - gdev-agent baseline evidence report from a canonical run artifact.
+- CI-safe mocked gdev-agent smoke that does not require Docker Compose or a live
+  gdev-agent service.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
 - Markdown reports and failure taxonomy.
 - Append-only human review notes.

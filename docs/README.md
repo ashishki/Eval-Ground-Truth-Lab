@@ -44,14 +44,15 @@ Lab.
 
 ## Active Tasks
 
-- `docs/tasks.md#t20-ci-smoke-for-gdev-adapter-without-live-gdev` - current Phase 5
+- `docs/tasks.md#t21-cost-rollup-and-budget-check` - current Phase 6
   entry point.
 
 ## Known Gaps
 
 - gdev-agent dataset, normalizer, adapter, validators, CLI, and baseline report
   are implemented for the local deterministic proof path.
-- Mocked CI smoke for the gdev adapter is planned next.
+- Mocked CI smoke for the gdev adapter is implemented.
+- Cost rollup and CI budget enforcement are planned next.
 - Cost telemetry exists, but rollup and CI budget enforcement are planned later.
 - File-backed human review and static HTML reporting are planned later.
 - Dashboard, hosted service, continuous eval, and production platform claims are

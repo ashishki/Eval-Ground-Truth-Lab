@@ -64,6 +64,10 @@ Maintain this file for:
 | T19 gdev-agent baseline run | eval evidence | `reports/gdev-agent/baseline_run.json` | Canonical gdev-agent baseline run artifact with candidate version, dataset hash, metrics, and case-level validator evidence | 2026-06-12 | Yes |
 | T19 gdev-agent baseline report artifact | report | `reports/gdev-agent/baseline_report.md` | Dataset hash, environment, candidate version, metrics, thresholds, failure taxonomy, case-level failures, known limits, and reproduction command | 2026-06-12 | Yes |
 | T19 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, baseline report, run artifact, and consolidated review gate for T19 | 2026-06-12 | Yes |
+| T20 mocked gdev CI smoke | test | `tests/eval/test_gdev_agent_smoke.py` | 55-case mocked gdev eval pass path, unsafe auto-approval regression exit `1`, and docs/workflow separation from live integration | 2026-06-12 | Yes |
+| T20 mocked gdev workflow step | ci | `.github/workflows/ci.yml` | Explicit mocked gdev-agent smoke step running smoke and adapter tests without Docker Compose | 2026-06-12 | Yes |
+| T20 gdev adapter docs | docs | `docs/GDEV_AGENT_ADAPTER.md` | CI mocked smoke versus live local integration boundary | 2026-06-12 | Yes |
+| T20 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, mocked smoke, CI, docs, and consolidated review gate for T20 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

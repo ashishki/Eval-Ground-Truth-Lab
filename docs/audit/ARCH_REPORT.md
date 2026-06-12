@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 16
+# ARCH_REPORT - Cycle 17
 
 Date: 2026-06-12
 
@@ -6,28 +6,28 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| gdev baseline run artifact | PASS | `baseline_run.json` uses the canonical `RunRecord` shape and parses through `RunRecord.from_mapping`. |
-| gdev baseline report | PASS | Report includes required evidence sections and values from the run artifact. |
-| Source dataset alignment | PASS | Baseline cases are checked against `datasets/gdev_agent/triage_v1.jsonl`; non-failing category outputs match expected categories. |
-| README/evidence index | PASS | Root README and `docs/EVIDENCE_INDEX.md` link the baseline report and run artifact. |
-| Evidence tracking | PASS | `.gitignore` allows tracked `reports/gdev-agent/**` evidence artifacts. |
-| Tests | PASS | T19 tests cover report consistency, required sections, scope/overclaim labels, evidence links, and dataset-case alignment. |
-| Audit continuity | PASS | Cycle 15 review artifacts are archived before active review artifacts are overwritten for Cycle 16. |
+| mocked gdev smoke | PASS | Runs `run-gdev-agent` against the real 55-case dataset with deterministic fake adapter output and no live service. |
+| unsafe regression smoke | PASS | Injected unsafe auto-approval returns exit `1` and records validator failure evidence. |
+| adapter boundary coverage | PASS | CI step includes existing mocked-transport adapter tests. |
+| CI workflow | PASS | Workflow has a named mocked gdev-agent smoke step and does not use Docker Compose. |
+| docs separation | PASS | Adapter docs separate CI mocked smoke from live local integration. |
+| Tests | PASS | T20 tests cover pass path, unsafe regression, and docs/workflow separation. |
+| Audit continuity | PASS | Cycle 16 review artifacts are archived before active review artifacts are overwritten for Cycle 17. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T19 adds no SQL or database calls. |
-| Credentials and secrets | PASS | Report commands use local demo config examples only; no secrets are committed. |
+| SQL safety | n/a | T20 adds no SQL or database calls. |
+| Credentials and secrets | PASS | Mocked smoke uses no real secrets; live local examples retain placeholder demo config only. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
 | No self-review | PASS | Review artifacts record scoped review evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | Evidence rows point to concrete report, run artifact, and tests. |
-| Deterministic gates own blocking decisions | PASS | Report labels validator-derived failure taxonomy and does not introduce judge authority. |
-| Dataset and run identity are immutable | PASS | Baseline report records the canonical dataset hash and the committed run artifact records run ID/version fields. |
-| Synthetic data only in v1 | PASS | The report and README label the evidence as synthetic/local deterministic. |
-| Explicit candidate adapter boundary | PASS | Reproduction command uses configured `--base-url`; no case-controlled destination is introduced. |
-| Optional judge is budgeted and non-authoritative | n/a | T19 does not modify judge execution, providers, or budgets. |
+| Repository authority | PASS | CI workflow, tests, and docs are concrete repository artifacts. |
+| Deterministic gates own blocking decisions | PASS | Unsafe smoke fails from deterministic gdev validators, not judge output. |
+| Dataset and run identity are immutable | PASS | Smoke writes new temp run IDs and does not mutate committed run artifacts. |
+| Synthetic data only in v1 | PASS | Tests use synthetic committed dataset and generated fake outputs. |
+| Explicit candidate adapter boundary | PASS | Fake adapter is injected only by tests; live adapter boundary remains configured URL only. |
+| Optional judge is budgeted and non-authoritative | n/a | T20 does not modify judge execution, providers, or budgets. |
 
 ## ADR Compliance
 
@@ -43,14 +43,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T19 adds filesystem evidence artifacts and tests, not dashboard, scheduler, hosted runtime, or provider calls. |
-| Deterministic-owned areas remain deterministic | PASS | Report claims are backed by committed JSON and deterministic tests. |
-| Runtime tier unchanged / justified | PASS | No new runtime or dependency was added. |
+| Solution shape still appropriate | PASS | T20 adds tests, workflow step, and docs only; no dashboard, scheduler, hosted runtime, or provider calls. |
+| Deterministic-owned areas remain deterministic | PASS | Smoke outputs are deterministic and validator-driven. |
+| Runtime tier unchanged / justified | PASS | No new runtime, dependency, service, or network requirement was added. |
 | Human approval boundaries still valid | PASS | No threshold loosening, safety-regression acceptance, judge-authority increase, or budget change. |
-| Minimum viable control surface still proportionate | PASS | Baseline evidence is required before mocked CI smoke and cost rollup tasks. |
+| Minimum viable control surface still proportionate | PASS | Mocked CI smoke is required before cost rollup and final evidence tasks. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T19. |
+| none | n/a | No architecture/spec patch required for T20. |

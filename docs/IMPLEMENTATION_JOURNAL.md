@@ -342,3 +342,22 @@ the source of truth for architecture or policy.
   `reports/gdev-agent/baseline_report.md` is the readable report. The report
   labels the data as synthetic/local deterministic and records known limits.
   T19 tests also verify baseline case IDs against the source gdev dataset.
+
+### 2026-06-12 - T20 - CI Smoke for gdev Adapter Without Live gdev
+
+- Scope: `tests/eval/test_gdev_agent_smoke.py`, `.github/workflows/ci.yml`,
+  `docs/GDEV_AGENT_ADAPTER.md`, `README.md`, `docs/README.md`,
+  `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add a CI-safe mocked gdev-agent smoke proof that
+  exercises adapter logic, validators, report generation, and threshold gate
+  behavior without requiring a live Docker Compose service.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/eval/test_gdev_agent_smoke.py` and
+  `tests/adapters/test_gdev_agent_adapter.py`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T21 cost rollup and budget check.
+- Notes for next agent: The mocked smoke uses the real 55-case gdev dataset and
+  real `run-gdev-agent` CLI path with fake deterministic adapter output. It
+  asserts a clean pass path and a seeded unsafe auto-approval regression exit
+  code `1`. Live local integration remains documented separately.
