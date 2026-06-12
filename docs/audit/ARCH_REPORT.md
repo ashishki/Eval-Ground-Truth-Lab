@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 14
+# ARCH_REPORT - Cycle 15
 
 Date: 2026-06-12
 
@@ -6,27 +6,27 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| gdev-agent validators | PASS | Adds deterministic validators for category, status, human routing, guard behavior, unsafe auto-approval, structure, confidence, cost, and latency. |
-| Candidate self-report boundary | PASS | Candidate `correct=true` is ignored; correctness comes from expected vs normalized actual values. |
-| Failure taxonomy | PASS | gdev labels are documented and added to the report taxonomy surface. |
-| Threshold handling | PASS | Confidence, cost, and latency checks emit deterministic pass/fail with evidence. |
-| Adapter docs | PASS | Documents validator coverage and non-authority of candidate self-reported correctness. |
-| Audit continuity | PASS | Cycle 13 review artifacts are archived before active review artifacts are overwritten for Cycle 14. |
+| CLI command surface | PASS | Adds `run-gdev-agent` and `compare` while preserving `seeded-smoke` and `dataset-inspect`. |
+| gdev run command | PASS | Loads dataset, invokes adapter, applies deterministic validators, writes run artifact/report, and exits on validator failure. |
+| compare command | PASS | Reads canonical run JSON, applies threshold config, writes markdown comparison report, and returns CI-style exit code. |
+| README/CLI docs | PASS | Commands are documented in root README and new `docs/CLI.md`. |
+| Tests | PASS | CLI tests cover help, dataset metadata output, gdev run artifact/report writing, compare failure exit, and README command support. |
+| Audit continuity | PASS | Cycle 14 review artifacts are archived before active review artifacts are overwritten for Cycle 15. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T17 adds no SQL or database calls. |
-| Credentials and secrets | PASS | T17 adds no credential handling. |
+| SQL safety | n/a | T18 adds no SQL or database calls. |
+| Credentials and secrets | PASS | CLI uses configured adapter/env boundary; eval cases still cannot provide credentials. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
 | No self-review | PASS | Review artifacts record findings and evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | Validator tests, taxonomy docs, and evidence index point to canonical artifacts. |
-| Deterministic gates own blocking decisions | PASS | Validators derive failures from expected values, actual normalized output, and configured thresholds only. |
-| Dataset and run identity are immutable | n/a | T17 does not modify dataset hashing or run storage. |
-| Synthetic data only in v1 | n/a | T17 adds no dataset cases. |
-| Explicit candidate adapter boundary | n/a | T17 does not modify adapter execution boundaries. |
-| Optional judge is budgeted and non-authoritative | PASS | T17 adds no judge path and preserves deterministic validator authority. |
+| Repository authority | PASS | CLI tests, docs, and evidence index point to canonical artifacts. |
+| Deterministic gates own blocking decisions | PASS | `run-gdev-agent` exits non-zero from deterministic validator failures, not judge output. |
+| Dataset and run identity are immutable | PASS | Run artifacts are written through `RunStore`; completed run records are immutable by existing store contract. |
+| Synthetic data only in v1 | PASS | Tests use synthetic one-case fixtures only. |
+| Explicit candidate adapter boundary | PASS | CLI builds the configured gdev adapter; tests inject mocked adapter and do not require live Docker. |
+| Optional judge is budgeted and non-authoritative | n/a | T18 does not modify judge execution or authority. |
 
 ## ADR Compliance
 
@@ -42,14 +42,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T17 adds pure validation functions, tests, and taxonomy docs. |
-| Deterministic-owned areas remain deterministic | PASS | Validators use only expected fields, normalized actual output, and threshold values. |
-| Runtime tier unchanged / justified | PASS | No network, subprocess, package, service, model SDK/API, or privileged runtime path added. |
+| Solution shape still appropriate | PASS | T18 adds local CLI orchestration and filesystem artifacts, not dashboard, scheduler, provider calls, or hosted runtime. |
+| Deterministic-owned areas remain deterministic | PASS | Validator results and comparison thresholds drive exit codes. |
+| Runtime tier unchanged / justified | PASS | CLI uses existing adapter and run store boundaries; no new dependency or privileged runtime path added. |
 | Human approval boundaries still valid | PASS | No threshold loosening, safety-regression acceptance, judge authority increase, or budget change. |
-| Minimum viable control surface still proportionate | PASS | Validators are required before the real gdev-agent CLI run command and baseline report. |
+| Minimum viable control surface still proportionate | PASS | CLI wiring is required before baseline report and CI smoke tasks. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T17. |
+| none | n/a | No architecture/spec patch required for T18. |

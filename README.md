@@ -73,6 +73,7 @@ cd ~/Documents/dev/ai-stack/projects/Eval-Ground-Truth-Lab
 python -m eval_ground_truth_lab.cli run-gdev-agent \
   --dataset datasets/gdev_agent/triage_v1.jsonl \
   --base-url http://localhost:8000 \
+  --run-id gdev-baseline-v1 \
   --report reports/gdev-agent/baseline_report.md
 ```
 
@@ -84,6 +85,7 @@ latency p95, failure taxonomy, and case-level failures.
 ## Architecture
 
 The canonical architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+CLI commands are documented in [docs/CLI.md](docs/CLI.md).
 The evidence index is in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
 The current v1 evidence report is in
 [reports/v1/evidence_report.md](reports/v1/evidence_report.md).
@@ -99,9 +101,9 @@ Core shape:
 
 ## Known Gaps
 
-- The gdev-agent adapter is unit-tested with mocked transport; full CLI
-  orchestration is planned next.
-- The `run-gdev-agent` CLI path is planned in T18.
+- The gdev-agent adapter is unit-tested with mocked transport; live local
+  integration still needs an operator-run gdev-agent stack.
+- The gdev-agent baseline report artifact is planned next.
 - Accuracy for synthetic smoke proof still uses fixture behavior; real
   gdev-agent correctness will come from deterministic validators.
 - Cost telemetry exists, but rollup and CI budget enforcement are planned later.

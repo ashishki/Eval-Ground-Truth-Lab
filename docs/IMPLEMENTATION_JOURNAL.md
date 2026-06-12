@@ -306,3 +306,21 @@ the source of truth for architecture or policy.
   entries for structure, category, status, human routing, guard behavior, unsafe
   auto-approval, confidence, cost, and latency. Candidate `correct=true` is
   ignored. Failure labels are documented in `docs/FAILURE_TAXONOMY.md`.
+
+### 2026-06-12 - T18 - CLI Commands for Real External Eval
+
+- Scope: `src/eval_ground_truth_lab/cli.py`, `tests/test_cli.py`,
+  `docs/CLI.md`, `README.md`, `tests/docs/test_readme_quickstart.py`,
+  `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Make Eval Lab usable from the local CLI for
+  gdev-agent eval runs, run artifact writing, report writing, dataset inspection,
+  and run comparison.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/test_cli.py`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T19 gdev-agent baseline report.
+- Notes for next agent: `run-gdev-agent` writes completed run artifacts through
+  `RunStore`, applies gdev validators, and writes a markdown report. `compare`
+  reads run JSON artifacts and returns `1` on blocking threshold regression.
+  README command examples are backed by subcommand help checks.

@@ -1,56 +1,59 @@
-# META_ANALYSIS - Cycle 14
+# META_ANALYSIS - Cycle 15
 
 Date: 2026-06-12
 Type: targeted
 
 ## Project State
 
-Phase 5 is in progress. T17 gdev-agent Deterministic Validators is implemented
-locally. Next: T18 - CLI Commands for Real External Eval.
+Phase 5 is in progress. T18 CLI Commands for Real External Eval is implemented
+locally. Next: T19 - gdev-agent Baseline Report.
 
-Baseline: 64 pass, 0 skip.
+Baseline: 68 pass, 0 skip.
 
 ## Open Findings
 
 | ID | Sev | Description | Files | Status |
 |----|-----|-------------|-------|--------|
-| none | n/a | No open findings in `docs/CODEX_PROMPT.md`; Cycle 13 review had no P0/P1/P2 findings. | n/a | n/a |
+| none | n/a | No open findings in `docs/CODEX_PROMPT.md`; Cycle 14 review had no P0/P1/P2 findings. | n/a | n/a |
 
 ## PROMPT_1 Scope (architecture)
 
-- gdev validators: new `src/eval_ground_truth_lab/validators/gdev_agent.py`
-  derives correctness from expected dataset fields and normalized actual output.
-- Validator exports: `src/eval_ground_truth_lab/validators/__init__.py` exposes
-  gdev validator functions and threshold dataclass.
-- Failure taxonomy: new `docs/FAILURE_TAXONOMY.md` and updated
-  `src/eval_ground_truth_lab/reports/taxonomy.py` include gdev labels.
-- Adapter docs: `docs/GDEV_AGENT_ADAPTER.md` now records deterministic validator
-  coverage and candidate self-report non-authority.
-- Acceptance tests: new `tests/validators/test_gdev_agent_validators.py` covers
-  self-report rejection, routing/guard blocking failures, unsafe auto-approval,
-  confidence/cost/latency thresholds, and result shape.
-- Audit continuity: Cycle 13 review artifacts archived under
+- CLI commands: `src/eval_ground_truth_lab/cli.py` now exposes
+  `dataset-inspect`, `run-gdev-agent`, `compare`, and existing `seeded-smoke`.
+- gdev run orchestration: `run-gdev-agent` loads a dataset, invokes the gdev
+  adapter, applies deterministic gdev validators, writes a run artifact, writes
+  a markdown report, and exits non-zero on validator failure.
+- Compare orchestration: `compare` reads baseline/candidate run JSON artifacts,
+  applies threshold config, writes a comparison report, and returns CI-style exit
+  code.
+- CLI docs: new `docs/CLI.md` documents help, dataset-inspect, run-gdev-agent,
+  and compare commands.
+- README: gdev quickstart now includes `--run-id`; known gaps reflect that CLI
+  orchestration exists and baseline evidence artifact is next.
+- Acceptance tests: new `tests/test_cli.py` covers help, dataset inspect,
+  run-gdev-agent artifacts/report, and compare blocking exit. README CLI example
+  test now checks implemented subcommand help.
+- Audit continuity: Cycle 14 review artifacts archived under
   `docs/audit/archive/`.
 
 ## PROMPT_2 Scope (code/docs priority order)
 
-1. `src/eval_ground_truth_lab/validators/gdev_agent.py` (new)
-2. `tests/validators/test_gdev_agent_validators.py` (new)
-3. `docs/FAILURE_TAXONOMY.md` (new)
-4. `src/eval_ground_truth_lab/validators/__init__.py` (changed)
-5. `src/eval_ground_truth_lab/reports/taxonomy.py` (changed)
-6. `docs/GDEV_AGENT_ADAPTER.md` (changed)
-7. `docs/CODEX_PROMPT.md` (changed)
-8. `docs/EVIDENCE_INDEX.md` (changed)
-9. `docs/IMPLEMENTATION_JOURNAL.md` (changed)
-10. `docs/audit/` review artifacts (changed/new)
+1. `src/eval_ground_truth_lab/cli.py` (changed)
+2. `tests/test_cli.py` (new)
+3. `docs/CLI.md` (new)
+4. `README.md` (changed)
+5. `tests/docs/test_readme_quickstart.py` (changed)
+6. `docs/CODEX_PROMPT.md` (changed)
+7. `docs/EVIDENCE_INDEX.md` (changed)
+8. `docs/IMPLEMENTATION_JOURNAL.md` (changed)
+9. `docs/audit/` review artifacts (changed/new)
 
 ## Cycle Type
 
-Targeted - Phase 5 task review for T17 gdev-agent deterministic validators.
+Targeted - Phase 5 task review for T18 CLI commands.
 
 ## Notes for PROMPT_3
 
-Focus on deterministic ownership of correctness, candidate `correct=true`
-non-authority, failure label consistency, threshold handling, absence of runtime
-calls, and validator result evidence shape.
+Focus on artifact writing, deterministic validator application, CLI exit codes,
+README command support, no shell execution, no live gdev dependency in tests, and
+comparison threshold behavior.

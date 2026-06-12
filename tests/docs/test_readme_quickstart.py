@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+from eval_ground_truth_lab.cli import main
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -50,11 +54,16 @@ def test_readme_avoids_production_overclaim() -> None:
 def test_readme_cli_examples_are_supported() -> None:
     readme = _read("README.md")
 
-    for command in (
-        "python -m eval_ground_truth_lab.cli seeded-smoke",
-        "python -m eval_ground_truth_lab.cli run-gdev-agent",
-    ):
-        assert command in readme
+    supported_commands = (
+        ("seeded-smoke", "python -m eval_ground_truth_lab.cli seeded-smoke"),
+        ("run-gdev-agent", "python -m eval_ground_truth_lab.cli run-gdev-agent"),
+    )
+
+    for command, example in supported_commands:
+        assert example in readme
+        with pytest.raises(SystemExit) as exc:
+            main([command, "--help"])
+        assert exc.value.code == 0
 
 
 def _read(path: str) -> str:

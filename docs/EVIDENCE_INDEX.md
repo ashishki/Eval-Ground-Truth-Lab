@@ -56,7 +56,10 @@ Maintain this file for:
 | T16 deep review | review | `docs/audit/archive/CYCLE13_REVIEW_REPORT.md` | META, ARCH, CODE, adapter boundary, and consolidated review gate for T16 | 2026-06-12 | Yes |
 | T17 gdev-agent validators | test | `tests/validators/test_gdev_agent_validators.py` | Candidate self-report non-authority, category/status/routing/guard failures, unsafe auto-approval, confidence/cost/latency thresholds, and result shape | 2026-06-12 | Yes |
 | T17 failure taxonomy | docs | `docs/FAILURE_TAXONOMY.md` | gdev failure labels and deterministic validator authority | 2026-06-12 | Yes |
-| T17 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, validator, taxonomy, and consolidated review gate for T17 | 2026-06-12 | Yes |
+| T17 deep review | review | `docs/audit/archive/CYCLE14_REVIEW_REPORT.md` | META, ARCH, CODE, validator, taxonomy, and consolidated review gate for T17 | 2026-06-12 | Yes |
+| T18 CLI commands | test | `tests/test_cli.py` | CLI help, dataset-inspect metadata, run-gdev-agent artifact/report writing, and compare blocking exit code | 2026-06-12 | Yes |
+| T18 CLI docs | docs | `docs/CLI.md` | Help, dataset-inspect, run-gdev-agent, and compare command examples | 2026-06-12 | Yes |
+| T18 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, CLI command, and consolidated review gate for T18 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

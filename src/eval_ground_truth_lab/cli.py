@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from eval_ground_truth_lab.adapters import GdevAgentConfig, GdevAgentHttpAdapter
 from eval_ground_truth_lab.compare import ComparisonReport, ThresholdConfig, compare_runs
 from eval_ground_truth_lab.datasets import Dataset, load_dataset
 from eval_ground_truth_lab.reports import render_markdown_report
-from eval_ground_truth_lab.runs import CaseResult, RunRecord
+from eval_ground_truth_lab.runs import CaseResult, RunRecord, RunStore
+from eval_ground_truth_lab.validators import GdevValidatorThresholds, validate_gdev_case
 
 
 def comparison_exit_code(report: ComparisonReport) -> int:
@@ -31,6 +34,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     inspect_parser = subparsers.add_parser("dataset-inspect")
     inspect_parser.add_argument("--dataset", required=True)
 
+    gdev_parser = subparsers.add_parser("run-gdev-agent")
+    gdev_parser.add_argument("--dataset", required=True)
+    gdev_parser.add_argument("--base-url", required=True)
+    gdev_parser.add_argument("--run-id")
+    gdev_parser.add_argument("--run-dir", default="runs")
+    gdev_parser.add_argument("--candidate-version", default="gdev-agent-demo")
+    gdev_parser.add_argument("--report", required=True)
+    gdev_parser.add_argument(
+        "--threshold-config",
+        default="datasets/gdev_agent/thresholds.json",
+    )
+
+    compare_parser = subparsers.add_parser("compare")
+    compare_parser.add_argument("--baseline", required=True)
+    compare_parser.add_argument("--candidate", required=True)
+    compare_parser.add_argument("--threshold-config", required=True)
+    compare_parser.add_argument("--report", required=True)
+
     args = parser.parse_args(argv)
     if args.command == "seeded-smoke":
         return run_seeded_smoke_eval(
@@ -41,6 +62,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "dataset-inspect":
         print(json.dumps(inspect_dataset(args.dataset), sort_keys=True))
         return 0
+    if args.command == "run-gdev-agent":
+        return run_gdev_agent_eval(
+            dataset_path=args.dataset,
+            base_url=args.base_url,
+            report_path=args.report,
+            run_id=args.run_id,
+            run_dir=args.run_dir,
+            candidate_version=args.candidate_version,
+            threshold_config_path=args.threshold_config,
+        )
+    if args.command == "compare":
+        return run_compare_command(
+            baseline_path=args.baseline,
+            candidate_path=args.candidate,
+            threshold_config_path=args.threshold_config,
+            report_path=args.report,
+        )
     raise ValueError(f"Unsupported command {args.command}")
 
 
@@ -86,6 +124,94 @@ def run_seeded_smoke_eval(
             "candidate run": str(candidate_path),
             "threshold config": str(threshold_config_path),
             "failure taxonomy evidence": "src/eval_ground_truth_lab/reports/taxonomy.py",
+        },
+    )
+    report_path.write_text(report, encoding="utf-8")
+    return comparison_exit_code(comparison)
+
+
+def run_gdev_agent_eval(
+    *,
+    dataset_path: str | Path,
+    base_url: str,
+    report_path: str | Path,
+    run_id: str | None = None,
+    run_dir: str | Path = "runs",
+    candidate_version: str = "gdev-agent-demo",
+    threshold_config_path: str | Path = "datasets/gdev_agent/thresholds.json",
+    adapter: GdevAgentHttpAdapter | None = None,
+) -> int:
+    dataset = load_dataset(dataset_path)
+    validator_thresholds = _load_gdev_validator_thresholds(Path(threshold_config_path))
+    selected_adapter = adapter or _build_gdev_adapter(base_url)
+    store = RunStore(run_dir)
+    run = store.create_run(
+        run_id=run_id,
+        run_type="candidate",
+        dataset_hash=dataset.metadata.dataset_hash,
+        candidate_version=candidate_version,
+        validator_version="gdev-validators-v1",
+        threshold_config_version=_threshold_config_version(Path(threshold_config_path)),
+    )
+
+    has_failure = False
+    for case in dataset.cases:
+        adapter_result = selected_adapter.invoke(case.to_canonical_mapping())
+        actual = _mapping_or_empty(adapter_result.output)
+        expected = _mapping_or_empty(case.expected)
+        validator_results = validate_gdev_case(
+            case_id=case.id,
+            expected=expected,
+            actual=actual,
+            thresholds=validator_thresholds,
+        )
+        has_failure = has_failure or any(not result.passed for result in validator_results)
+        output = dict(actual)
+        output["correct"] = _derived_gdev_correctness(validator_results)
+        store.add_case_result(
+            run.run_id,
+            CaseResult(
+                case_id=case.id,
+                output=output,
+                validator_results=tuple(asdict(result) for result in validator_results),
+                cost_usd=float(actual.get("cost_usd") or 0.0),
+                latency_ms=float(actual.get("latency_ms") or adapter_result.latency_ms),
+            ),
+        )
+
+    completed = store.complete_run(run.run_id)
+    _write_gdev_run_report(
+        report_path=Path(report_path),
+        run=completed,
+        dataset=dataset,
+        threshold_config_path=Path(threshold_config_path),
+        run_artifact_path=Path(run_dir) / f"{completed.run_id}.json",
+    )
+    return 1 if has_failure else 0
+
+
+def run_compare_command(
+    *,
+    baseline_path: str | Path,
+    candidate_path: str | Path,
+    threshold_config_path: str | Path,
+    report_path: str | Path,
+) -> int:
+    baseline = _read_run_artifact(Path(baseline_path))
+    candidate = _read_run_artifact(Path(candidate_path))
+    thresholds = _load_threshold_config(Path(threshold_config_path))
+    comparison = compare_runs(baseline=baseline, candidate=candidate, thresholds=thresholds)
+
+    report_path = Path(report_path)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report = render_markdown_report(
+        baseline=baseline,
+        candidate=candidate,
+        comparison=comparison,
+        raw_artifact_links={
+            "baseline run": str(baseline_path),
+            "candidate run": str(candidate_path),
+            "threshold config": str(threshold_config_path),
         },
     )
     report_path.write_text(report, encoding="utf-8")
@@ -215,6 +341,8 @@ def _run_record(
 def _load_threshold_config(path: Path) -> ThresholdConfig:
     with path.open(encoding="utf-8") as config_file:
         raw = json.load(config_file)
+    if "max_accuracy_drop" not in raw:
+        return _load_gdev_comparison_threshold_config(raw)
     return ThresholdConfig(
         max_accuracy_drop=float(raw["max_accuracy_drop"]),
         max_invalid_output_rate_increase=float(raw["max_invalid_output_rate_increase"]),
@@ -224,11 +352,112 @@ def _load_threshold_config(path: Path) -> ThresholdConfig:
     )
 
 
+def _load_gdev_comparison_threshold_config(raw: Mapping[str, Any]) -> ThresholdConfig:
+    accuracy_min = float(raw.get("classification_accuracy_min", 1.0))
+    return ThresholdConfig(
+        max_accuracy_drop=max(0.0, 1.0 - accuracy_min),
+        max_invalid_output_rate_increase=float(raw.get("max_invalid_structured_output_rate", 0.0)),
+        max_unsafe_auto_approval_rate_increase=float(raw.get("max_unsafe_auto_approval_rate", 0.0)),
+        max_latency_p95_delta_ms=float(raw.get("max_latency_p95_ms", 0.0)),
+        max_cost_per_case_delta_usd=float(raw.get("max_cost_per_case_usd", 0.0)),
+    )
+
+
+def _load_gdev_validator_thresholds(path: Path) -> GdevValidatorThresholds:
+    with path.open(encoding="utf-8") as config_file:
+        raw = json.load(config_file)
+    return GdevValidatorThresholds(
+        confidence_floor=float(raw.get("confidence_floor", 0.0)),
+        cost_ceiling_usd=_optional_float(raw.get("max_cost_per_case_usd")),
+        latency_ceiling_ms=_optional_float(raw.get("max_latency_p95_ms")),
+    )
+
+
 def _write_run_artifact(path: Path, record: RunRecord) -> None:
     path.write_text(
         json.dumps(record.to_mapping(), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def _write_gdev_run_report(
+    *,
+    report_path: Path,
+    run: RunRecord,
+    dataset: Dataset,
+    threshold_config_path: Path,
+    run_artifact_path: Path,
+) -> None:
+    comparison = ComparisonReport(
+        baseline_run_id=run.run_id,
+        candidate_run_id=run.run_id,
+        dataset_hash=dataset.metadata.dataset_hash,
+        accuracy_delta=0.0,
+        invalid_output_rate_delta=0.0,
+        unsafe_auto_approval_rate_delta=0.0,
+        latency_ms_p95_delta=0.0,
+        cost_per_case_delta=0.0,
+        threshold_status={
+            "accuracy_delta": "pass",
+            "invalid_output_rate": "pass",
+            "unsafe_auto_approval_rate": "pass",
+            "latency_ms_p95_delta": "pass",
+            "cost_per_case_delta": "pass",
+        },
+    )
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report = render_markdown_report(
+        baseline=run,
+        candidate=run,
+        comparison=comparison,
+        raw_artifact_links={
+            "dataset hash": dataset.metadata.dataset_hash,
+            "run artifact": str(run_artifact_path),
+            "threshold config": str(threshold_config_path),
+            "failure taxonomy": "docs/FAILURE_TAXONOMY.md",
+        },
+    )
+    report_path.write_text(report, encoding="utf-8")
+
+
+def _build_gdev_adapter(base_url: str) -> GdevAgentHttpAdapter:
+    return GdevAgentHttpAdapter(GdevAgentConfig.from_environment(base_url=base_url))
+
+
+def _read_run_artifact(path: Path) -> RunRecord:
+    with path.open(encoding="utf-8") as run_file:
+        return RunRecord.from_mapping(json.load(run_file))
+
+
+def _mapping_or_empty(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, Mapping) else {}
+
+
+def _derived_gdev_correctness(validator_results: tuple[Any, ...]) -> bool:
+    threshold_validators = {
+        "gdev.confidence_floor",
+        "gdev.cost_ceiling",
+        "gdev.latency_ceiling",
+    }
+    return all(
+        result.passed
+        for result in validator_results
+        if result.validator_id not in threshold_validators
+    )
+
+
+def _threshold_config_version(path: Path) -> str:
+    if not path.exists():
+        return path.stem
+    with path.open(encoding="utf-8") as config_file:
+        raw = json.load(config_file)
+    return str(raw.get("version") or path.stem)
+
+
+def _optional_float(value: Any) -> float | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    return float(value)
 
 
 if __name__ == "__main__":
