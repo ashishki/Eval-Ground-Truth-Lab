@@ -38,6 +38,8 @@ fixtures.
 - CI-safe mocked gdev-agent smoke that does not require Docker Compose or a live
   gdev-agent service.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
+- Optional OpenAI judge provider contract, disabled by default and tested with
+  fake transport only.
 - Cost telemetry rollup and fixture-safe budget check commands.
 - Markdown reports and failure taxonomy.
 - Append-only human review notes.
@@ -117,7 +119,8 @@ Core shape:
   gdev-agent correctness will come from deterministic validators.
 - Cost telemetry rollup and fixture-safe budget check commands exist; live judge
   cost gates require telemetry rollup artifacts and an approved policy.
-- The judge provider boundary exists, but no live provider is enabled by default.
+- Optional OpenAI judge provider contract exists, but no live provider call is
+  enabled by default.
 - Human review storage is currently primitive and will become file-backed later.
 - No dashboard, hosted service, continuous eval, or production platform claim is
   made.

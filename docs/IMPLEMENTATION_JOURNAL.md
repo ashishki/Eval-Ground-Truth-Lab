@@ -382,3 +382,25 @@ the source of truth for architecture or policy.
   outcome distribution. `budget-check` exits `1` for per-run, monthly,
   cost-per-case, or judge-call-count overrun. Live judge cost gates still require
   approved policy and telemetry artifacts before enforcement.
+
+### 2026-06-12 - T22 - Optional Real Judge Provider
+
+- Scope: `src/eval_ground_truth_lab/judging/providers/`,
+  `src/eval_ground_truth_lab/judging/__init__.py`,
+  `tests/judging/test_provider_contract.py`, `docs/JUDGE_CALIBRATION.md`,
+  `datasets/judge_calibration/ambiguous_cases.jsonl`,
+  `reports/judge_calibration/report.md`, `.gitignore`, `README.md`,
+  `docs/README.md`, `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add one optional provider integration behind the
+  existing injected-provider judge boundary while preserving budget prechecks and
+  non-authoritative judge behavior.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/judging/test_provider_contract.py` and existing
+  `tests/judging/`; full gate passed with `ruff check src tests`,
+  `ruff format --check src tests`, and `python -m pytest tests -q --tb=short`.
+- Follow-ups: T23 file-backed human review queue.
+- Notes for next agent: `OpenAIJudgeProvider` is disabled without environment
+  credentials and a positive runner budget. Tests use fake transport only.
+  Provider structured output is validated before conversion to
+  `JudgeProviderResult`; telemetry goes through existing `JudgeRunner`.
+  Deterministic failures remain blocking through `final_case_decision`.

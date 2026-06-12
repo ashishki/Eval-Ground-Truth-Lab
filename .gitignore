@@ -12,4 +12,6 @@ build/
 !/reports/v1/**
 !/reports/gdev-agent/
 !/reports/gdev-agent/**
+!/reports/judge_calibration/
+!/reports/judge_calibration/**
 docs/ai_cost_telemetry.jsonl

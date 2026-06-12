@@ -1,17 +1,19 @@
-# REVIEW_REPORT - Cycle 18
+# REVIEW_REPORT - Cycle 19
 
 Date: 2026-06-12
-Scope: T21 Cost Rollup and Budget Check
+Scope: T22 Optional Real Judge Provider
 
 ## Executive Summary
 
 - Stop-Ship: No.
-- T21 adds deterministic JSONL cost telemetry rollup and budget policy checks.
-- CLI now exposes `cost-rollup` and `budget-check`; `budget-check` exits `1`
-  on budget overrun.
-- Docs state that live judge cost gates require telemetry rollup artifacts and
-  an approved budget policy before enforcement.
-- Baseline is now 79 passing tests, 0 skipped.
+- T22 adds an optional OpenAI judge provider behind the existing injected
+  provider boundary.
+- Provider tests use fake transport only; no live provider calls or credentials
+  are used.
+- Budget precheck remains before provider transport, telemetry is recorded, and
+  deterministic failures remain blocking.
+- Calibration docs, synthetic ambiguous cases, and report artifact are added.
+- Baseline is now 84 passing tests, 0 skipped.
 - No P0, P1, or P2 findings were identified in the scoped files.
 
 ## P0 Issues
@@ -32,66 +34,63 @@ None.
 
 | ID | Sev | Description | Status | Change |
 |----|-----|-------------|--------|--------|
-| none | n/a | Cycle 17 review had no P0/P1/P2 findings. | n/a | n/a |
+| none | n/a | Cycle 18 review had no P0/P1/P2 findings. | n/a | n/a |
 
 ## Stop-Ship Decision
 
-No - scoped implementation satisfies T21 acceptance criteria, local verification
+No - scoped implementation satisfies T22 acceptance criteria, local verification
 passed, and no blocking findings were identified.
 
 ## README-First Index Status
 
 | Changed boundary | README path | Status | Notes |
 |------------------|-------------|--------|-------|
-| cost commands | `README.md` | current | Root README lists cost rollup and budget check as working capability. |
-| CLI docs | `docs/CLI.md` | current | CLI doc includes `cost-rollup` and `budget-check` examples. |
-| cost budget | `docs/COST_BUDGET.md` | current | Cost budget doc records rollup and budget-check command status. |
-| docs index | `docs/README.md` | current | Docs index now points to T22 as active task and notes cost rollup is implemented. |
-| audit artifacts | `docs/audit/AUDIT_INDEX.md` | current | Audit index will point Cycle 18 to active review until the next cycle archives it. |
+| optional judge provider | `README.md` | current | Root README lists disabled-by-default OpenAI judge provider contract. |
+| calibration docs | `docs/JUDGE_CALIBRATION.md` | current | Documents provider boundary, structured output, and non-authority. |
+| docs index | `docs/README.md` | current | Docs index now points to T23 as active task and notes provider contract is implemented. |
+| audit artifacts | `docs/audit/AUDIT_INDEX.md` | current | Audit index will point Cycle 19 to active review until the next cycle archives it. |
 
 ## Cost Budget Status
 
 | Scope | Status | Notes |
 |-------|--------|-------|
-| AI/model budget | within budget | T21 added no model calls, judge execution, retries, fan-out, tool calls, or recurring AI usage. |
-| Telemetry rollup | implemented | Rollup and budget check use fixture telemetry and local JSON artifacts. |
+| AI/model budget | within budget | T22 added no live model calls, no provider credentials, no retry expansion, and no recurring AI usage. |
+| Telemetry rollup | available | Provider contract emits telemetry through existing runner; T21 rollup can aggregate it. |
 
 ## Code Review Checklist Result
 
 | Check | Result | Note |
 |-------|--------|------|
 | SEC-1 SQL parameterization | n/a | No SQL introduced. |
-| SEC-2 secret handling | PASS | No credentials or provider SDK config added. |
-| SEC-3 auth boundary | n/a | No auth path changed. |
-| SEC-4 credentials from environment/config only | PASS | Future live provider credentials remain outside T21. |
-| QUAL-1 error handling | PASS | Invalid telemetry/policy shapes raise deterministic errors; overrun returns exit `1`. |
-| QUAL-2 test coverage | PASS | T21 AC-1 through AC-4 are covered by tests and docs verification. |
-| GOV-1 solution-shape drift | PASS | T21 adds local modules/CLI only, not dashboard, scheduler, or provider integrations. |
-| GOV-2 deterministic ownership | PASS | Rollup and budget decisions are pure local deterministic checks. |
-| GOV-3 runtime-tier drift | PASS | No new service runtime, package, model SDK/API, or privileged execution path added. |
-| GOV-4 human approval boundaries | PASS | Docs require approved policy before live judge cost gates. |
+| SEC-2 secret handling | PASS | Placeholder keys only; provider reads real keys from environment when enabled by an operator. |
+| SEC-3 auth boundary | PASS | Provider disabled without key and positive budget; no CI secrets required. |
+| SEC-4 credentials from environment/config only | PASS | Provider config reads `OPENAI_API_KEY` or `LLM_JUDGE_API_KEY`; no committed credentials. |
+| QUAL-1 error handling | PASS | Invalid provider output raises provider-specific errors before becoming judge result. |
+| QUAL-2 test coverage | PASS | T22 AC-1 through AC-5 are covered by provider contract tests. |
+| GOV-1 solution-shape drift | PASS | T22 adds optional provider contract only, not dashboard, scheduler, or CI live judging. |
+| GOV-2 deterministic ownership | PASS | Deterministic failures remain blocking. |
+| GOV-3 runtime-tier drift | PASS | No new runtime, dependency, or live provider call in tests/CI. |
+| GOV-4 human approval boundaries | PASS | Live calls, credentials, budget changes, escalation, and retry expansion still require approval. |
 | GOV-5 continuity discipline | PASS | Journal, evidence index, audit index, and handoff updated. |
-| GOV-6 filesystem reality | PASS | Claimed modules, tests, and docs exist. |
+| GOV-6 filesystem reality | PASS | Claimed provider, tests, dataset, docs, and report exist. |
 | GOV-7 runtime verification | PASS | Targeted and full local gates were executed. |
-| GOV-8 bounded correction | PASS | CLI help test was extended for new commands; no test weakening. |
-| GOV-9 claim evidence | PASS | Tests and docs verification back completion claims. |
-| GOV-10 README-first index | PASS | README and docs index reflect cost rollup status. |
-| GOV-11 cost budget | PASS | T21 implements deterministic cost-budget tooling without spend. |
-| OBS-1 external call instrumentation | n/a | T21 does not invoke external services. |
-| OBS-2 AI-path metrics | PASS | Rollup reads telemetry fields produced by judge-capable code paths. |
+| GOV-8 bounded correction | PASS | Import-order and circular-import corrections were made without weakening tests. |
+| GOV-9 claim evidence | PASS | Tests and calibration artifacts back completion claims. |
+| GOV-10 README-first index | PASS | README and docs index reflect provider status. |
+| GOV-11 cost budget | PASS | No live model spend; T22 only adds disabled optional call path. |
+| OBS-1 external call instrumentation | PASS | Provider returns token/cost/latency data consumed by existing telemetry sink. |
+| OBS-2 AI-path metrics | PASS | Telemetry contract records model, tokens, estimated cost, latency, retry, and quality outcome. |
 | OBS-3 health endpoint integrity | n/a | No health endpoint exists or changed. |
 
 ## Validation Evidence
 
-- `.venv/bin/python -m pytest tests/cost/test_rollup.py tests/cost/test_budget_check.py tests/test_cli.py -q --tb=short`
-  - pass, 7 tests
+- `.venv/bin/python -m pytest tests/judging/test_provider_contract.py tests/judging/ -q --tb=short`
+  - pass, 10 tests
 - `.venv/bin/python -m pytest tests -q --tb=short`
-  - pass, 79 tests
+  - pass, 84 tests
 - `.venv/bin/ruff check src tests` - pass
 - `.venv/bin/ruff format --check src tests` - pass
-- `.venv/bin/python -m eval_ground_truth_lab.cli cost-rollup --help` - pass
-- `.venv/bin/python -m eval_ground_truth_lab.cli budget-check --help` - pass
-- `rg -n "cost-rollup|budget-check|telemetry rollup|live judge" docs/COST_BUDGET.md docs/CLI.md`
+- `rg -n "provider disabled|structured output|budget precheck|human review|deterministic" docs/JUDGE_CALIBRATION.md reports/judge_calibration/report.md tests/judging/test_provider_contract.py`
   - pass
 - Requested audience-positioning wording scan across README, docs, reports,
   source, and tests
@@ -99,4 +98,4 @@ passed, and no blocking findings were identified.
 
 ## Next
 
-Proceed to T22 Optional Real Judge Provider.
+Proceed to T23 File-Backed Human Review Queue.

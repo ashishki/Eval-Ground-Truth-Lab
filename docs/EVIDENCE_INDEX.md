@@ -73,6 +73,11 @@ Maintain this file for:
 | T21 cost CLI docs | docs | `docs/CLI.md` | `cost-rollup` and `budget-check` command examples and live judge cost-gate boundary | 2026-06-12 | Yes |
 | T21 cost budget docs | docs | `docs/COST_BUDGET.md` | Telemetry rollup status, budget-check status, fixture CI use, and live judge approval boundary | 2026-06-12 | Yes |
 | T21 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, cost rollup, budget policy, CLI, docs, and consolidated review gate for T21 | 2026-06-12 | Yes |
+| T22 optional OpenAI judge provider | test | `tests/judging/test_provider_contract.py` | Disabled-without-key/budget behavior, structured output schema, budget precheck, telemetry, human review routing, and deterministic failure authority | 2026-06-12 | Yes |
+| T22 judge calibration docs | docs | `docs/JUDGE_CALIBRATION.md` | Optional provider boundary, fake-transport tests, synthetic calibration fixtures, and non-authoritative judge rules | 2026-06-12 | Yes |
+| T22 judge calibration dataset | eval evidence | `datasets/judge_calibration/ambiguous_cases.jsonl` | Synthetic ambiguous cases for judge calibration documentation | 2026-06-12 | Yes |
+| T22 judge calibration report | report | `reports/judge_calibration/report.md` | Provider contract evidence and no-live-call boundary | 2026-06-12 | Yes |
+| T22 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, provider contract, calibration artifacts, and consolidated review gate for T22 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 
