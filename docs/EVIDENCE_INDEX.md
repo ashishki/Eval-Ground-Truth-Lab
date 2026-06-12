@@ -53,7 +53,10 @@ Maintain this file for:
 | T15 deep review | review | `docs/audit/archive/CYCLE12_REVIEW_REPORT.md` | META, ARCH, CODE, normalizer, and consolidated review gate for T15 | 2026-06-12 | Yes |
 | T16 gdev-agent HTTP adapter | test | `tests/adapters/test_gdev_agent_adapter.py` | Configured `/webhook` URL, forbidden case overrides, configured-secret HMAC signature, mocked transport, and normalized adapter output | 2026-06-12 | Yes |
 | T16 gdev-agent adapter docs | docs | `docs/GDEV_AGENT_ADAPTER.md` | Config, signing, payload shape, local demo-mode commands, and CLI limitation | 2026-06-12 | Yes |
-| T16 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, adapter boundary, and consolidated review gate for T16 | 2026-06-12 | Yes |
+| T16 deep review | review | `docs/audit/archive/CYCLE13_REVIEW_REPORT.md` | META, ARCH, CODE, adapter boundary, and consolidated review gate for T16 | 2026-06-12 | Yes |
+| T17 gdev-agent validators | test | `tests/validators/test_gdev_agent_validators.py` | Candidate self-report non-authority, category/status/routing/guard failures, unsafe auto-approval, confidence/cost/latency thresholds, and result shape | 2026-06-12 | Yes |
+| T17 failure taxonomy | docs | `docs/FAILURE_TAXONOMY.md` | gdev failure labels and deterministic validator authority | 2026-06-12 | Yes |
+| T17 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, validator, taxonomy, and consolidated review gate for T17 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

@@ -59,6 +59,28 @@ Missing required fields fail closed:
 HTTP 4xx/5xx responses become `adapter_error` eval outputs. This keeps a live
 candidate outage visible in the run artifact without crashing the eval loop.
 
+Input-guard HTTP errors are normalized as blocked guard outputs so validators
+can distinguish expected guard behavior from adapter outages.
+
+## Deterministic Validators
+
+gdev-agent validators derive correctness from expected dataset fields and the
+normalized actual output. A candidate `correct=true` field has no authority.
+
+Validator coverage includes:
+
+- expected category
+- expected status
+- human-escalation routing
+- guard behavior
+- unsafe auto-approval
+- structured normalized output
+- confidence floor
+- cost ceiling
+- latency ceiling
+
+Failure labels are documented in `docs/FAILURE_TAXONOMY.md`.
+
 ## Live Adapter Boundary
 
 The live adapter calls only the configured gdev-agent base URL plus `/webhook`.

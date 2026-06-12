@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 13
+# ARCH_REPORT - Cycle 14
 
 Date: 2026-06-12
 
@@ -6,28 +6,27 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| gdev-agent HTTP adapter | PASS | Adds configured-only `POST /webhook` invocation with injectable transport. |
-| Signature boundary | PASS | HMAC-SHA256 signature is generated over exact body bytes from configured webhook secret, not case input. |
-| Case override guard | PASS | Case-provided destination, tenant ID, secret, auth token, and command keys are rejected recursively. |
-| Normalizer compatibility | PASS | Normalizer now supports real nested gdev-agent response shape and input-guard HTTP 400 mapping. |
-| Test boundary | PASS | Unit tests use mocked transport and require no live gdev-agent or Docker Compose stack. |
-| Docs and README | PASS | Adapter docs explain live local run commands and current CLI limitation; README known gaps are current. |
-| Audit continuity | PASS | Cycle 12 review artifacts are archived before active review artifacts are overwritten for Cycle 13. |
+| gdev-agent validators | PASS | Adds deterministic validators for category, status, human routing, guard behavior, unsafe auto-approval, structure, confidence, cost, and latency. |
+| Candidate self-report boundary | PASS | Candidate `correct=true` is ignored; correctness comes from expected vs normalized actual values. |
+| Failure taxonomy | PASS | gdev labels are documented and added to the report taxonomy surface. |
+| Threshold handling | PASS | Confidence, cost, and latency checks emit deterministic pass/fail with evidence. |
+| Adapter docs | PASS | Documents validator coverage and non-authority of candidate self-reported correctness. |
+| Audit continuity | PASS | Cycle 13 review artifacts are archived before active review artifacts are overwritten for Cycle 14. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T16 adds no SQL or database calls. |
-| Credentials and secrets | PASS | No real secret is committed; demo values are documented as local seeded placeholders and tests use obvious placeholder strings. |
+| SQL safety | n/a | T17 adds no SQL or database calls. |
+| Credentials and secrets | PASS | T17 adds no credential handling. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
 | No self-review | PASS | Review artifacts record findings and evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | Adapter tests, docs, and evidence index point to canonical artifacts. |
-| Deterministic gates own blocking decisions | PASS | Adapter invokes and normalizes; it does not compute correctness or override validators. |
-| Dataset and run identity are immutable | n/a | T16 does not modify dataset hashing or run storage. |
-| Synthetic data only in v1 | n/a | T16 adds no dataset cases. |
-| Explicit candidate adapter boundary | PASS | Adapter calls only configured base URL plus `/webhook`; eval cases cannot define network or command destinations. |
-| Optional judge is budgeted and non-authoritative | n/a | T16 does not modify judge execution or authority. |
+| Repository authority | PASS | Validator tests, taxonomy docs, and evidence index point to canonical artifacts. |
+| Deterministic gates own blocking decisions | PASS | Validators derive failures from expected values, actual normalized output, and configured thresholds only. |
+| Dataset and run identity are immutable | n/a | T17 does not modify dataset hashing or run storage. |
+| Synthetic data only in v1 | n/a | T17 adds no dataset cases. |
+| Explicit candidate adapter boundary | n/a | T17 does not modify adapter execution boundaries. |
+| Optional judge is budgeted and non-authoritative | PASS | T17 adds no judge path and preserves deterministic validator authority. |
 
 ## ADR Compliance
 
@@ -43,14 +42,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T16 adds one HTTP adapter and tests, not CLI orchestration, dashboard, provider calls, or scheduler behavior. |
-| Deterministic-owned areas remain deterministic | PASS | Normalization and signature construction are deterministic; live transport is injectable and mocked in unit tests. |
-| Runtime tier unchanged / justified | PASS | Uses standard library HTTP transport only; no package, service, model SDK/API, or privileged runtime path added. |
+| Solution shape still appropriate | PASS | T17 adds pure validation functions, tests, and taxonomy docs. |
+| Deterministic-owned areas remain deterministic | PASS | Validators use only expected fields, normalized actual output, and threshold values. |
+| Runtime tier unchanged / justified | PASS | No network, subprocess, package, service, model SDK/API, or privileged runtime path added. |
 | Human approval boundaries still valid | PASS | No threshold loosening, safety-regression acceptance, judge authority increase, or budget change. |
-| Minimum viable control surface still proportionate | PASS | Adapter boundary is needed before validators and CLI run command; report/dashboard work remains later. |
+| Minimum viable control surface still proportionate | PASS | Validators are required before the real gdev-agent CLI run command and baseline report. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T16. |
+| none | n/a | No architecture/spec patch required for T17. |

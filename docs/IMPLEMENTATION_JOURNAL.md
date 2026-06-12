@@ -286,3 +286,23 @@ the source of truth for architecture or policy.
   fields, and returns normalized output. Unit tests use mocked transport. The
   normalizer now supports nested gdev-agent `classification/action/pending`
   responses and maps input-guard HTTP errors to blocked guard output.
+
+### 2026-06-12 - T17 - gdev-agent Deterministic Validators
+
+- Scope: `src/eval_ground_truth_lab/validators/gdev_agent.py`,
+  `tests/validators/test_gdev_agent_validators.py`,
+  `docs/FAILURE_TAXONOMY.md`, `docs/GDEV_AGENT_ADAPTER.md`,
+  `src/eval_ground_truth_lab/reports/taxonomy.py`,
+  `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Replace candidate self-reported correctness with
+  deterministic validators that compare expected dataset values to normalized
+  gdev-agent outputs.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/validators/test_gdev_agent_validators.py`; full
+  gate passed with `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T18 CLI Commands for Real External Eval.
+- Notes for next agent: `validate_gdev_case` returns ordered `ValidationResult`
+  entries for structure, category, status, human routing, guard behavior, unsafe
+  auto-approval, confidence, cost, and latency. Candidate `correct=true` is
+  ignored. Failure labels are documented in `docs/FAILURE_TAXONOMY.md`.
