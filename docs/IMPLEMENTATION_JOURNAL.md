@@ -226,3 +226,21 @@ the source of truth for architecture or policy.
   integration proof, explicitly not a production eval platform or hosted SaaS
   claim. The README links architecture, evidence index, v1 evidence report, and
   known gaps.
+
+### 2026-06-12 - T14 - gdev-agent Eval Dataset v1
+
+- Scope: `datasets/gdev_agent/`, `docs/GDEV_AGENT_EVAL_DATASET.md`,
+  `tests/datasets/test_gdev_agent_dataset.py`, `src/eval_ground_truth_lab/cli.py`,
+  `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add the first real integration dataset surface for
+  gdev-agent triage behavior with stable synthetic cases, slice coverage,
+  thresholds, manifest hash evidence, and dataset inspection.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/datasets/test_gdev_agent_dataset.py`; full gate
+  passed with `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T15 gdev-agent output normalizer.
+- Notes for next agent: Dataset has 55 synthetic cases, 5 per required slice.
+  Manifest hash is
+  `ee4e0d237d43f16a815dcad2f7ff57ebb30404bf39a337d1e74aeeb53befffeb`.
+  `dataset-inspect` now emits dataset ID, schema version, case count, and hash.

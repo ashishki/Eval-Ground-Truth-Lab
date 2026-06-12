@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 5
-- Baseline: 44 passing tests
+- Baseline: 49 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-12
@@ -55,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-T14: gdev-agent Eval Dataset v1
+T15: gdev-agent Output Normalizer
 
 ## Fix Queue
 

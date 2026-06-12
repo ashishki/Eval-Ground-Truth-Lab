@@ -44,7 +44,10 @@ Maintain this file for:
 | T12 v1 evidence report | report | `reports/v1/evidence_report.md` | Adoption proof links for unsafe regression, invalid structured output, excessive cost increase, and material accuracy drop CI evidence | 2026-06-11 | Yes |
 | T12 deep review | review | `docs/audit/archive/CYCLE9_REVIEW_REPORT.md` | META, ARCH, CODE, evidence-pack, and consolidated review gate for T12 | 2026-06-11 | Yes |
 | T13 truth surface and packaging | test | `tests/docs/test_readme_quickstart.py` | Root README required sections, core evidence links, gdev-agent local proof positioning, and production/SaaS overclaim guard | 2026-06-12 | Yes |
-| T13 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, docs, and consolidated review gate for T13 | 2026-06-12 | Yes |
+| T13 deep review | review | `docs/audit/archive/CYCLE10_REVIEW_REPORT.md` | META, ARCH, CODE, docs, and consolidated review gate for T13 | 2026-06-12 | Yes |
+| T14 gdev-agent dataset | test | `tests/datasets/test_gdev_agent_dataset.py` | 55-case synthetic gdev-agent triage dataset, required slice coverage, manifest hash consistency, dataset-inspect output, and no real data markers | 2026-06-12 | Yes |
+| T14 gdev-agent dataset manifest | eval evidence | `datasets/gdev_agent/manifest.json` | gdev-agent triage v1 case count, dataset hash, slice list, and threshold config pointer | 2026-06-12 | Yes |
+| T14 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, dataset, and consolidated review gate for T14 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

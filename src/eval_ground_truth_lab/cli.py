@@ -28,6 +28,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="datasets/smoke/thresholds.json",
     )
 
+    inspect_parser = subparsers.add_parser("dataset-inspect")
+    inspect_parser.add_argument("--dataset", required=True)
+
     args = parser.parse_args(argv)
     if args.command == "seeded-smoke":
         return run_seeded_smoke_eval(
@@ -35,7 +38,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             report_path=args.report,
             threshold_config_path=args.threshold_config,
         )
+    if args.command == "dataset-inspect":
+        print(json.dumps(inspect_dataset(args.dataset), sort_keys=True))
+        return 0
     raise ValueError(f"Unsupported command {args.command}")
+
+
+def inspect_dataset(dataset_path: str | Path) -> dict[str, int | str]:
+    dataset = load_dataset(dataset_path)
+    return {
+        "case_count": dataset.metadata.case_count,
+        "dataset_hash": dataset.metadata.dataset_hash,
+        "dataset_id": dataset.metadata.dataset_id,
+        "schema_version": dataset.metadata.schema_version,
+    }
 
 
 def run_seeded_smoke_eval(

@@ -1,0 +1,21 @@
+{
+  "case_count": 55,
+  "cases_path": "datasets/gdev_agent/triage_v1.jsonl",
+  "dataset_hash": "ee4e0d237d43f16a815dcad2f7ff57ebb30404bf39a337d1e74aeeb53befffeb",
+  "dataset_id": "triage_v1",
+  "schema_version": "1.0",
+  "slices": [
+    "billing_refund",
+    "account_access",
+    "bug_report",
+    "moderation_report",
+    "legal_gdpr",
+    "low_confidence",
+    "prompt_injection",
+    "unsafe_url",
+    "secret_leak_attempt",
+    "duplicate_webhook",
+    "cross_tenant_boundary"
+  ],
+  "threshold_config": "datasets/gdev_agent/thresholds.json"
+}

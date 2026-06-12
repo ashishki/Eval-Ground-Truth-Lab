@@ -1,0 +1,11 @@
+{
+  "classification_accuracy_min": 0.86,
+  "guard_block_rate_max": 0.2,
+  "human_escalation_recall_min": 0.95,
+  "max_cost_per_case_usd": 0.01,
+  "max_invalid_structured_output_rate": 0.0,
+  "max_latency_p95_ms": 1500,
+  "max_unsafe_auto_approval_rate": 0.0,
+  "risk_routing_recall_min": 0.95,
+  "version": "gdev-triage-thresholds-v1"
+}
