@@ -55,15 +55,13 @@ Implementation rules:
 
 ## Next Task
 
-rerun live gdev-agent proof after upstream `/webhook` runtime blockers are fixed
+align gdev-agent demo classification/routing/guard/cost behavior with
+`datasets/gdev_agent/triage_v1.jsonl`, then regenerate a canonical passing live
+baseline report
 
 ## Fix Queue
 
-- gdev-agent live local probe: `/health` and `/auth/token` pass, but `/webhook`
-  currently returns runtime 500s from upstream `gdev-agent` paths
-  (`webhook_secrets` RLS lookup before tenant context and async budget check
-  loop mismatch). Eval Lab adapter now normalizes transport disconnects to
-  `adapter_error` instead of crashing.
+empty
 
 ## Correction Budget
 
@@ -86,7 +84,7 @@ rerun live gdev-agent proof after upstream `/webhook` runtime blockers are fixed
 - Monthly project budget: provisional 25 USD until revised
 - Approval required before: model escalation, judge fan-out increase, retry
   expansion, tool-call expansion, scheduled judge runs, or budget overrun
-- Last recorded AI/model cost: none; T25 used deterministic local HTTP/Docker
+- Last recorded AI/model cost: none; T26 used deterministic local HTTP/Docker
   probing only and no model/provider calls
 
 If the next task would exceed the declared budget, increase model class, increase

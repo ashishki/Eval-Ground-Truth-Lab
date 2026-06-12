@@ -89,7 +89,8 @@ Maintain this file for:
 | T24 HTML report artifact | report | `reports/gdev-agent/baseline_report.html` | Derivative readable HTML linked to canonical markdown and run JSON | 2026-06-12 | Yes |
 | T25 transport disconnect hardening | test | `tests/adapters/test_gdev_agent_adapter.py` | `RemoteDisconnected` from live gdev-agent transport normalizes to deterministic `adapter_error` instead of crashing CLI | 2026-06-12 | Yes |
 | T25 adapter-error blocking | test | `tests/validators/test_gdev_agent_validators.py` | Normalized adapter errors remain blocking deterministic eval failures | 2026-06-12 | Yes |
-| T25 live gdev-agent probe limit | docs | `docs/KNOWN_LIMITS.md` | Live local probe reached health/auth and then blocked on upstream `webhook_secrets` RLS and async-loop runtime failures in gdev-agent | 2026-06-12 | Yes |
+| T25 live gdev-agent pre-fix probe | docs | `docs/KNOWN_LIMITS.md` | Pre-fix live local probe found upstream `webhook_secrets` RLS and async-loop runtime failures plus the Eval Lab transport-disconnect gap | 2026-06-12 | Yes |
+| T26 live gdev-agent proof rerun | report | `reports/gdev-agent/live_probe_summary.md` | Post-fix live run reaches all 55 cases with zero adapter errors and records remaining deterministic quality/telemetry failures | 2026-06-12 | Yes |
 | Final claim: dataset versioning | test/report | `tests/datasets/test_gdev_agent_dataset.py`, `datasets/gdev_agent/manifest.json`, `docs/CASE_STUDY.md` | Dataset hash and case count evidence | 2026-06-12 | Yes |
 | Final claim: baseline candidate comparison | test | `tests/compare/`, `tests/test_cli.py`, `docs/CASE_STUDY.md` | Comparison threshold and CLI compare behavior | 2026-06-12 | Yes |
 | Final claim: unsafe auto-approval | test/report | `tests/eval/test_seeded_smoke_gate.py`, `tests/validators/test_gdev_agent_validators.py`, `tests/eval/test_gdev_agent_smoke.py` | Seeded and gdev unsafe regression gates | 2026-06-12 | Yes |
@@ -99,6 +100,7 @@ Maintain this file for:
 | Final claim: known limits | docs | `docs/KNOWN_LIMITS.md`, `README.md` | Explicit non-production, synthetic/local, no-dashboard, and live-validation limits | 2026-06-12 | Yes |
 | T24 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, HTML report, final evidence docs, evidence index, and consolidated review gate for T24 | 2026-06-12 | Yes |
 | T25 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, live-probe transport hardening, known limits, and consolidated review gate for T25 | 2026-06-12 | Yes |
+| T26 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, live proof rerun summary, known limits, and consolidated review gate for T26 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

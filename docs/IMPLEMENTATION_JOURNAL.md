@@ -473,3 +473,23 @@ the source of truth for architecture or policy.
   blockers in `webhook_secrets` RLS lookup before tenant context and async
   budget checking across event loops. Transient `runs/` output and
   `reports/gdev-agent/live_probe_report.md` are ignored, not canonical evidence.
+
+### 2026-06-12 - T26 - Live gdev-agent Proof Rerun Summary
+
+- Scope: `reports/gdev-agent/live_probe_summary.md`, `docs/KNOWN_LIMITS.md`,
+  `docs/EVIDENCE_INDEX.md`, `docs/tasks.md`, `docs/CODEX_PROMPT.md`, and
+  `docs/audit/`.
+- Why this work happened: After the upstream `gdev-agent` runtime fix was
+  pushed at commit `901292d`, the live proof needed to be rerun and documented
+  without promoting a failing quality run into the canonical baseline.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `make demo` passed against local `gdev-agent`; live
+  `run-gdev-agent` reached all 55 cases with zero adapter errors and exited `1`
+  from deterministic validator failures.
+- Follow-ups: Align gdev-agent demo classification, routing, guard behavior,
+  unsafe auto-approval, and cost output with the eval dataset; then regenerate a
+  canonical passing live baseline.
+- Notes for next agent: The live integration path is now operational. The
+  remaining gap is not adapter/runtime connectivity; it is product-quality and
+  telemetry alignment between `gdev-agent` demo behavior and
+  `datasets/gdev_agent/triage_v1.jsonl`.

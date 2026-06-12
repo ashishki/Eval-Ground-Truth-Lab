@@ -5,14 +5,15 @@ production eval platform.
 
 - The committed gdev-agent baseline is synthetic/local deterministic evidence.
 - Live gdev-agent validation requires an operator-run local gdev-agent stack.
-- A live gdev-agent probe on 2026-06-12 reached `/health` and `/auth/token`,
-  then blocked on upstream `/webhook` runtime failures in `gdev-agent`:
-  `webhook_secrets` lookup under row-level security before tenant context is
-  available, followed by `Future attached to a different loop` in the budget
-  check path. Eval Lab now normalizes transport disconnects such as
-  `RemoteDisconnected` into deterministic `adapter_error` outputs instead of
-  crashing the CLI. A passing live report should be regenerated after those
-  upstream runtime blockers are fixed.
+- A live gdev-agent probe on 2026-06-12 first exposed upstream `/webhook`
+  runtime failures in `gdev-agent` and an Eval Lab transport-disconnect
+  handling gap. After `gdev-agent` commit `901292d` and Eval Lab commit
+  `8b052f2`, the local live path reaches `/health`, `/auth/token`, `make demo`,
+  and all 55 eval cases with zero adapter errors.
+- The current live gdev-agent eval is still not a passing baseline. It exits
+  `1` because deterministic validators find real quality/telemetry gaps:
+  category/routing mismatches, unsafe auto-approval for expected-human cases,
+  guard expectation mismatches, and missing per-case cost output.
 - The committed baseline run is compact representative evidence, not a full
   production quality score.
 - The optional OpenAI judge provider is disabled by default and tested with fake

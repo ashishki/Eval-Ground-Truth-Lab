@@ -15,7 +15,7 @@ Mode: Standard
 
 ## Implementation Status
 
-Current status: complete through T25.
+Current status: complete through T26.
 
 | Range | Status | Evidence |
 |-------|--------|----------|
@@ -23,9 +23,11 @@ Current status: complete through T25.
 | T13-T18 | complete | README/truth surface, gdev dataset, normalizer, adapter, validators, and CLI evidence in `docs/EVIDENCE_INDEX.md`. |
 | T19-T24 | complete | gdev baseline report, mocked CI smoke, cost rollup, optional judge provider contract, file-backed review, HTML report, and final evidence pack in `docs/EVIDENCE_INDEX.md`. |
 | T25 | complete | Live-probe adapter hardening for transport disconnects in `tests/adapters/test_gdev_agent_adapter.py` and `docs/EVIDENCE_INDEX.md`. |
+| T26 | complete | Live gdev-agent proof rerun summary in `reports/gdev-agent/live_probe_summary.md`. |
 
-Next task: rerun live gdev-agent proof after upstream `/webhook` runtime
-blockers are fixed in `gdev-agent`.
+Next task: align gdev-agent demo classification/routing/guard/cost behavior
+with `datasets/gdev_agent/triage_v1.jsonl`, then regenerate a canonical passing
+live baseline report.
 
 ## T01: Project Skeleton
 
@@ -947,3 +949,39 @@ Context-Refs:
   - docs/GDEV_AGENT_ADAPTER.md
   - docs/KNOWN_LIMITS.md
   - docs/IMPLEMENTATION_CONTRACT.md#candidate-adapters-are-isolated-and-instrumented
+
+## T26: Live gdev-agent Proof Rerun Summary
+
+Owner: codex
+Phase: 7
+Type: none
+Depends-On: T25
+
+Objective: |
+  Re-run the live local gdev-agent integration after upstream runtime blockers
+  are fixed and record the resulting proof state without promoting a failing
+  quality run into the canonical baseline.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Live probe summary records gdev-agent and Eval Lab versions, commands, case count, adapter-error count, and top failure categories."
+    verify: "rg -n \"gdev-agent Live Probe Summary|Adapter errors|wrong routing|unsafe auto-approval|901292d|8b052f2\" reports/gdev-agent/live_probe_summary.md"
+  - id: AC-2
+    description: "Known limits state that live HTTP integration now reaches all cases but does not yet pass deterministic quality gates."
+    verify: "rg -n \"zero adapter errors|not a passing baseline|category/routing mismatches|missing per-case cost\" docs/KNOWN_LIMITS.md"
+  - id: AC-3
+    description: "Next task points to gdev-agent demo/eval alignment, not runtime adapter repair."
+    verify: "rg -n \"align gdev-agent demo classification/routing/guard/cost behavior\" docs/tasks.md docs/CODEX_PROMPT.md"
+
+Files:
+  - reports/gdev-agent/live_probe_summary.md
+  - docs/KNOWN_LIMITS.md
+  - docs/EVIDENCE_INDEX.md
+  - docs/IMPLEMENTATION_JOURNAL.md
+  - docs/tasks.md
+  - docs/CODEX_PROMPT.md
+
+Context-Refs:
+  - docs/GDEV_AGENT_ADAPTER.md
+  - docs/KNOWN_LIMITS.md
+  - reports/gdev-agent/live_probe_summary.md

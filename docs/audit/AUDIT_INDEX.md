@@ -26,4 +26,5 @@ Last updated: 2026-06-12
 | Review cycle 19 | 2026-06-12 | PASS | T22 optional real judge provider deep review | `docs/audit/archive/CYCLE19_REVIEW_REPORT.md` |
 | Review cycle 20 | 2026-06-12 | PASS | T23 file-backed human review deep review | `docs/audit/archive/CYCLE20_REVIEW_REPORT.md` |
 | Review cycle 21 | 2026-06-12 | PASS | T24 final evidence pack deep review | `docs/audit/archive/CYCLE21_REVIEW_REPORT.md` |
-| Review cycle 22 | 2026-06-12 | PASS | T25 live gdev-agent probe adapter hardening deep review | `docs/audit/REVIEW_REPORT.md` |
+| Review cycle 22 | 2026-06-12 | PASS | T25 live gdev-agent probe adapter hardening deep review | `docs/audit/archive/CYCLE22_REVIEW_REPORT.md` |
+| Review cycle 23 | 2026-06-12 | PASS | T26 live gdev-agent proof rerun summary deep review | `docs/audit/REVIEW_REPORT.md` |

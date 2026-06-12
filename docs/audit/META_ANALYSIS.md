@@ -1,13 +1,13 @@
-# META_ANALYSIS - Cycle 22
+# META_ANALYSIS - Cycle 23
 
 Date: 2026-06-12
 Type: targeted
 
 ## Project State
 
-T25 Live gdev-agent Probe Adapter Hardening is implemented locally. The roadmap
-is complete through T25, with one external follow-up: rerun live proof after
-upstream `gdev-agent` `/webhook` runtime blockers are fixed.
+T26 Live gdev-agent Proof Rerun Summary is implemented locally. Eval Lab now
+has a durable record that live HTTP integration reaches the real gdev-agent
+system with zero adapter errors, while deterministic quality gates still fail.
 
 Baseline: 95 pass, 0 skip.
 
@@ -15,44 +15,40 @@ Baseline: 95 pass, 0 skip.
 
 | ID | Sev | Description | Files | Status |
 |----|-----|-------------|-------|--------|
-| none | n/a | No open Eval Lab P0/P1/P2 findings in `docs/CODEX_PROMPT.md`; Cycle 21 review had no P0/P1/P2 findings. | n/a | n/a |
+| none | n/a | No open Eval Lab P0/P1/P2 findings in `docs/CODEX_PROMPT.md`; Cycle 22 review had no Eval Lab P0/P1/P2 findings. | n/a | n/a |
 
 ## PROMPT_1 Scope (architecture)
 
-- Live probe: local `gdev-agent` reached `/health` and `/auth/token`; `/webhook`
-  returned upstream runtime 500s.
-- Adapter hardening: `_post_signed_json` now maps transport-level disconnects
-  and URL/timeout/HTTP client failures to HTTP `599` normalized
-  `adapter_error` output.
-- Deterministic authority: normalized adapter errors remain blocking validator
-  failures, not candidate self-reported correctness.
-- Evidence hygiene: transient `runs/` output and
-  `reports/gdev-agent/live_probe_report.md` are ignored and not canonical.
-- Known limits: live gdev-agent blocker is documented with the concrete
-  `webhook_secrets` RLS and async-loop failure modes observed on 2026-06-12.
-- Audit continuity: Cycle 21 review artifacts archived under
+- Upstream repair: `gdev-agent` commit `901292d` fixed the runtime blockers that
+  previously prevented `/webhook` live probing.
+- Live proof state: `make demo` passes locally, and `run-gdev-agent` reaches all
+  55 dataset cases with zero adapter errors.
+- Deterministic quality state: live eval exits `1` from expected validator
+  failures, including category/routing mismatches, unsafe auto-approval,
+  guard-behavior mismatch, and missing per-case cost output.
+- Evidence boundary: `reports/gdev-agent/live_probe_summary.md` is a concise
+  proof-state artifact, not a canonical passing baseline.
+- Next task: align gdev-agent demo behavior and telemetry with the eval dataset,
+  then regenerate canonical live baseline evidence.
+- Audit continuity: Cycle 22 review artifacts archived under
   `docs/audit/archive/`.
 
 ## PROMPT_2 Scope (code/docs priority order)
 
-1. `src/eval_ground_truth_lab/adapters/gdev_agent.py` (changed)
-2. `tests/adapters/test_gdev_agent_adapter.py` (changed)
-3. `tests/validators/test_gdev_agent_validators.py` (changed)
-4. `.gitignore` (changed)
+1. `reports/gdev-agent/live_probe_summary.md` (new)
+2. `docs/KNOWN_LIMITS.md` (changed)
+3. `docs/EVIDENCE_INDEX.md` (changed)
+4. `docs/IMPLEMENTATION_JOURNAL.md` (changed)
 5. `docs/tasks.md` (changed)
-6. `docs/KNOWN_LIMITS.md` (changed)
-7. `docs/EVIDENCE_INDEX.md` (changed)
-8. `docs/IMPLEMENTATION_JOURNAL.md` (changed)
-9. `docs/CODEX_PROMPT.md` (changed)
-10. `docs/audit/` review artifacts (changed/new)
+6. `docs/CODEX_PROMPT.md` (changed)
+7. `docs/audit/` review artifacts (changed/new)
 
 ## Cycle Type
 
-Targeted - post-roadmap live-probe hardening for real gdev-agent adapter
-transport failure behavior.
+Targeted - post-upstream-fix live proof rerun documentation.
 
 ## Notes for PROMPT_3
 
-Focus on fail-closed adapter behavior, deterministic validator authority,
-transient artifact hygiene, and explicit separation between Eval Lab readiness
-and current upstream `gdev-agent` live-runtime blockers.
+Focus on not overclaiming: live integration now reaches the real system, but
+the current live run is intentionally recorded as failing quality gates and is
+not promoted to the canonical baseline.
