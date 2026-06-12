@@ -16,7 +16,14 @@ def test_cli_help_includes_real_eval_commands(capsys: pytest.CaptureFixture[str]
 
     assert exc.value.code == 0
     output = capsys.readouterr().out
-    for command in ("seeded-smoke", "dataset-inspect", "run-gdev-agent", "compare"):
+    for command in (
+        "seeded-smoke",
+        "dataset-inspect",
+        "run-gdev-agent",
+        "compare",
+        "cost-rollup",
+        "budget-check",
+    ):
         assert command in output
 
 

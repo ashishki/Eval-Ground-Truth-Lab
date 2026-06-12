@@ -1,18 +1,17 @@
-# REVIEW_REPORT - Cycle 17
+# REVIEW_REPORT - Cycle 18
 
 Date: 2026-06-12
-Scope: T20 CI Smoke for gdev Adapter Without Live gdev
+Scope: T21 Cost Rollup and Budget Check
 
 ## Executive Summary
 
 - Stop-Ship: No.
-- T20 adds a CI-safe mocked gdev-agent smoke test that exercises the
-  `run-gdev-agent` command, gdev validators, run artifact writing, report
-  generation, and unsafe auto-approval regression exit behavior without a live
-  gdev-agent service.
-- GitHub Actions now has a named mocked gdev-agent smoke step.
-- Adapter docs clearly separate CI mocked smoke from live local integration.
-- Baseline is now 76 passing tests, 0 skipped.
+- T21 adds deterministic JSONL cost telemetry rollup and budget policy checks.
+- CLI now exposes `cost-rollup` and `budget-check`; `budget-check` exits `1`
+  on budget overrun.
+- Docs state that live judge cost gates require telemetry rollup artifacts and
+  an approved budget policy before enforcement.
+- Baseline is now 79 passing tests, 0 skipped.
 - No P0, P1, or P2 findings were identified in the scoped files.
 
 ## P0 Issues
@@ -33,66 +32,71 @@ None.
 
 | ID | Sev | Description | Status | Change |
 |----|-----|-------------|--------|--------|
-| none | n/a | Cycle 16 review had no P0/P1/P2 findings. | n/a | n/a |
+| none | n/a | Cycle 17 review had no P0/P1/P2 findings. | n/a | n/a |
 
 ## Stop-Ship Decision
 
-No - scoped implementation satisfies T20 acceptance criteria, local verification
+No - scoped implementation satisfies T21 acceptance criteria, local verification
 passed, and no blocking findings were identified.
 
 ## README-First Index Status
 
 | Changed boundary | README path | Status | Notes |
 |------------------|-------------|--------|-------|
-| mocked gdev smoke | `README.md` | current | Root README lists CI-safe mocked gdev-agent smoke as working evidence. |
-| adapter docs | `docs/GDEV_AGENT_ADAPTER.md` | current | Docs separate mocked CI smoke from live local integration. |
-| docs index | `docs/README.md` | current | Docs index now points to T21 as active task and notes mocked smoke is implemented. |
-| audit artifacts | `docs/audit/AUDIT_INDEX.md` | current | Audit index will point Cycle 17 to active review until the next cycle archives it. |
+| cost commands | `README.md` | current | Root README lists cost rollup and budget check as working capability. |
+| CLI docs | `docs/CLI.md` | current | CLI doc includes `cost-rollup` and `budget-check` examples. |
+| cost budget | `docs/COST_BUDGET.md` | current | Cost budget doc records rollup and budget-check command status. |
+| docs index | `docs/README.md` | current | Docs index now points to T22 as active task and notes cost rollup is implemented. |
+| audit artifacts | `docs/audit/AUDIT_INDEX.md` | current | Audit index will point Cycle 18 to active review until the next cycle archives it. |
 
 ## Cost Budget Status
 
 | Scope | Status | Notes |
 |-------|--------|-------|
-| AI/model budget | within budget | T20 added no model calls, judge execution, retries, fan-out, tool calls, or recurring AI usage. |
-| Telemetry rollup | unchanged | T20 uses temp run artifacts in tests and does not add telemetry rollup or CI budget thresholds. |
+| AI/model budget | within budget | T21 added no model calls, judge execution, retries, fan-out, tool calls, or recurring AI usage. |
+| Telemetry rollup | implemented | Rollup and budget check use fixture telemetry and local JSON artifacts. |
 
 ## Code Review Checklist Result
 
 | Check | Result | Note |
 |-------|--------|------|
 | SEC-1 SQL parameterization | n/a | No SQL introduced. |
-| SEC-2 secret handling | PASS | Mocked smoke uses no secrets; docs keep placeholder demo config only. |
-| SEC-3 auth boundary | PASS | Tests inject fake adapter through monkeypatch and do not expand runtime auth paths. |
-| SEC-4 credentials from environment/config only | PASS | Existing gdev adapter config remains the credential boundary. |
-| QUAL-1 error handling | PASS | Unsafe regression exits `1` and records failure taxonomy evidence. |
-| QUAL-2 test coverage | PASS | T20 AC-1 through AC-3 are covered by smoke tests. |
-| GOV-1 solution-shape drift | PASS | T20 adds CI/test/docs only, not dashboard, scheduler, or provider integrations. |
-| GOV-2 deterministic ownership | PASS | Smoke pass/fail comes from deterministic gdev validators. |
+| SEC-2 secret handling | PASS | No credentials or provider SDK config added. |
+| SEC-3 auth boundary | n/a | No auth path changed. |
+| SEC-4 credentials from environment/config only | PASS | Future live provider credentials remain outside T21. |
+| QUAL-1 error handling | PASS | Invalid telemetry/policy shapes raise deterministic errors; overrun returns exit `1`. |
+| QUAL-2 test coverage | PASS | T21 AC-1 through AC-4 are covered by tests and docs verification. |
+| GOV-1 solution-shape drift | PASS | T21 adds local modules/CLI only, not dashboard, scheduler, or provider integrations. |
+| GOV-2 deterministic ownership | PASS | Rollup and budget decisions are pure local deterministic checks. |
 | GOV-3 runtime-tier drift | PASS | No new service runtime, package, model SDK/API, or privileged execution path added. |
-| GOV-4 human approval boundaries | PASS | No threshold-policy, budget-policy, judge-authority, or seeded-regression gate changes. |
+| GOV-4 human approval boundaries | PASS | Docs require approved policy before live judge cost gates. |
 | GOV-5 continuity discipline | PASS | Journal, evidence index, audit index, and handoff updated. |
-| GOV-6 filesystem reality | PASS | Claimed tests, workflow step, and docs exist. |
+| GOV-6 filesystem reality | PASS | Claimed modules, tests, and docs exist. |
 | GOV-7 runtime verification | PASS | Targeted and full local gates were executed. |
-| GOV-8 bounded correction | PASS | One docs assertion was made line-wrap robust; no acceptance criteria were weakened. |
-| GOV-9 claim evidence | PASS | Tests and workflow step back completion claims. |
-| GOV-10 README-first index | PASS | README and docs index reflect mocked smoke status. |
-| GOV-11 cost budget | PASS | No AI/model budget change. |
-| OBS-1 external call instrumentation | PASS | Smoke command writes run artifacts and report in temp paths; no live external call occurs. |
-| OBS-2 AI-path metrics | n/a | T20 adds no AI path. |
+| GOV-8 bounded correction | PASS | CLI help test was extended for new commands; no test weakening. |
+| GOV-9 claim evidence | PASS | Tests and docs verification back completion claims. |
+| GOV-10 README-first index | PASS | README and docs index reflect cost rollup status. |
+| GOV-11 cost budget | PASS | T21 implements deterministic cost-budget tooling without spend. |
+| OBS-1 external call instrumentation | n/a | T21 does not invoke external services. |
+| OBS-2 AI-path metrics | PASS | Rollup reads telemetry fields produced by judge-capable code paths. |
 | OBS-3 health endpoint integrity | n/a | No health endpoint exists or changed. |
 
 ## Validation Evidence
 
-- `.venv/bin/python -m pytest tests/eval/test_gdev_agent_smoke.py tests/adapters/test_gdev_agent_adapter.py -q --tb=short`
+- `.venv/bin/python -m pytest tests/cost/test_rollup.py tests/cost/test_budget_check.py tests/test_cli.py -q --tb=short`
   - pass, 7 tests
 - `.venv/bin/python -m pytest tests -q --tb=short`
-  - pass, 76 tests
+  - pass, 79 tests
 - `.venv/bin/ruff check src tests` - pass
 - `.venv/bin/ruff format --check src tests` - pass
+- `.venv/bin/python -m eval_ground_truth_lab.cli cost-rollup --help` - pass
+- `.venv/bin/python -m eval_ground_truth_lab.cli budget-check --help` - pass
+- `rg -n "cost-rollup|budget-check|telemetry rollup|live judge" docs/COST_BUDGET.md docs/CLI.md`
+  - pass
 - Requested audience-positioning wording scan across README, docs, reports,
   source, and tests
   - pass, no matches
 
 ## Next
 
-Proceed to T21 Cost Rollup and Budget Check.
+Proceed to T22 Optional Real Judge Provider.

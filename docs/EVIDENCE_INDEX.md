@@ -68,6 +68,11 @@ Maintain this file for:
 | T20 mocked gdev workflow step | ci | `.github/workflows/ci.yml` | Explicit mocked gdev-agent smoke step running smoke and adapter tests without Docker Compose | 2026-06-12 | Yes |
 | T20 gdev adapter docs | docs | `docs/GDEV_AGENT_ADAPTER.md` | CI mocked smoke versus live local integration boundary | 2026-06-12 | Yes |
 | T20 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, mocked smoke, CI, docs, and consolidated review gate for T20 | 2026-06-12 | Yes |
+| T21 cost rollup | test | `tests/cost/test_rollup.py` | JSONL telemetry rollup for total cost/tokens, cost by model/workflow/case, latency p95, retry count, judge call count, and quality outcomes | 2026-06-12 | Yes |
+| T21 budget check | test | `tests/cost/test_budget_check.py` | Per-run, monthly, cost-per-case, and judge-call-count overrun detection plus fixture telemetry CLI path | 2026-06-12 | Yes |
+| T21 cost CLI docs | docs | `docs/CLI.md` | `cost-rollup` and `budget-check` command examples and live judge cost-gate boundary | 2026-06-12 | Yes |
+| T21 cost budget docs | docs | `docs/COST_BUDGET.md` | Telemetry rollup status, budget-check status, fixture CI use, and live judge approval boundary | 2026-06-12 | Yes |
+| T21 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, cost rollup, budget policy, CLI, docs, and consolidated review gate for T21 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

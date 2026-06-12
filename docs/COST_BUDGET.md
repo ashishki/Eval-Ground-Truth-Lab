@@ -2,7 +2,7 @@
 
 Mode: Standard
 Owner: human operator
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 
 ## Budget Scope
 
@@ -65,14 +65,38 @@ Judge-capable code paths must measure:
 - Telemetry file: `docs/ai_cost_telemetry.jsonl` by convention; runtime sinks are
   configurable per run.
 - Telemetry status: provider-agnostic JSONL telemetry sink implemented in T09.
-- Rollup command status: not implemented yet; manual review remains required
-  until a rollup task/tool is added.
-- CI threshold status: not enabled until telemetry rollup exists and CI policy is
-  explicitly approved.
+- Rollup command status: implemented as `python -m eval_ground_truth_lab.cli cost-rollup`.
+- Budget check status: implemented as `python -m eval_ground_truth_lab.cli budget-check`.
+- CI threshold status: fixture telemetry can be checked in CI. Live judge cost
+  gates require telemetry rollup artifacts and an approved budget policy before
+  enforcement.
 
 T09 provides budget-capped optional judge execution through an injected provider
 boundary. It does not store credentials, call a model provider directly, or allow
 judge scores to override deterministic blocking validator failures.
+
+## Rollup Commands
+
+```bash
+python -m eval_ground_truth_lab.cli cost-rollup \
+  --telemetry docs/ai_cost_telemetry.jsonl \
+  --out reports/cost/latest.json
+```
+
+```bash
+python -m eval_ground_truth_lab.cli budget-check \
+  --rollup reports/cost/latest.json \
+  --policy docs/cost_policy.json
+```
+
+The rollup includes total cost, total tokens, cost by model, cost by workflow,
+cost by case, latency p95, retry count, judge call count, and quality outcome
+distribution. The budget check exits `1` on per-run, monthly-project,
+cost-per-case, or judge-call-count overruns.
+
+Live judge cost gates require telemetry rollup output and an explicitly approved
+policy file before enforcement. Fixture telemetry can be used in CI without live
+model calls.
 
 ## Approval Triggers
 

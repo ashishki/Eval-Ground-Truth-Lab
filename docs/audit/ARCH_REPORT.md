@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 17
+# ARCH_REPORT - Cycle 18
 
 Date: 2026-06-12
 
@@ -6,28 +6,28 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| mocked gdev smoke | PASS | Runs `run-gdev-agent` against the real 55-case dataset with deterministic fake adapter output and no live service. |
-| unsafe regression smoke | PASS | Injected unsafe auto-approval returns exit `1` and records validator failure evidence. |
-| adapter boundary coverage | PASS | CI step includes existing mocked-transport adapter tests. |
-| CI workflow | PASS | Workflow has a named mocked gdev-agent smoke step and does not use Docker Compose. |
-| docs separation | PASS | Adapter docs separate CI mocked smoke from live local integration. |
-| Tests | PASS | T20 tests cover pass path, unsafe regression, and docs/workflow separation. |
-| Audit continuity | PASS | Cycle 16 review artifacts are archived before active review artifacts are overwritten for Cycle 17. |
+| cost rollup | PASS | Reads JSONL telemetry and aggregates required cost, token, latency, retry, call-count, and quality fields. |
+| budget policy | PASS | Checks per-run, monthly-project, cost-per-case, and judge-call-count ceilings. |
+| CLI commands | PASS | `cost-rollup` writes JSON; `budget-check` prints result JSON and exits `1` on overrun. |
+| fixture safety | PASS | Tests use fixture telemetry and no model/provider calls. |
+| docs | PASS | Cost budget and CLI docs include commands and live judge cost-gate approval boundary. |
+| Tests | PASS | T21 tests cover rollup, overrun detection, fixture telemetry CLI path, and CLI help surface. |
+| Audit continuity | PASS | Cycle 17 review artifacts are archived before active review artifacts are overwritten for Cycle 18. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T20 adds no SQL or database calls. |
-| Credentials and secrets | PASS | Mocked smoke uses no real secrets; live local examples retain placeholder demo config only. |
+| SQL safety | n/a | T21 adds no SQL or database calls. |
+| Credentials and secrets | PASS | No credentials, API keys, or provider configs are added. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
 | No self-review | PASS | Review artifacts record scoped review evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | CI workflow, tests, and docs are concrete repository artifacts. |
-| Deterministic gates own blocking decisions | PASS | Unsafe smoke fails from deterministic gdev validators, not judge output. |
-| Dataset and run identity are immutable | PASS | Smoke writes new temp run IDs and does not mutate committed run artifacts. |
-| Synthetic data only in v1 | PASS | Tests use synthetic committed dataset and generated fake outputs. |
-| Explicit candidate adapter boundary | PASS | Fake adapter is injected only by tests; live adapter boundary remains configured URL only. |
-| Optional judge is budgeted and non-authoritative | n/a | T20 does not modify judge execution, providers, or budgets. |
+| Repository authority | PASS | Tests and docs point to concrete cost modules and CLI commands. |
+| Deterministic gates own blocking decisions | PASS | Budget check is deterministic and does not involve judge scoring. |
+| Dataset and run identity are immutable | n/a | T21 does not mutate datasets or completed run artifacts. |
+| Synthetic data only in v1 | PASS | Tests use fixture telemetry only. |
+| Explicit candidate adapter boundary | n/a | T21 does not change candidate adapters. |
+| Optional judge is budgeted and non-authoritative | PASS | T21 adds budget enforcement primitives and no judge authority expansion. |
 
 ## ADR Compliance
 
@@ -43,14 +43,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T20 adds tests, workflow step, and docs only; no dashboard, scheduler, hosted runtime, or provider calls. |
-| Deterministic-owned areas remain deterministic | PASS | Smoke outputs are deterministic and validator-driven. |
+| Solution shape still appropriate | PASS | T21 adds local deterministic modules and CLI commands, not hosted services or provider calls. |
+| Deterministic-owned areas remain deterministic | PASS | Rollup and policy checks are pure JSON/file operations. |
 | Runtime tier unchanged / justified | PASS | No new runtime, dependency, service, or network requirement was added. |
-| Human approval boundaries still valid | PASS | No threshold loosening, safety-regression acceptance, judge-authority increase, or budget change. |
-| Minimum viable control surface still proportionate | PASS | Mocked CI smoke is required before cost rollup and final evidence tasks. |
+| Human approval boundaries still valid | PASS | Docs state live judge cost gates require approved policy and telemetry rollup. |
+| Minimum viable control surface still proportionate | PASS | Cost rollup is required before optional provider work. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T20. |
+| none | n/a | No architecture/spec patch required for T21. |

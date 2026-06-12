@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 5
-- Baseline: 76 passing tests
+- Baseline: 79 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-12
@@ -55,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-T21: Cost Rollup and Budget Check
+T22: Optional Real Judge Provider
 
 ## Fix Queue
 
@@ -82,8 +82,8 @@ empty
 - Monthly project budget: provisional 25 USD until revised
 - Approval required before: model escalation, judge fan-out increase, retry
   expansion, tool-call expansion, scheduled judge runs, or budget overrun
-- Last recorded AI/model cost: none; T20 added mocked CI smoke tests and no
-  model calls
+- Last recorded AI/model cost: none; T21 added deterministic fixture-only cost
+  rollup and budget-check tooling and no model calls
 
 If the next task would exceed the declared budget, increase model class, increase
 retry/fan-out/tool-call limits, or add recurring AI usage, stop for approval

@@ -361,3 +361,24 @@ the source of truth for architecture or policy.
   real `run-gdev-agent` CLI path with fake deterministic adapter output. It
   asserts a clean pass path and a seeded unsafe auto-approval regression exit
   code `1`. Live local integration remains documented separately.
+
+### 2026-06-12 - T21 - Cost Rollup and Budget Check
+
+- Scope: `src/eval_ground_truth_lab/cost/`, `src/eval_ground_truth_lab/cli.py`,
+  `tests/cost/`, `tests/test_cli.py`, `docs/COST_BUDGET.md`, `docs/CLI.md`,
+  `README.md`, `docs/README.md`, `docs/CODEX_PROMPT.md`,
+  `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Turn provider-agnostic JSONL telemetry into
+  deterministic cost rollups and enforceable budget checks for fixture CI and
+  local eval runs.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/cost/test_rollup.py`,
+  `tests/cost/test_budget_check.py`, and `tests/test_cli.py`; full gate passed
+  with `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T22 optional real judge provider.
+- Notes for next agent: `cost-rollup` writes JSON with total cost/tokens,
+  cost-by dimensions, latency p95, retry count, judge call count, and quality
+  outcome distribution. `budget-check` exits `1` for per-run, monthly,
+  cost-per-case, or judge-call-count overrun. Live judge cost gates still require
+  approved policy and telemetry artifacts before enforcement.

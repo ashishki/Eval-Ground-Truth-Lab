@@ -9,6 +9,7 @@ from typing import Any
 
 from eval_ground_truth_lab.adapters import GdevAgentConfig, GdevAgentHttpAdapter
 from eval_ground_truth_lab.compare import ComparisonReport, ThresholdConfig, compare_runs
+from eval_ground_truth_lab.cost import check_budget, load_budget_policy, rollup_telemetry
 from eval_ground_truth_lab.datasets import Dataset, load_dataset
 from eval_ground_truth_lab.reports import render_markdown_report
 from eval_ground_truth_lab.runs import CaseResult, RunRecord, RunStore
@@ -52,6 +53,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     compare_parser.add_argument("--threshold-config", required=True)
     compare_parser.add_argument("--report", required=True)
 
+    cost_rollup_parser = subparsers.add_parser("cost-rollup")
+    cost_rollup_parser.add_argument("--telemetry", required=True)
+    cost_rollup_parser.add_argument("--out", required=True)
+
+    budget_check_parser = subparsers.add_parser("budget-check")
+    budget_check_parser.add_argument("--rollup", required=True)
+    budget_check_parser.add_argument("--policy", required=True)
+
     args = parser.parse_args(argv)
     if args.command == "seeded-smoke":
         return run_seeded_smoke_eval(
@@ -79,6 +88,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             threshold_config_path=args.threshold_config,
             report_path=args.report,
         )
+    if args.command == "cost-rollup":
+        return run_cost_rollup_command(telemetry_path=args.telemetry, out_path=args.out)
+    if args.command == "budget-check":
+        return run_budget_check_command(rollup_path=args.rollup, policy_path=args.policy)
     raise ValueError(f"Unsupported command {args.command}")
 
 
@@ -216,6 +229,24 @@ def run_compare_command(
     )
     report_path.write_text(report, encoding="utf-8")
     return comparison_exit_code(comparison)
+
+
+def run_cost_rollup_command(*, telemetry_path: str | Path, out_path: str | Path) -> int:
+    rollup = rollup_telemetry(telemetry_path)
+    out = Path(out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(rollup, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return 0
+
+
+def run_budget_check_command(*, rollup_path: str | Path, policy_path: str | Path) -> int:
+    with Path(rollup_path).open(encoding="utf-8") as rollup_file:
+        rollup = json.load(rollup_file)
+    if not isinstance(rollup, dict):
+        raise ValueError("Rollup must be a JSON object")
+    result = check_budget(rollup, load_budget_policy(policy_path))
+    print(json.dumps(result.to_mapping(), sort_keys=True))
+    return 0 if result.passed else 1
 
 
 def _build_seeded_runs(dataset: Dataset) -> tuple[RunRecord, RunRecord]:

@@ -11,6 +11,8 @@ python -m eval_ground_truth_lab.cli seeded-smoke --help
 python -m eval_ground_truth_lab.cli dataset-inspect --help
 python -m eval_ground_truth_lab.cli run-gdev-agent --help
 python -m eval_ground_truth_lab.cli compare --help
+python -m eval_ground_truth_lab.cli cost-rollup --help
+python -m eval_ground_truth_lab.cli budget-check --help
 ```
 
 ## Dataset Inspect
@@ -47,3 +49,29 @@ python -m eval_ground_truth_lab.cli compare \
 ```
 
 The command exits `1` when comparison thresholds have a blocking failure.
+
+## Cost Rollup
+
+```bash
+python -m eval_ground_truth_lab.cli cost-rollup \
+  --telemetry docs/ai_cost_telemetry.jsonl \
+  --out reports/cost/latest.json
+```
+
+The command reads provider-agnostic JSONL telemetry and writes a deterministic
+rollup with total cost, total tokens, cost by model/workflow/case, p95 latency,
+retry count, judge call count, and quality outcome distribution.
+
+## Budget Check
+
+```bash
+python -m eval_ground_truth_lab.cli budget-check \
+  --rollup reports/cost/latest.json \
+  --policy docs/cost_policy.json
+```
+
+The command exits `1` when the rollup exceeds `per_run_budget_usd`,
+`monthly_project_budget_usd`, `cost_per_case_ceiling`, or
+`judge_call_count_ceiling`. CI should use fixture telemetry by default. Live
+judge cost gates require telemetry rollup artifacts and an approved budget
+policy before they are enforced.
