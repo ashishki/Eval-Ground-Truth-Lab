@@ -1,32 +1,31 @@
-# ARCH_REPORT - Cycle 9
+# ARCH_REPORT - Cycle 10
 
-Date: 2026-06-11
+Date: 2026-06-12
 
 ## Component Verdicts
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| V1 dataset pack | PASS | Manifest references 100 synthetic eval cases and records the canonical dataset hash. |
-| Seeded regression manifest | PASS | Contains 5 known regressions and expected failing gate IDs covering required v1 proof plus latency. |
-| V1 evidence report | PASS | Links CI failure evidence for unsafe regression, invalid structured output, excessive cost increase, and material accuracy drop. |
-| Ignore policy | PASS | Generated root `/reports/*` outputs remain ignored while `reports/v1/` evidence artifacts are tracked. |
-| Phase state/evidence docs | PASS | `CODEX_PROMPT`, implementation journal, and evidence index reflect T12 and task-list completion. |
-| Audit continuity | PASS | Cycle 8 review artifacts are archived before active review artifacts are overwritten for Cycle 9. |
+| Root README | PASS | Provides the 5-10 minute entry surface, seeded smoke command, gdev-agent local proof path, architecture links, known gaps, and roadmap. |
+| Docs README | PASS | Updated to current state and points to active evidence/audit surfaces. |
+| README tests | PASS | Mechanically enforce required sections, evidence links, local proof wording, and overclaim guardrails. |
+| Phase state/evidence docs | PASS | `CODEX_PROMPT`, implementation journal, and evidence index reflect T13 and next T14 state. |
+| Audit continuity | PASS | Cycle 9 review artifacts are archived before active review artifacts are overwritten for Cycle 10. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | PASS | T12 adds no SQL or database calls. |
-| Credentials and secrets | PASS | T12 adds no credentials; scoped scan found no hardcoded secrets. |
-| CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, pytest, and direct smoke command expected-failure check. |
+| SQL safety | n/a | T13 adds no SQL or database calls. |
+| Credentials and secrets | PASS | T13 adds no credentials; scoped scan found no hardcoded secrets. |
+| CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
 | No self-review | PASS | Review artifacts record findings and evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | V1 manifest, report, tests, and evidence index point to repository artifacts. |
-| Deterministic gates own blocking decisions | PASS | Evidence pack documents deterministic CI gate evidence and does not introduce judge authority. |
-| Dataset and run identity are immutable | PASS | V1 dataset hash is recorded in manifest and verified by tests. |
-| Synthetic data only in v1 | PASS | V1 cases are synthetic and marked synthetic. |
-| Explicit candidate adapter boundary | n/a | T12 does not modify candidate adapters. |
-| Optional judge is budgeted and non-authoritative | n/a | T12 does not run judge calls or change judge authority. |
+| Repository authority | PASS | README links canonical architecture, evidence index, and v1 evidence report. |
+| Deterministic gates own blocking decisions | n/a | T13 does not change validators or gates. |
+| Dataset and run identity are immutable | n/a | T13 does not change datasets or run records. |
+| Synthetic data only in v1 | PASS | T13 adds no data fixtures. |
+| Explicit candidate adapter boundary | PASS | README describes configured gdev-agent local integration path and does not let cases control endpoints. |
+| Optional judge is budgeted and non-authoritative | n/a | T13 does not modify judge execution or authority. |
 
 ## ADR Compliance
 
@@ -42,14 +41,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T12 adds evidence artifacts and tests, not new runtime infrastructure. |
-| Deterministic-owned areas remain deterministic | PASS | V1 proof relies on dataset hashes, manifests, tests, and seeded smoke gates. |
-| Runtime tier unchanged / justified | PASS | T12 adds no service, worker, model SDK/API call, package mutation, or privileged runtime path. |
-| Human approval boundaries still valid | PASS | T12 does not loosen thresholds, accept safety regression, alter judge authority, or change budget policy. |
-| Minimum viable control surface still proportionate | PASS | Dataset/report manifests satisfy v1 adoption proof without a dashboard or SaaS surface. |
+| Solution shape still appropriate | PASS | T13 adds documentation/tests only and does not expand runtime surface. |
+| Deterministic-owned areas remain deterministic | PASS | README points to deterministic seeded smoke and v1 evidence; no model authority change. |
+| Runtime tier unchanged / justified | PASS | No service, worker, model SDK/API call, package mutation, or privileged runtime path added. |
+| Human approval boundaries still valid | PASS | No threshold, budget, judge, or safety acceptance boundary changed. |
+| Minimum viable control surface still proportionate | PASS | Root README plus docs index is the minimum useful entry surface before real gdev-agent integration. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T12. |
+| none | n/a | No architecture/spec patch required for T13. |

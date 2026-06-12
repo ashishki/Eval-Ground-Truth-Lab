@@ -209,3 +209,20 @@ the source of truth for architecture or policy.
   mocked CI smoke, cost rollup, optional provider, file-backed review, and final
   static evidence pack. Dashboard, continuous eval, and extra provider work are
   intentionally later than the real gdev-agent proof.
+
+### 2026-06-12 - T13 - Truth Surface and Packaging Cleanup
+
+- Scope: `README.md`, `docs/README.md`, `tests/docs/test_readme_quickstart.py`,
+  `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Make the project understandable from the repository
+  root and provide a clear seeded-smoke quickstart plus a gdev-agent local
+  integration path.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/docs/test_readme_quickstart.py`; full gate passed
+  with `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T14 gdev-agent eval dataset v1.
+- Notes for next agent: README positions gdev-agent as the next local
+  integration proof, explicitly not a production eval platform or hosted SaaS
+  claim. The README links architecture, evidence index, v1 evidence report, and
+  known gaps.

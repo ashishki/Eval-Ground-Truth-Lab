@@ -1,7 +1,7 @@
 # Evidence Index - Eval Ground Truth Lab
 
 Version: 1.0
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 
 This file indexes durable proof so agents can retrieve prior evidence quickly.
 It is not authoritative by itself. Every row must point to an actual artifact
@@ -42,7 +42,9 @@ Maintain this file for:
 | T12 v1 evidence pack | test | `tests/eval/test_v1_evidence_pack.py` | V1 manifest 100-case/hash evidence, seeded regression manifest with 5 expected failing gates, and v1 evidence report CI-failure links | 2026-06-11 | Yes |
 | T12 v1 dataset manifest | eval evidence | `datasets/v1/manifest.json` | 100-case synthetic v1 dataset manifest with canonical dataset hash | 2026-06-11 | Yes |
 | T12 v1 evidence report | report | `reports/v1/evidence_report.md` | Adoption proof links for unsafe regression, invalid structured output, excessive cost increase, and material accuracy drop CI evidence | 2026-06-11 | Yes |
-| T12 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, evidence-pack, and consolidated review gate for T12 | 2026-06-11 | Yes |
+| T12 deep review | review | `docs/audit/archive/CYCLE9_REVIEW_REPORT.md` | META, ARCH, CODE, evidence-pack, and consolidated review gate for T12 | 2026-06-11 | Yes |
+| T13 truth surface and packaging | test | `tests/docs/test_readme_quickstart.py` | Root README required sections, core evidence links, gdev-agent local proof positioning, and production/SaaS overclaim guard | 2026-06-12 | Yes |
+| T13 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, docs, and consolidated review gate for T13 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

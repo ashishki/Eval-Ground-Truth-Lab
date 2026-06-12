@@ -11,10 +11,10 @@ summaries.
 ## Current State
 
 - Phase: 5
-- Baseline: 40 passing tests
+- Baseline: 44 passing tests
 - Ruff: configured
 - Last CI run: not yet run
-- Last updated: 2026-06-11
+- Last updated: 2026-06-12
 - Session tokens (approx): not tracked
 - Cumulative phase tokens (approx): not tracked
 - Session cost (approx): not tracked
@@ -55,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-T13: Truth Surface and Packaging Cleanup
+T14: gdev-agent Eval Dataset v1
 
 ## Fix Queue
 

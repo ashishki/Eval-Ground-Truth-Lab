@@ -1,58 +1,50 @@
-# META_ANALYSIS - Cycle 9
+# META_ANALYSIS - Cycle 10
 
-Date: 2026-06-11
+Date: 2026-06-12
 Type: targeted
 
 ## Project State
 
-Phase 4 task list is complete through T12. T04 through T11 are committed and
-pushed; T12 V1 Evidence Pack and 100-Case Dataset is implemented locally. Next:
-none in `docs/tasks.md`.
+Phase 5 is in progress. T13 Truth Surface and Packaging Cleanup is implemented
+locally. Next: T14 - gdev-agent Eval Dataset v1.
 
-Baseline: 40 pass, 0 skip.
+Baseline: 44 pass, 0 skip.
 
 ## Open Findings
 
 | ID | Sev | Description | Files | Status |
 |----|-----|-------------|-------|--------|
-| none | n/a | No open findings in `docs/CODEX_PROMPT.md`; Cycle 8 review had no P0/P1/P2 findings. | n/a | n/a |
+| none | n/a | No open findings in `docs/CODEX_PROMPT.md`; Cycle 9 review had no P0/P1/P2 findings. | n/a | n/a |
 
 ## PROMPT_1 Scope (architecture)
 
-- V1 dataset pack: new `datasets/v1/cases.jsonl` with 100 synthetic
-  gdev-agent-like cases and `datasets/v1/manifest.json` with canonical dataset
-  hash.
-- Seeded regression evidence: `datasets/v1/seeded_regressions.json` records at
-  least 5 known regressions and expected failing gate IDs.
-- V1 evidence report: `reports/v1/evidence_report.md` links CI failure evidence
-  for unsafe regression, invalid structured output, excessive cost increase, and
-  material accuracy drop.
-- Ignore policy: `.gitignore` keeps generated root report outputs ignored while
-  allowing tracked `reports/v1/` evidence artifacts.
+- Root truth surface: new `README.md` explains purpose, current capabilities,
+  quickstarts, architecture links, known gaps, and roadmap.
+- Docs index: `docs/README.md` updated from Phase 1 status to current seeded
+  smoke/v1 evidence and Phase 5 gdev-agent integration status.
+- Acceptance tests: new README quickstart tests enforce required sections,
+  evidence links, gdev-agent local proof positioning, and overclaim guardrails.
 - Phase state/evidence docs: updates to `docs/CODEX_PROMPT.md`,
   `docs/EVIDENCE_INDEX.md`, and `docs/IMPLEMENTATION_JOURNAL.md`.
-- Audit continuity: Cycle 8 review artifacts archived under
+- Audit continuity: Cycle 9 review artifacts archived under
   `docs/audit/archive/`.
 
-## PROMPT_2 Scope (code, priority order)
+## PROMPT_2 Scope (code/docs priority order)
 
-1. `datasets/v1/cases.jsonl` (new)
-2. `datasets/v1/manifest.json` (new)
-3. `datasets/v1/seeded_regressions.json` (new)
-4. `reports/v1/evidence_report.md` (new)
-5. `tests/eval/test_v1_evidence_pack.py` (new)
-6. `.gitignore` (changed)
-7. `docs/CODEX_PROMPT.md` (changed)
-8. `docs/EVIDENCE_INDEX.md` (changed)
-9. `docs/IMPLEMENTATION_JOURNAL.md` (changed)
-10. `docs/audit/` review artifacts (changed/new)
+1. `README.md` (new)
+2. `docs/README.md` (changed)
+3. `tests/docs/test_readme_quickstart.py` (new)
+4. `docs/CODEX_PROMPT.md` (changed)
+5. `docs/EVIDENCE_INDEX.md` (changed)
+6. `docs/IMPLEMENTATION_JOURNAL.md` (changed)
+7. `docs/audit/` review artifacts (changed/new)
 
 ## Cycle Type
 
-Targeted - completion review for T12 and the current `docs/tasks.md` list.
+Targeted - Phase 5 task review for T13 documentation and packaging cleanup.
 
 ## Notes for PROMPT_3
 
-Focus on v1 adoption proof evidence: 100-case manifest/hash integrity, at least
-5 known seeded regressions with expected failing gates, required CI-failure links
-in the v1 report, synthetic-only data, and no new runtime or AI surface area.
+Focus on reviewer/operator entry path, seeded-smoke reproducibility, gdev-agent
+local proof positioning, links to canonical evidence, and absence of production
+or hosted-platform overclaims.

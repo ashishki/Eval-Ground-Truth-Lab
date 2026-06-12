@@ -4,9 +4,9 @@ Status: active
 
 ## Purpose
 
-This docs folder owns the Phase 1 architecture, task state, implementation
-contract, budget rules, continuity surfaces, and validation evidence for Eval
-Ground Truth Lab.
+This docs folder owns the architecture, task state, implementation contract,
+budget rules, continuity surfaces, and validation evidence for Eval Ground Truth
+Lab.
 
 ## Start Here
 
@@ -24,6 +24,9 @@ Ground Truth Lab.
 - Product capability profiles: RAG OFF, Tool-Use OFF, Agentic OFF, Planning OFF,
   Compliance OFF.
 - Optional LLM judge is disabled by default and budget-gated.
+- Current proof surface: seeded smoke gate plus v1 synthetic evidence pack.
+- Next proof surface: local gdev-agent integration proof, not a production eval
+  platform or hosted SaaS claim.
 
 ## Key Decisions
 
@@ -35,20 +38,23 @@ Ground Truth Lab.
 - `docs/IMPLEMENTATION_CONTRACT.md` - implementation authority.
 - `docs/COST_BUDGET.md` - judge/model budget boundary.
 - `docs/EVIDENCE_INDEX.md` - proof retrieval index.
-- `docs/audit/PHASE1_AUDIT.md` - Phase 1 validation output after it is written.
+- `reports/v1/evidence_report.md` - v1 synthetic evidence report.
+- `docs/audit/AUDIT_INDEX.md` - audit and deep-review index.
 
 ## Active Tasks
 
-- `docs/tasks.md#t01-project-skeleton` - first task in Phase 1.
+- `docs/tasks.md#t13-truth-surface-and-packaging-cleanup` - current Phase 5
+  entry point.
 
 ## Known Gaps
 
-- Product implementation starts after Phase 1 validation passes.
-- Cost telemetry is planned for T09; Phase 1 uses manual-review budget policy.
-- Seeded regression CI smoke gate is planned for T11.
+- gdev-agent dataset, normalizer, adapter, validators, and CLI are planned next.
+- Cost telemetry exists, but rollup and CI budget enforcement are planned later.
+- File-backed human review and static HTML reporting are planned later.
+- Dashboard, hosted service, continuous eval, and production platform claims are
+  out of scope for the current proof.
 
 ## Authority
 
 This README is a navigation index. Canonical artifacts, tests, evals, ADRs,
 proof receipts, and review reports remain authoritative.
-
