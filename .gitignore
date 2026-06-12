@@ -10,4 +10,6 @@ build/
 /reports/*
 !/reports/v1/
 !/reports/v1/**
+!/reports/gdev-agent/
+!/reports/gdev-agent/**
 docs/ai_cost_telemetry.jsonl

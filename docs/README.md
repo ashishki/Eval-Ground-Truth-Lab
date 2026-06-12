@@ -39,16 +39,19 @@ Lab.
 - `docs/COST_BUDGET.md` - judge/model budget boundary.
 - `docs/EVIDENCE_INDEX.md` - proof retrieval index.
 - `reports/v1/evidence_report.md` - v1 synthetic evidence report.
+- `reports/gdev-agent/baseline_report.md` - gdev-agent local baseline report.
 - `docs/audit/AUDIT_INDEX.md` - audit and deep-review index.
 
 ## Active Tasks
 
-- `docs/tasks.md#t13-truth-surface-and-packaging-cleanup` - current Phase 5
+- `docs/tasks.md#t20-ci-smoke-for-gdev-adapter-without-live-gdev` - current Phase 5
   entry point.
 
 ## Known Gaps
 
-- gdev-agent dataset, normalizer, adapter, validators, and CLI are planned next.
+- gdev-agent dataset, normalizer, adapter, validators, CLI, and baseline report
+  are implemented for the local deterministic proof path.
+- Mocked CI smoke for the gdev adapter is planned next.
 - Cost telemetry exists, but rollup and CI budget enforcement are planned later.
 - File-backed human review and static HTML reporting are planned later.
 - Dashboard, hosted service, continuous eval, and production platform claims are

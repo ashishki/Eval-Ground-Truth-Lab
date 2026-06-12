@@ -324,3 +324,21 @@ the source of truth for architecture or policy.
   `RunStore`, applies gdev validators, and writes a markdown report. `compare`
   reads run JSON artifacts and returns `1` on blocking threshold regression.
   README command examples are backed by subcommand help checks.
+
+### 2026-06-12 - T19 - gdev-agent Baseline Report
+
+- Scope: `reports/gdev-agent/`, `tests/eval/test_gdev_agent_baseline_report.py`,
+  `.gitignore`, `README.md`, `docs/README.md`, `docs/EVIDENCE_INDEX.md`,
+  `docs/CODEX_PROMPT.md`
+- Why this work happened: Add the primary local gdev-agent baseline evidence
+  report from a canonical run artifact without production-quality claims.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/eval/test_gdev_agent_baseline_report.py`; full
+  gate passed with `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T20 CI smoke for gdev adapter without live gdev.
+- Notes for next agent: `reports/gdev-agent/baseline_run.json` is a compact
+  canonical `RunRecord` evidence artifact and
+  `reports/gdev-agent/baseline_report.md` is the readable report. The report
+  labels the data as synthetic/local deterministic and records known limits.
+  T19 tests also verify baseline case IDs against the source gdev dataset.

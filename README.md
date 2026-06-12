@@ -34,6 +34,7 @@ fixtures.
 - Baseline/candidate comparison with CI-style exit codes.
 - Synthetic, HTTP, and CLI adapter boundaries.
 - gdev-agent dataset, response normalizer, and configured HTTP adapter boundary.
+- gdev-agent baseline evidence report from a canonical run artifact.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
 - Markdown reports and failure taxonomy.
 - Append-only human review notes.
@@ -77,10 +78,11 @@ python -m eval_ground_truth_lab.cli run-gdev-agent \
   --report reports/gdev-agent/baseline_report.md
 ```
 
-The planned report will show dataset hash, case count, candidate version,
+The committed baseline report shows dataset hash, case count, candidate version,
 classification accuracy, risk-routing recall, unsafe auto-approval rate, invalid
 structured output rate, guard block rate, human escalation recall, cost per case,
-latency p95, failure taxonomy, and case-level failures.
+latency p95, failure taxonomy, and case-level failures:
+[reports/gdev-agent/baseline_report.md](reports/gdev-agent/baseline_report.md).
 
 ## Architecture
 
@@ -89,6 +91,8 @@ CLI commands are documented in [docs/CLI.md](docs/CLI.md).
 The evidence index is in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
 The current v1 evidence report is in
 [reports/v1/evidence_report.md](reports/v1/evidence_report.md).
+The current gdev-agent baseline report is in
+[reports/gdev-agent/baseline_report.md](reports/gdev-agent/baseline_report.md).
 Known gaps are tracked in [Known Gaps](#known-gaps).
 
 Core shape:
@@ -103,7 +107,9 @@ Core shape:
 
 - The gdev-agent adapter is unit-tested with mocked transport; live local
   integration still needs an operator-run gdev-agent stack.
-- The gdev-agent baseline report artifact is planned next.
+- The gdev-agent baseline report is a compact synthetic/local deterministic
+  artifact; full live local validation still needs an operator-run gdev-agent
+  stack.
 - Accuracy for synthetic smoke proof still uses fixture behavior; real
   gdev-agent correctness will come from deterministic validators.
 - Cost telemetry exists, but rollup and CI budget enforcement are planned later.

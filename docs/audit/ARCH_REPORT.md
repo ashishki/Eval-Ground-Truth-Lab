@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 15
+# ARCH_REPORT - Cycle 16
 
 Date: 2026-06-12
 
@@ -6,27 +6,28 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| CLI command surface | PASS | Adds `run-gdev-agent` and `compare` while preserving `seeded-smoke` and `dataset-inspect`. |
-| gdev run command | PASS | Loads dataset, invokes adapter, applies deterministic validators, writes run artifact/report, and exits on validator failure. |
-| compare command | PASS | Reads canonical run JSON, applies threshold config, writes markdown comparison report, and returns CI-style exit code. |
-| README/CLI docs | PASS | Commands are documented in root README and new `docs/CLI.md`. |
-| Tests | PASS | CLI tests cover help, dataset metadata output, gdev run artifact/report writing, compare failure exit, and README command support. |
-| Audit continuity | PASS | Cycle 14 review artifacts are archived before active review artifacts are overwritten for Cycle 15. |
+| gdev baseline run artifact | PASS | `baseline_run.json` uses the canonical `RunRecord` shape and parses through `RunRecord.from_mapping`. |
+| gdev baseline report | PASS | Report includes required evidence sections and values from the run artifact. |
+| Source dataset alignment | PASS | Baseline cases are checked against `datasets/gdev_agent/triage_v1.jsonl`; non-failing category outputs match expected categories. |
+| README/evidence index | PASS | Root README and `docs/EVIDENCE_INDEX.md` link the baseline report and run artifact. |
+| Evidence tracking | PASS | `.gitignore` allows tracked `reports/gdev-agent/**` evidence artifacts. |
+| Tests | PASS | T19 tests cover report consistency, required sections, scope/overclaim labels, evidence links, and dataset-case alignment. |
+| Audit continuity | PASS | Cycle 15 review artifacts are archived before active review artifacts are overwritten for Cycle 16. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T18 adds no SQL or database calls. |
-| Credentials and secrets | PASS | CLI uses configured adapter/env boundary; eval cases still cannot provide credentials. |
+| SQL safety | n/a | T19 adds no SQL or database calls. |
+| Credentials and secrets | PASS | Report commands use local demo config examples only; no secrets are committed. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
-| No self-review | PASS | Review artifacts record findings and evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | CLI tests, docs, and evidence index point to canonical artifacts. |
-| Deterministic gates own blocking decisions | PASS | `run-gdev-agent` exits non-zero from deterministic validator failures, not judge output. |
-| Dataset and run identity are immutable | PASS | Run artifacts are written through `RunStore`; completed run records are immutable by existing store contract. |
-| Synthetic data only in v1 | PASS | Tests use synthetic one-case fixtures only. |
-| Explicit candidate adapter boundary | PASS | CLI builds the configured gdev adapter; tests inject mocked adapter and do not require live Docker. |
-| Optional judge is budgeted and non-authoritative | n/a | T18 does not modify judge execution or authority. |
+| No self-review | PASS | Review artifacts record scoped review evidence; no P1/P2 finding is self-closed because none exist. |
+| Repository authority | PASS | Evidence rows point to concrete report, run artifact, and tests. |
+| Deterministic gates own blocking decisions | PASS | Report labels validator-derived failure taxonomy and does not introduce judge authority. |
+| Dataset and run identity are immutable | PASS | Baseline report records the canonical dataset hash and the committed run artifact records run ID/version fields. |
+| Synthetic data only in v1 | PASS | The report and README label the evidence as synthetic/local deterministic. |
+| Explicit candidate adapter boundary | PASS | Reproduction command uses configured `--base-url`; no case-controlled destination is introduced. |
+| Optional judge is budgeted and non-authoritative | n/a | T19 does not modify judge execution, providers, or budgets. |
 
 ## ADR Compliance
 
@@ -42,14 +43,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T18 adds local CLI orchestration and filesystem artifacts, not dashboard, scheduler, provider calls, or hosted runtime. |
-| Deterministic-owned areas remain deterministic | PASS | Validator results and comparison thresholds drive exit codes. |
-| Runtime tier unchanged / justified | PASS | CLI uses existing adapter and run store boundaries; no new dependency or privileged runtime path added. |
-| Human approval boundaries still valid | PASS | No threshold loosening, safety-regression acceptance, judge authority increase, or budget change. |
-| Minimum viable control surface still proportionate | PASS | CLI wiring is required before baseline report and CI smoke tasks. |
+| Solution shape still appropriate | PASS | T19 adds filesystem evidence artifacts and tests, not dashboard, scheduler, hosted runtime, or provider calls. |
+| Deterministic-owned areas remain deterministic | PASS | Report claims are backed by committed JSON and deterministic tests. |
+| Runtime tier unchanged / justified | PASS | No new runtime or dependency was added. |
+| Human approval boundaries still valid | PASS | No threshold loosening, safety-regression acceptance, judge-authority increase, or budget change. |
+| Minimum viable control surface still proportionate | PASS | Baseline evidence is required before mocked CI smoke and cost rollup tasks. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T18. |
+| none | n/a | No architecture/spec patch required for T19. |

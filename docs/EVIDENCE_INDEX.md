@@ -60,6 +60,10 @@ Maintain this file for:
 | T18 CLI commands | test | `tests/test_cli.py` | CLI help, dataset-inspect metadata, run-gdev-agent artifact/report writing, and compare blocking exit code | 2026-06-12 | Yes |
 | T18 CLI docs | docs | `docs/CLI.md` | Help, dataset-inspect, run-gdev-agent, and compare command examples | 2026-06-12 | Yes |
 | T18 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, CLI command, and consolidated review gate for T18 | 2026-06-12 | Yes |
+| T19 gdev-agent baseline report | test | `tests/eval/test_gdev_agent_baseline_report.py` | Report-to-run-artifact consistency, required report sections, synthetic/local deterministic scope labels, and evidence-index links | 2026-06-12 | Yes |
+| T19 gdev-agent baseline run | eval evidence | `reports/gdev-agent/baseline_run.json` | Canonical gdev-agent baseline run artifact with candidate version, dataset hash, metrics, and case-level validator evidence | 2026-06-12 | Yes |
+| T19 gdev-agent baseline report artifact | report | `reports/gdev-agent/baseline_report.md` | Dataset hash, environment, candidate version, metrics, thresholds, failure taxonomy, case-level failures, known limits, and reproduction command | 2026-06-12 | Yes |
+| T19 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, baseline report, run artifact, and consolidated review gate for T19 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 
