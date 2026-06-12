@@ -425,3 +425,26 @@ the source of truth for architecture or policy.
   separate JSONL files. `unresolved_entries()` returns entries without decisions.
   `render_unresolved_review_links` creates a markdown report section for pending
   review items.
+
+### 2026-06-12 - T24 - Static HTML Report and Final Evidence Pack
+
+- Scope: `src/eval_ground_truth_lab/reports/html.py`,
+  `src/eval_ground_truth_lab/reports/templates/eval_report.html`,
+  `tests/reports/test_html_report.py`,
+  `tests/docs/test_final_evidence_pack.py`,
+  `reports/gdev-agent/baseline_report.html`, `docs/REPORTING.md`,
+  `docs/CASE_STUDY.md`, `docs/KNOWN_LIMITS.md`, `README.md`,
+  `docs/EVIDENCE_INDEX.md`, `docs/CODEX_PROMPT.md`, `docs/README.md`
+- Why this work happened: Add a derivative static HTML report and final evidence
+  pack while keeping markdown reports and run artifacts canonical.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/reports/test_html_report.py` and
+  `tests/docs/test_final_evidence_pack.py`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: none in the current task roadmap.
+- Notes for next agent: HTML report is derivative and embeds escaped canonical
+  markdown; `reports/gdev-agent/baseline_report.md` and
+  `reports/gdev-agent/baseline_run.json` remain authoritative. Final claims are
+  mapped in `docs/EVIDENCE_INDEX.md`, and limits are explicit in
+  `docs/KNOWN_LIMITS.md`.

@@ -44,8 +44,7 @@ Lab.
 
 ## Active Tasks
 
-- `docs/tasks.md#t24-static-html-report-and-final-evidence-pack` - current Phase 6
-  entry point.
+- Current roadmap status: complete through `docs/tasks.md#t24-static-html-report-and-final-evidence-pack`.
 
 ## Known Gaps
 
@@ -56,7 +55,7 @@ Lab.
 - Optional real judge provider contract is implemented and remains disabled
   without credentials and budget.
 - File-backed human review queue is implemented.
-- Static HTML report and final evidence pack are planned next.
+- Static HTML report and final evidence pack are implemented.
 - Cost telemetry exists, but rollup and CI budget enforcement are planned later.
 - File-backed human review and static HTML reporting are planned later.
 - Dashboard, hosted service, continuous eval, and production platform claims are

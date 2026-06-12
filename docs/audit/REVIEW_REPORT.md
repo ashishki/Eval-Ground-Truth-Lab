@@ -1,17 +1,18 @@
-# REVIEW_REPORT - Cycle 20
+# REVIEW_REPORT - Cycle 21
 
 Date: 2026-06-12
-Scope: T23 File-Backed Human Review Queue
+Scope: T24 Static HTML Report and Final Evidence Pack
 
 ## Executive Summary
 
 - Stop-Ship: No.
-- T23 adds append-only file-backed review entries and separate auditable review
-  decisions.
-- Original judge evidence remains immutable when a decision is appended.
-- Reports can link unresolved review items.
-- Human review docs now include entry and decision JSONL shapes.
-- Baseline is now 87 passing tests, 0 skipped.
+- T24 adds a derivative static HTML baseline report while keeping markdown and
+  run JSON canonical.
+- README now has a 5-minute reviewer path.
+- Final case study, known limits, and reporting docs are added.
+- Evidence index maps final claims to tests, docs, reports, datasets, and run
+  artifacts.
+- Baseline is now 93 passing tests, 0 skipped.
 - No P0, P1, or P2 findings were identified in the scoped files.
 
 ## P0 Issues
@@ -32,68 +33,69 @@ None.
 
 | ID | Sev | Description | Status | Change |
 |----|-----|-------------|--------|--------|
-| none | n/a | Cycle 19 review had no P0/P1/P2 findings. | n/a | n/a |
+| none | n/a | Cycle 20 review had no P0/P1/P2 findings. | n/a | n/a |
 
 ## Stop-Ship Decision
 
-No - scoped implementation satisfies T23 acceptance criteria, local verification
+No - scoped implementation satisfies T24 acceptance criteria, local verification
 passed, and no blocking findings were identified.
 
 ## README-First Index Status
 
 | Changed boundary | README path | Status | Notes |
 |------------------|-------------|--------|-------|
-| file-backed review | `README.md` | current | Root README lists file-backed append-only review records. |
-| human review docs | `docs/HUMAN_REVIEW.md` | current | Documents entry and decision JSONL shapes. |
-| docs index | `docs/README.md` | current | Docs index now points to T24 as active task and notes file-backed review is implemented. |
-| audit artifacts | `docs/audit/AUDIT_INDEX.md` | current | Audit index will point Cycle 20 to active review until the next cycle archives it. |
+| reviewer path | `README.md` | current | 5-minute reviewer path links seeded smoke, gdev eval, evidence index, reports, and limits. |
+| reporting docs | `docs/REPORTING.md` | current | Documents markdown/run JSON as canonical and HTML as derivative. |
+| case study | `docs/CASE_STUDY.md` | current | Answers final evidence questions. |
+| known limits | `docs/KNOWN_LIMITS.md` | current | Explicitly avoids production/platform overclaim. |
+| audit artifacts | `docs/audit/AUDIT_INDEX.md` | current | Audit index will point Cycle 21 to active review. |
 
 ## Cost Budget Status
 
 | Scope | Status | Notes |
 |-------|--------|-------|
-| AI/model budget | within budget | T23 added no model calls, provider calls, retries, fan-out, tool calls, or recurring AI usage. |
-| Telemetry rollup | unchanged | Review records are local JSONL artifacts and do not affect cost telemetry. |
+| AI/model budget | within budget | T24 added no model calls, provider calls, retries, fan-out, tool calls, or recurring AI usage. |
+| Telemetry rollup | unchanged | T24 changes reporting/docs only. |
 
 ## Code Review Checklist Result
 
 | Check | Result | Note |
 |-------|--------|------|
 | SEC-1 SQL parameterization | n/a | No SQL introduced. |
-| SEC-2 secret handling | PASS | No secrets or private data in review fixtures. |
+| SEC-2 secret handling | PASS | No secrets or private data added. |
 | SEC-3 auth boundary | n/a | No auth path changed. |
 | SEC-4 credentials from environment/config only | n/a | No credentials used. |
-| QUAL-1 error handling | PASS | Invalid blank fields and invalid decisions are rejected. |
-| QUAL-2 test coverage | PASS | T23 AC-1 through AC-3 are covered by review store tests. |
-| GOV-1 solution-shape drift | PASS | T23 adds local JSONL persistence only, not dashboard, scheduler, or provider integrations. |
-| GOV-2 deterministic ownership | PASS | Review persistence does not change deterministic gates. |
+| QUAL-1 error handling | PASS | HTML renderer escapes markdown content and links canonical artifacts. |
+| QUAL-2 test coverage | PASS | T24 AC-1 through AC-6 are covered by report/docs tests. |
+| GOV-1 solution-shape drift | PASS | T24 adds static derivative report and docs, not dashboard or hosted service. |
+| GOV-2 deterministic ownership | PASS | HTML contains no separate metrics logic. |
 | GOV-3 runtime-tier drift | PASS | No new runtime, dependency, service, model SDK/API, or privileged execution path added. |
-| GOV-4 human approval boundaries | PASS | Human decisions are explicit append-only artifacts. |
+| GOV-4 human approval boundaries | PASS | No threshold-policy, budget-policy, judge-authority, or safety-regression changes. |
 | GOV-5 continuity discipline | PASS | Journal, evidence index, audit index, and handoff updated. |
-| GOV-6 filesystem reality | PASS | Claimed modules, tests, and docs exist. |
+| GOV-6 filesystem reality | PASS | Claimed HTML, docs, and tests exist. |
 | GOV-7 runtime verification | PASS | Targeted and full local gates were executed. |
-| GOV-8 bounded correction | PASS | Formatting correction only; no test weakening. |
-| GOV-9 claim evidence | PASS | Tests and docs back completion claims. |
-| GOV-10 README-first index | PASS | README and docs index reflect file-backed review status. |
+| GOV-8 bounded correction | PASS | README heading duplication was corrected; no test weakening. |
+| GOV-9 claim evidence | PASS | Evidence index maps final claims to concrete artifacts. |
+| GOV-10 README-first index | PASS | README has the final reviewer path. |
 | GOV-11 cost budget | PASS | No AI/model budget change. |
-| OBS-1 external call instrumentation | n/a | T23 does not invoke external services. |
-| OBS-2 AI-path metrics | n/a | T23 adds no AI path. |
+| OBS-1 external call instrumentation | n/a | T24 does not invoke external services. |
+| OBS-2 AI-path metrics | n/a | T24 adds no AI path. |
 | OBS-3 health endpoint integrity | n/a | No health endpoint exists or changed. |
 
 ## Validation Evidence
 
-- `.venv/bin/python -m pytest tests/review/test_review_store.py tests/review/ tests/reports/ -q --tb=short`
+- `.venv/bin/python -m pytest tests/reports/test_html_report.py tests/docs/test_final_evidence_pack.py -q --tb=short`
   - pass, 6 tests
 - `.venv/bin/python -m pytest tests -q --tb=short`
-  - pass, 87 tests
+  - pass, 93 tests
 - `.venv/bin/ruff check src tests` - pass
 - `.venv/bin/ruff format --check src tests` - pass
-- `rg -n "append-only|review_entries|review_decisions|unresolved review|review_id" docs/HUMAN_REVIEW.md tests/review/test_review_store.py src/eval_ground_truth_lab/review/store.py src/eval_ground_truth_lab/reports/review.py`
+- `rg -n "5-Minute Reviewer Path|seeded-smoke|run-gdev-agent|known limits|baseline_report.html" README.md docs/CASE_STUDY.md docs/KNOWN_LIMITS.md docs/EVIDENCE_INDEX.md reports/gdev-agent/baseline_report.html`
   - pass
 - Requested audience-positioning wording scan across README, docs, reports,
   source, and tests
-  - pass, no matches
+  - pass, no matches in project docs/source/reports
 
 ## Next
 
-Proceed to T24 Static HTML Report and Final Evidence Pack.
+No remaining task in the current `docs/tasks.md` roadmap.

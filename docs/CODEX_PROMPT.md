@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 5
-- Baseline: 87 passing tests
+- Baseline: 93 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-12
@@ -55,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-T24: Static HTML Report and Final Evidence Pack
+none - roadmap complete through T24
 
 ## Fix Queue
 
@@ -82,7 +82,7 @@ empty
 - Monthly project budget: provisional 25 USD until revised
 - Approval required before: model escalation, judge fan-out increase, retry
   expansion, tool-call expansion, scheduled judge runs, or budget overrun
-- Last recorded AI/model cost: none; T23 added local file-backed review storage
+- Last recorded AI/model cost: none; T24 added static derivative HTML/docs only
   and no model/provider calls
 
 If the next task would exceed the declared budget, increase model class, increase

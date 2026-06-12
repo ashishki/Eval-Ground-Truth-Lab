@@ -1,3 +1,4 @@
+from eval_ground_truth_lab.reports.html import render_html_report
 from eval_ground_truth_lab.reports.markdown import render_markdown_report
 from eval_ground_truth_lab.reports.review import render_unresolved_review_links
 from eval_ground_truth_lab.reports.taxonomy import (
@@ -10,6 +11,7 @@ __all__ = [
     "FAILURE_TAXONOMY",
     "REQUIRED_FAILURE_LABELS",
     "FailureTaxonomyEntry",
+    "render_html_report",
     "render_markdown_report",
     "render_unresolved_review_links",
 ]

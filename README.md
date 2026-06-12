@@ -46,6 +46,17 @@ fixtures.
 - Seeded smoke gate that intentionally exits `1` for seeded regressions.
 - V1 synthetic evidence pack with 100 cases and 5 known seeded regressions.
 
+## 5-Minute Reviewer Path
+
+1. Read [docs/CASE_STUDY.md](docs/CASE_STUDY.md) for the project story.
+2. Run the seeded smoke command below and confirm it exits `1`.
+3. Review the gdev-agent eval command below and the baseline reports:
+   [reports/gdev-agent/baseline_report.md](reports/gdev-agent/baseline_report.md)
+   and
+   [reports/gdev-agent/baseline_report.html](reports/gdev-agent/baseline_report.html).
+4. Check the evidence map in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
+5. Check known limits in [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md).
+
 ## Quickstart: Seeded Smoke
 
 The seeded smoke command proves the gate catches a deliberately bad synthetic
@@ -98,6 +109,8 @@ The current v1 evidence report is in
 [reports/v1/evidence_report.md](reports/v1/evidence_report.md).
 The current gdev-agent baseline report is in
 [reports/gdev-agent/baseline_report.md](reports/gdev-agent/baseline_report.md).
+The derivative HTML report is in
+[reports/gdev-agent/baseline_report.html](reports/gdev-agent/baseline_report.html).
 Known gaps are tracked in [Known Gaps](#known-gaps).
 
 Core shape:

@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 20
+# ARCH_REPORT - Cycle 21
 
 Date: 2026-06-12
 
@@ -6,27 +6,29 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| file-backed review entries | PASS | Entries append to JSONL with required review metadata and timestamps. |
-| review decisions | PASS | Decisions append separately and do not mutate original entries. |
-| unresolved reporting | PASS | Report helper links unresolved review items by `review_id`. |
-| docs | PASS | `docs/HUMAN_REVIEW.md` documents entry/decision shapes and append-only rule. |
-| Tests | PASS | T23 tests cover append-only entries, immutable evidence, decisions, and unresolved report links. |
-| Audit continuity | PASS | Cycle 19 review artifacts are archived before active review artifacts are overwritten for Cycle 20. |
+| HTML report | PASS | Generated from canonical markdown body and links markdown/run JSON artifacts. |
+| reporting boundary | PASS | Docs state HTML is derivative and markdown/run JSON remain canonical. |
+| final case study | PASS | Case study answers required final evidence questions. |
+| known limits | PASS | Limits explicitly cover local/synthetic evidence, no dashboard, no hosted service, and no production platform claim. |
+| evidence index | PASS | Final claims map to concrete tests, docs, reports, and datasets. |
+| README reviewer path | PASS | README has 5-minute path linking seeded smoke, gdev eval, evidence index, reports, and known limits. |
+| Tests | PASS | T24 tests cover HTML derivation, final evidence docs, evidence mapping, and overclaim guard. |
+| Audit continuity | PASS | Cycle 20 review artifacts are archived before active review artifacts are overwritten for Cycle 21. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T23 adds no SQL or database calls. |
-| Credentials and secrets | PASS | Review fixtures contain no credentials, real user data, or private transcripts. |
+| SQL safety | n/a | T24 adds no SQL or database calls. |
+| Credentials and secrets | PASS | No credentials, real user data, or private transcripts added. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
 | No self-review | PASS | Review artifacts record scoped review evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | Review JSONL records are filesystem artifacts and tests verify behavior. |
-| Deterministic gates own blocking decisions | n/a | T23 does not change validation gates. |
-| Dataset and run identity are immutable | n/a | T23 does not mutate datasets or completed run artifacts. |
-| Synthetic data only in v1 | PASS | Tests use synthetic review IDs and case IDs only. |
-| Explicit candidate adapter boundary | n/a | T23 does not change candidate adapters. |
-| Optional judge is budgeted and non-authoritative | PASS | Human review records remain auditable and do not alter judge authority. |
+| Repository authority | PASS | Evidence index maps claims to canonical tests, reports, datasets, and docs. |
+| Deterministic gates own blocking decisions | PASS | T24 does not change validators or gate authority. |
+| Dataset and run identity are immutable | PASS | HTML links existing canonical run artifact and does not mutate it. |
+| Synthetic data only in v1 | PASS | Final docs preserve synthetic/local deterministic labels. |
+| Explicit candidate adapter boundary | PASS | T24 does not change adapter boundaries. |
+| Optional judge is budgeted and non-authoritative | PASS | Final docs keep judge non-authoritative. |
 
 ## ADR Compliance
 
@@ -42,14 +44,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T23 adds local JSONL review persistence and report links only. |
-| Deterministic-owned areas remain deterministic | PASS | Review persistence does not affect validator pass/fail logic. |
+| Solution shape still appropriate | PASS | T24 adds static derivative report and docs only, not dashboard or hosted runtime. |
+| Deterministic-owned areas remain deterministic | PASS | No metrics logic was added to HTML. |
 | Runtime tier unchanged / justified | PASS | No new runtime, dependency, service, or network requirement was added. |
-| Human approval boundaries still valid | PASS | Review decisions are explicit append-only artifacts. |
-| Minimum viable control surface still proportionate | PASS | File-backed review is required before final evidence pack. |
+| Human approval boundaries still valid | PASS | No threshold, judge authority, cost policy, or safety acceptance changes. |
+| Minimum viable control surface still proportionate | PASS | Final evidence pack closes the current local-first proof path. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T23. |
+| none | n/a | No architecture/spec patch required for T24. |
