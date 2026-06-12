@@ -78,6 +78,9 @@ Maintain this file for:
 | T22 judge calibration dataset | eval evidence | `datasets/judge_calibration/ambiguous_cases.jsonl` | Synthetic ambiguous cases for judge calibration documentation | 2026-06-12 | Yes |
 | T22 judge calibration report | report | `reports/judge_calibration/report.md` | Provider contract evidence and no-live-call boundary | 2026-06-12 | Yes |
 | T22 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, provider contract, calibration artifacts, and consolidated review gate for T22 | 2026-06-12 | Yes |
+| T23 file-backed human review | test | `tests/review/test_review_store.py` | Append-only review entries, separate decisions without evidence mutation, and unresolved review report links | 2026-06-12 | Yes |
+| T23 human review docs | docs | `docs/HUMAN_REVIEW.md` | Review entry JSONL shape, decision JSONL shape, append-only rule, and unresolved review links | 2026-06-12 | Yes |
+| T23 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, file-backed review store, report links, docs, and consolidated review gate for T23 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

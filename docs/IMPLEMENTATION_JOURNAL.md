@@ -404,3 +404,24 @@ the source of truth for architecture or policy.
   Provider structured output is validated before conversion to
   `JudgeProviderResult`; telemetry goes through existing `JudgeRunner`.
   Deterministic failures remain blocking through `final_case_decision`.
+
+### 2026-06-12 - T23 - File-Backed Human Review Queue
+
+- Scope: `src/eval_ground_truth_lab/review/store.py`,
+  `src/eval_ground_truth_lab/reports/review.py`,
+  `src/eval_ground_truth_lab/review/__init__.py`,
+  `src/eval_ground_truth_lab/reports/__init__.py`,
+  `tests/review/test_review_store.py`, `docs/HUMAN_REVIEW.md`, `README.md`,
+  `docs/README.md`, `docs/CODEX_PROMPT.md`, `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Replace in-memory-only human review usage with
+  append-only file-backed review entries and decisions without mutating original
+  judge evidence.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/review/test_review_store.py`; full gate passed
+  with `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T24 static HTML report and final evidence pack.
+- Notes for next agent: `FileReviewStore` writes entries and decisions to
+  separate JSONL files. `unresolved_entries()` returns entries without decisions.
+  `render_unresolved_review_links` creates a markdown report section for pending
+  review items.

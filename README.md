@@ -42,7 +42,7 @@ fixtures.
   fake transport only.
 - Cost telemetry rollup and fixture-safe budget check commands.
 - Markdown reports and failure taxonomy.
-- Append-only human review notes.
+- Append-only human review notes and file-backed review entries/decisions.
 - Seeded smoke gate that intentionally exits `1` for seeded regressions.
 - V1 synthetic evidence pack with 100 cases and 5 known seeded regressions.
 
@@ -121,7 +121,8 @@ Core shape:
   cost gates require telemetry rollup artifacts and an approved policy.
 - Optional OpenAI judge provider contract exists, but no live provider call is
   enabled by default.
-- Human review storage is currently primitive and will become file-backed later.
+- Human review has append-only file-backed entries and decisions; richer
+  operator workflow is still future work.
 - No dashboard, hosted service, continuous eval, or production platform claim is
   made.
 

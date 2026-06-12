@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 19
+# ARCH_REPORT - Cycle 20
 
 Date: 2026-06-12
 
@@ -6,30 +6,27 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| OpenAI judge provider | PASS | Added behind injectable transport with no live calls in tests. |
-| disabled/budget boundary | PASS | Provider is unavailable without key and runner blocks calls without positive budget. |
-| structured output | PASS | Provider requests strict JSON schema and validates score, explanation, and quality outcome. |
-| telemetry | PASS | Runner records token, cost, latency, retry, model, and quality outcome fields from provider result. |
-| human review | PASS | Ambiguous judge result can create a pending human review item. |
-| judge authority | PASS | Deterministic failure remains blocking and cannot be overridden by judge result. |
-| calibration artifacts | PASS | Synthetic dataset, calibration doc, and report artifact are committed. |
-| Tests | PASS | T22 provider contract tests cover all acceptance criteria. |
-| Audit continuity | PASS | Cycle 18 review artifacts are archived before active review artifacts are overwritten for Cycle 19. |
+| file-backed review entries | PASS | Entries append to JSONL with required review metadata and timestamps. |
+| review decisions | PASS | Decisions append separately and do not mutate original entries. |
+| unresolved reporting | PASS | Report helper links unresolved review items by `review_id`. |
+| docs | PASS | `docs/HUMAN_REVIEW.md` documents entry/decision shapes and append-only rule. |
+| Tests | PASS | T23 tests cover append-only entries, immutable evidence, decisions, and unresolved report links. |
+| Audit continuity | PASS | Cycle 19 review artifacts are archived before active review artifacts are overwritten for Cycle 20. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T22 adds no SQL or database calls. |
-| Credentials and secrets | PASS | No credentials are committed; tests use placeholder keys and fake transport. |
+| SQL safety | n/a | T23 adds no SQL or database calls. |
+| Credentials and secrets | PASS | Review fixtures contain no credentials, real user data, or private transcripts. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
 | No self-review | PASS | Review artifacts record scoped review evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | Tests and calibration artifacts are concrete repository evidence. |
-| Deterministic gates own blocking decisions | PASS | `final_case_decision` still prevents judge override of deterministic failures. |
-| Dataset and run identity are immutable | n/a | T22 does not mutate completed run artifacts. |
-| Synthetic data only in v1 | PASS | Calibration dataset uses synthetic cases only. |
-| Explicit candidate adapter boundary | n/a | T22 does not change candidate adapters. |
-| Optional judge is budgeted and non-authoritative | PASS | Provider call path is budget-gated and non-authoritative. |
+| Repository authority | PASS | Review JSONL records are filesystem artifacts and tests verify behavior. |
+| Deterministic gates own blocking decisions | n/a | T23 does not change validation gates. |
+| Dataset and run identity are immutable | n/a | T23 does not mutate datasets or completed run artifacts. |
+| Synthetic data only in v1 | PASS | Tests use synthetic review IDs and case IDs only. |
+| Explicit candidate adapter boundary | n/a | T23 does not change candidate adapters. |
+| Optional judge is budgeted and non-authoritative | PASS | Human review records remain auditable and do not alter judge authority. |
 
 ## ADR Compliance
 
@@ -45,14 +42,14 @@ None.
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T22 adds an optional disabled provider boundary, not recurring judge jobs or scheduled eval. |
-| Deterministic-owned areas remain deterministic | PASS | Deterministic validator authority is unchanged. |
-| Runtime tier unchanged / justified | PASS | No new dependency, service, or live provider call was added to tests/CI. |
-| Human approval boundaries still valid | PASS | Live calls, credentials, budget changes, escalation, and retry expansion still require approval. |
-| Minimum viable control surface still proportionate | PASS | Provider contract is required before file-backed review queue and final evidence tasks. |
+| Solution shape still appropriate | PASS | T23 adds local JSONL review persistence and report links only. |
+| Deterministic-owned areas remain deterministic | PASS | Review persistence does not affect validator pass/fail logic. |
+| Runtime tier unchanged / justified | PASS | No new runtime, dependency, service, or network requirement was added. |
+| Human approval boundaries still valid | PASS | Review decisions are explicit append-only artifacts. |
+| Minimum viable control surface still proportionate | PASS | File-backed review is required before final evidence pack. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T22. |
+| none | n/a | No architecture/spec patch required for T23. |

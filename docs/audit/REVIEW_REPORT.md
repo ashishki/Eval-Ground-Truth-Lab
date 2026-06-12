@@ -1,19 +1,17 @@
-# REVIEW_REPORT - Cycle 19
+# REVIEW_REPORT - Cycle 20
 
 Date: 2026-06-12
-Scope: T22 Optional Real Judge Provider
+Scope: T23 File-Backed Human Review Queue
 
 ## Executive Summary
 
 - Stop-Ship: No.
-- T22 adds an optional OpenAI judge provider behind the existing injected
-  provider boundary.
-- Provider tests use fake transport only; no live provider calls or credentials
-  are used.
-- Budget precheck remains before provider transport, telemetry is recorded, and
-  deterministic failures remain blocking.
-- Calibration docs, synthetic ambiguous cases, and report artifact are added.
-- Baseline is now 84 passing tests, 0 skipped.
+- T23 adds append-only file-backed review entries and separate auditable review
+  decisions.
+- Original judge evidence remains immutable when a decision is appended.
+- Reports can link unresolved review items.
+- Human review docs now include entry and decision JSONL shapes.
+- Baseline is now 87 passing tests, 0 skipped.
 - No P0, P1, or P2 findings were identified in the scoped files.
 
 ## P0 Issues
@@ -34,63 +32,63 @@ None.
 
 | ID | Sev | Description | Status | Change |
 |----|-----|-------------|--------|--------|
-| none | n/a | Cycle 18 review had no P0/P1/P2 findings. | n/a | n/a |
+| none | n/a | Cycle 19 review had no P0/P1/P2 findings. | n/a | n/a |
 
 ## Stop-Ship Decision
 
-No - scoped implementation satisfies T22 acceptance criteria, local verification
+No - scoped implementation satisfies T23 acceptance criteria, local verification
 passed, and no blocking findings were identified.
 
 ## README-First Index Status
 
 | Changed boundary | README path | Status | Notes |
 |------------------|-------------|--------|-------|
-| optional judge provider | `README.md` | current | Root README lists disabled-by-default OpenAI judge provider contract. |
-| calibration docs | `docs/JUDGE_CALIBRATION.md` | current | Documents provider boundary, structured output, and non-authority. |
-| docs index | `docs/README.md` | current | Docs index now points to T23 as active task and notes provider contract is implemented. |
-| audit artifacts | `docs/audit/AUDIT_INDEX.md` | current | Audit index will point Cycle 19 to active review until the next cycle archives it. |
+| file-backed review | `README.md` | current | Root README lists file-backed append-only review records. |
+| human review docs | `docs/HUMAN_REVIEW.md` | current | Documents entry and decision JSONL shapes. |
+| docs index | `docs/README.md` | current | Docs index now points to T24 as active task and notes file-backed review is implemented. |
+| audit artifacts | `docs/audit/AUDIT_INDEX.md` | current | Audit index will point Cycle 20 to active review until the next cycle archives it. |
 
 ## Cost Budget Status
 
 | Scope | Status | Notes |
 |-------|--------|-------|
-| AI/model budget | within budget | T22 added no live model calls, no provider credentials, no retry expansion, and no recurring AI usage. |
-| Telemetry rollup | available | Provider contract emits telemetry through existing runner; T21 rollup can aggregate it. |
+| AI/model budget | within budget | T23 added no model calls, provider calls, retries, fan-out, tool calls, or recurring AI usage. |
+| Telemetry rollup | unchanged | Review records are local JSONL artifacts and do not affect cost telemetry. |
 
 ## Code Review Checklist Result
 
 | Check | Result | Note |
 |-------|--------|------|
 | SEC-1 SQL parameterization | n/a | No SQL introduced. |
-| SEC-2 secret handling | PASS | Placeholder keys only; provider reads real keys from environment when enabled by an operator. |
-| SEC-3 auth boundary | PASS | Provider disabled without key and positive budget; no CI secrets required. |
-| SEC-4 credentials from environment/config only | PASS | Provider config reads `OPENAI_API_KEY` or `LLM_JUDGE_API_KEY`; no committed credentials. |
-| QUAL-1 error handling | PASS | Invalid provider output raises provider-specific errors before becoming judge result. |
-| QUAL-2 test coverage | PASS | T22 AC-1 through AC-5 are covered by provider contract tests. |
-| GOV-1 solution-shape drift | PASS | T22 adds optional provider contract only, not dashboard, scheduler, or CI live judging. |
-| GOV-2 deterministic ownership | PASS | Deterministic failures remain blocking. |
-| GOV-3 runtime-tier drift | PASS | No new runtime, dependency, or live provider call in tests/CI. |
-| GOV-4 human approval boundaries | PASS | Live calls, credentials, budget changes, escalation, and retry expansion still require approval. |
+| SEC-2 secret handling | PASS | No secrets or private data in review fixtures. |
+| SEC-3 auth boundary | n/a | No auth path changed. |
+| SEC-4 credentials from environment/config only | n/a | No credentials used. |
+| QUAL-1 error handling | PASS | Invalid blank fields and invalid decisions are rejected. |
+| QUAL-2 test coverage | PASS | T23 AC-1 through AC-3 are covered by review store tests. |
+| GOV-1 solution-shape drift | PASS | T23 adds local JSONL persistence only, not dashboard, scheduler, or provider integrations. |
+| GOV-2 deterministic ownership | PASS | Review persistence does not change deterministic gates. |
+| GOV-3 runtime-tier drift | PASS | No new runtime, dependency, service, model SDK/API, or privileged execution path added. |
+| GOV-4 human approval boundaries | PASS | Human decisions are explicit append-only artifacts. |
 | GOV-5 continuity discipline | PASS | Journal, evidence index, audit index, and handoff updated. |
-| GOV-6 filesystem reality | PASS | Claimed provider, tests, dataset, docs, and report exist. |
+| GOV-6 filesystem reality | PASS | Claimed modules, tests, and docs exist. |
 | GOV-7 runtime verification | PASS | Targeted and full local gates were executed. |
-| GOV-8 bounded correction | PASS | Import-order and circular-import corrections were made without weakening tests. |
-| GOV-9 claim evidence | PASS | Tests and calibration artifacts back completion claims. |
-| GOV-10 README-first index | PASS | README and docs index reflect provider status. |
-| GOV-11 cost budget | PASS | No live model spend; T22 only adds disabled optional call path. |
-| OBS-1 external call instrumentation | PASS | Provider returns token/cost/latency data consumed by existing telemetry sink. |
-| OBS-2 AI-path metrics | PASS | Telemetry contract records model, tokens, estimated cost, latency, retry, and quality outcome. |
+| GOV-8 bounded correction | PASS | Formatting correction only; no test weakening. |
+| GOV-9 claim evidence | PASS | Tests and docs back completion claims. |
+| GOV-10 README-first index | PASS | README and docs index reflect file-backed review status. |
+| GOV-11 cost budget | PASS | No AI/model budget change. |
+| OBS-1 external call instrumentation | n/a | T23 does not invoke external services. |
+| OBS-2 AI-path metrics | n/a | T23 adds no AI path. |
 | OBS-3 health endpoint integrity | n/a | No health endpoint exists or changed. |
 
 ## Validation Evidence
 
-- `.venv/bin/python -m pytest tests/judging/test_provider_contract.py tests/judging/ -q --tb=short`
-  - pass, 10 tests
+- `.venv/bin/python -m pytest tests/review/test_review_store.py tests/review/ tests/reports/ -q --tb=short`
+  - pass, 6 tests
 - `.venv/bin/python -m pytest tests -q --tb=short`
-  - pass, 84 tests
+  - pass, 87 tests
 - `.venv/bin/ruff check src tests` - pass
 - `.venv/bin/ruff format --check src tests` - pass
-- `rg -n "provider disabled|structured output|budget precheck|human review|deterministic" docs/JUDGE_CALIBRATION.md reports/judge_calibration/report.md tests/judging/test_provider_contract.py`
+- `rg -n "append-only|review_entries|review_decisions|unresolved review|review_id" docs/HUMAN_REVIEW.md tests/review/test_review_store.py src/eval_ground_truth_lab/review/store.py src/eval_ground_truth_lab/reports/review.py`
   - pass
 - Requested audience-positioning wording scan across README, docs, reports,
   source, and tests
@@ -98,4 +96,4 @@ passed, and no blocking findings were identified.
 
 ## Next
 
-Proceed to T23 File-Backed Human Review Queue.
+Proceed to T24 Static HTML Report and Final Evidence Pack.

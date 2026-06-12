@@ -44,7 +44,7 @@ Lab.
 
 ## Active Tasks
 
-- `docs/tasks.md#t23-file-backed-human-review-queue` - current Phase 6
+- `docs/tasks.md#t24-static-html-report-and-final-evidence-pack` - current Phase 6
   entry point.
 
 ## Known Gaps
@@ -55,7 +55,8 @@ Lab.
 - Cost rollup and fixture budget-check are implemented.
 - Optional real judge provider contract is implemented and remains disabled
   without credentials and budget.
-- File-backed human review queue is planned next.
+- File-backed human review queue is implemented.
+- Static HTML report and final evidence pack are planned next.
 - Cost telemetry exists, but rollup and CI budget enforcement are planned later.
 - File-backed human review and static HTML reporting are planned later.
 - Dashboard, hosted service, continuous eval, and production platform claims are

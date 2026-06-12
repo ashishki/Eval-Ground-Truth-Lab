@@ -23,4 +23,5 @@ Last updated: 2026-06-12
 | Review cycle 16 | 2026-06-12 | PASS | T19 gdev-agent baseline report deep review | `docs/audit/archive/CYCLE16_REVIEW_REPORT.md` |
 | Review cycle 17 | 2026-06-12 | PASS | T20 mocked gdev CI smoke deep review | `docs/audit/archive/CYCLE17_REVIEW_REPORT.md` |
 | Review cycle 18 | 2026-06-12 | PASS | T21 cost rollup and budget check deep review | `docs/audit/archive/CYCLE18_REVIEW_REPORT.md` |
-| Review cycle 19 | 2026-06-12 | PASS | T22 optional real judge provider deep review | `docs/audit/REVIEW_REPORT.md` |
+| Review cycle 19 | 2026-06-12 | PASS | T22 optional real judge provider deep review | `docs/audit/archive/CYCLE19_REVIEW_REPORT.md` |
+| Review cycle 20 | 2026-06-12 | PASS | T23 file-backed human review deep review | `docs/audit/REVIEW_REPORT.md` |
