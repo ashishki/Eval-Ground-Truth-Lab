@@ -47,7 +47,10 @@ Maintain this file for:
 | T13 deep review | review | `docs/audit/archive/CYCLE10_REVIEW_REPORT.md` | META, ARCH, CODE, docs, and consolidated review gate for T13 | 2026-06-12 | Yes |
 | T14 gdev-agent dataset | test | `tests/datasets/test_gdev_agent_dataset.py` | 55-case synthetic gdev-agent triage dataset, required slice coverage, manifest hash consistency, dataset-inspect output, and no real data markers | 2026-06-12 | Yes |
 | T14 gdev-agent dataset manifest | eval evidence | `datasets/gdev_agent/manifest.json` | gdev-agent triage v1 case count, dataset hash, slice list, and threshold config pointer | 2026-06-12 | Yes |
-| T14 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, dataset, and consolidated review gate for T14 | 2026-06-12 | Yes |
+| T14 deep review | review | `docs/audit/archive/CYCLE11_REVIEW_REPORT.md` | META, ARCH, CODE, dataset, and consolidated review gate for T14 | 2026-06-12 | Yes |
+| T15 gdev-agent normalizer | test | `tests/adapters/test_gdev_agent_normalizer.py` | Executed, pending, blocked, error, malformed structured output, HTTP error, cost, and latency normalization | 2026-06-12 | Yes |
+| T15 gdev-agent adapter contract | docs | `docs/GDEV_AGENT_ADAPTER.md` | Canonical normalized output shape, fail-closed behavior, adapter error mapping, and live adapter boundary | 2026-06-12 | Yes |
+| T15 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, normalizer, and consolidated review gate for T15 | 2026-06-12 | Yes |
 
 ## Retrieval Rules
 

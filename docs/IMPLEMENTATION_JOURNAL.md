@@ -1,7 +1,7 @@
 # Implementation Journal - Eval Ground Truth Lab
 
 Version: 1.0
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 Status: append-only
 
 This file records durable handoff context across agents and sessions. It is not
@@ -244,3 +244,22 @@ the source of truth for architecture or policy.
   Manifest hash is
   `ee4e0d237d43f16a815dcad2f7ff57ebb30404bf39a337d1e74aeeb53befffeb`.
   `dataset-inspect` now emits dataset ID, schema version, case count, and hash.
+
+### 2026-06-12 - T15 - gdev-agent Output Normalizer
+
+- Scope: `src/eval_ground_truth_lab/adapters/gdev_normalizer.py`,
+  `tests/adapters/test_gdev_agent_normalizer.py`,
+  `docs/GDEV_AGENT_ADAPTER.md`, `docs/CODEX_PROMPT.md`,
+  `docs/EVIDENCE_INDEX.md`
+- Why this work happened: Add the deterministic response-mapping boundary needed
+  before a live gdev-agent adapter and gdev-agent validators can inspect real
+  candidate outputs.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/adapters/test_gdev_agent_normalizer.py`; full gate
+  passed with `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: T16 Real GDevAgentHttpAdapter.
+- Notes for next agent: `normalize_gdev_response` supports executed, pending,
+  blocked, and error statuses; malformed output fails closed into
+  `invalid_structured_output`; HTTP 4xx/5xx responses become `adapter_error`;
+  cost and latency fields are preserved when available.
