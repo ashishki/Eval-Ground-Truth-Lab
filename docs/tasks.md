@@ -1,7 +1,7 @@
 # Tasks - Eval Ground Truth Lab
 
 Version: 1.0
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 Mode: Standard
 
 ## Task Rules
@@ -12,6 +12,18 @@ Mode: Standard
   judge authority, budget policy, seeded regression gates, or failure taxonomy.
 - Product capability profiles are OFF in Phase 1. Do not add RAG, Tool-Use,
   Agentic, Planning, or Compliance profile work without an ADR.
+
+## Implementation Status
+
+Current status: complete through T24.
+
+| Range | Status | Evidence |
+|-------|--------|----------|
+| T01-T12 | complete | Phase 1 audit, seeded smoke gate, and v1 evidence pack in `docs/EVIDENCE_INDEX.md`. |
+| T13-T18 | complete | README/truth surface, gdev dataset, normalizer, adapter, validators, and CLI evidence in `docs/EVIDENCE_INDEX.md`. |
+| T19-T24 | complete | gdev baseline report, mocked CI smoke, cost rollup, optional judge provider contract, file-backed review, HTML report, and final evidence pack in `docs/EVIDENCE_INDEX.md`. |
+
+Next task: none in the current roadmap.
 
 ## T01: Project Skeleton
 
