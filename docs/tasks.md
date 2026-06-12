@@ -15,15 +15,17 @@ Mode: Standard
 
 ## Implementation Status
 
-Current status: complete through T24.
+Current status: complete through T25.
 
 | Range | Status | Evidence |
 |-------|--------|----------|
 | T01-T12 | complete | Phase 1 audit, seeded smoke gate, and v1 evidence pack in `docs/EVIDENCE_INDEX.md`. |
 | T13-T18 | complete | README/truth surface, gdev dataset, normalizer, adapter, validators, and CLI evidence in `docs/EVIDENCE_INDEX.md`. |
 | T19-T24 | complete | gdev baseline report, mocked CI smoke, cost rollup, optional judge provider contract, file-backed review, HTML report, and final evidence pack in `docs/EVIDENCE_INDEX.md`. |
+| T25 | complete | Live-probe adapter hardening for transport disconnects in `tests/adapters/test_gdev_agent_adapter.py` and `docs/EVIDENCE_INDEX.md`. |
 
-Next task: none in the current roadmap.
+Next task: rerun live gdev-agent proof after upstream `/webhook` runtime
+blockers are fixed in `gdev-agent`.
 
 ## T01: Project Skeleton
 
@@ -909,3 +911,39 @@ Context-Refs:
   - docs/EVIDENCE_INDEX.md
   - reports/v1/evidence_report.md
   - docs/ARCHITECTURE.md
+
+## T25: Live gdev-agent Probe Adapter Hardening
+
+Owner: codex
+Phase: 7
+Type: none
+Depends-On: T16 T18 T20
+
+Objective: |
+  Harden the real gdev-agent adapter after a live local probe revealed that
+  transport-level disconnects can occur when the external system returns a 500
+  before completing an HTTP response.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "A network disconnect from the configured gdev-agent URL normalizes to an adapter_error output instead of crashing the CLI."
+    test: "tests/adapters/test_gdev_agent_adapter.py::test_network_disconnect_normalizes_to_adapter_error"
+  - id: AC-2
+    description: "Live probe failures remain deterministic eval failures and do not become candidate self-reported correctness."
+    test: "tests/validators/test_gdev_agent_validators.py::test_adapter_error_blocks_case"
+  - id: AC-3
+    description: "Known limits record that the current live gdev-agent local run reaches health/auth but blocks on upstream `/webhook` runtime errors."
+    verify: "rg -n \"live gdev-agent probe|RemoteDisconnected|Future attached to a different loop|webhook_secrets\" docs/KNOWN_LIMITS.md docs/EVIDENCE_INDEX.md"
+
+Files:
+  - src/eval_ground_truth_lab/adapters/gdev_agent.py
+  - tests/adapters/test_gdev_agent_adapter.py
+  - docs/KNOWN_LIMITS.md
+  - docs/EVIDENCE_INDEX.md
+  - docs/IMPLEMENTATION_JOURNAL.md
+  - .gitignore
+
+Context-Refs:
+  - docs/GDEV_AGENT_ADAPTER.md
+  - docs/KNOWN_LIMITS.md
+  - docs/IMPLEMENTATION_CONTRACT.md#candidate-adapters-are-isolated-and-instrumented

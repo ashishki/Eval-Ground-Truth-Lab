@@ -10,8 +10,8 @@ summaries.
 
 ## Current State
 
-- Phase: 5
-- Baseline: 93 passing tests
+- Phase: 7
+- Baseline: 95 passing tests
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-12
@@ -55,11 +55,15 @@ Implementation rules:
 
 ## Next Task
 
-none - roadmap complete through T24
+rerun live gdev-agent proof after upstream `/webhook` runtime blockers are fixed
 
 ## Fix Queue
 
-empty
+- gdev-agent live local probe: `/health` and `/auth/token` pass, but `/webhook`
+  currently returns runtime 500s from upstream `gdev-agent` paths
+  (`webhook_secrets` RLS lookup before tenant context and async budget check
+  loop mismatch). Eval Lab adapter now normalizes transport disconnects to
+  `adapter_error` instead of crashing.
 
 ## Correction Budget
 
@@ -82,8 +86,8 @@ empty
 - Monthly project budget: provisional 25 USD until revised
 - Approval required before: model escalation, judge fan-out increase, retry
   expansion, tool-call expansion, scheduled judge runs, or budget overrun
-- Last recorded AI/model cost: none; T24 added static derivative HTML/docs only
-  and no model/provider calls
+- Last recorded AI/model cost: none; T25 used deterministic local HTTP/Docker
+  probing only and no model/provider calls
 
 If the next task would exceed the declared budget, increase model class, increase
 retry/fan-out/tool-call limits, or add recurring AI usage, stop for approval

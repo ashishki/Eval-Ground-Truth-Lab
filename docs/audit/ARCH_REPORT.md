@@ -1,4 +1,4 @@
-# ARCH_REPORT - Cycle 21
+# ARCH_REPORT - Cycle 22
 
 Date: 2026-06-12
 
@@ -6,29 +6,30 @@ Date: 2026-06-12
 
 | Component | Verdict | Note |
 |-----------|---------|------|
-| HTML report | PASS | Generated from canonical markdown body and links markdown/run JSON artifacts. |
-| reporting boundary | PASS | Docs state HTML is derivative and markdown/run JSON remain canonical. |
-| final case study | PASS | Case study answers required final evidence questions. |
-| known limits | PASS | Limits explicitly cover local/synthetic evidence, no dashboard, no hosted service, and no production platform claim. |
-| evidence index | PASS | Final claims map to concrete tests, docs, reports, and datasets. |
-| README reviewer path | PASS | README has 5-minute path linking seeded smoke, gdev eval, evidence index, reports, and known limits. |
-| Tests | PASS | T24 tests cover HTML derivation, final evidence docs, evidence mapping, and overclaim guard. |
-| Audit continuity | PASS | Cycle 20 review artifacts are archived before active review artifacts are overwritten for Cycle 21. |
+| gdev transport adapter | PASS | Transport disconnects, URL errors, timeouts, HTTP client errors, and OS network errors normalize to HTTP `599` adapter-error outputs. |
+| gdev normalizer boundary | PASS | HTTP status `599` follows existing HTTP-error normalization and becomes `adapter_error`. |
+| gdev validators | PASS | Adapter errors remain deterministic blocking failures through `gdev.adapter_error`. |
+| CLI failure behavior | PASS | Live probe no longer tracebacked after adapter hardening; it exits non-zero from deterministic failures. |
+| live gdev-agent dependency | BLOCKED_EXTERNAL | Current upstream `gdev-agent` `/webhook` path returns runtime 500s after health/auth pass. |
+| artifact hygiene | PASS | Transient live probe outputs under `runs/` and `reports/gdev-agent/live_probe_report.md` are ignored. |
+| known limits | PASS | Live probe blocker is documented without claiming a passing live baseline. |
+| Tests | PASS | Adapter and validator regression tests cover the new failure mode and blocking behavior. |
+| Audit continuity | PASS | Cycle 21 review artifacts are archived before active review artifacts are overwritten for Cycle 22. |
 
 ## Contract Compliance
 
 | Rule | Verdict | Note |
 |------|---------|------|
-| SQL safety | n/a | T24 adds no SQL or database calls. |
-| Credentials and secrets | PASS | No credentials, real user data, or private transcripts added. |
+| SQL safety | n/a | Eval Lab added no SQL or database calls. |
+| Credentials and secrets | PASS | Runtime probe used existing synthetic local tenant IDs/secrets only; no real secrets added. |
 | CI gate | PASS | Local equivalent gate passed: ruff check, ruff format check, and pytest. |
-| No self-review | PASS | Review artifacts record scoped review evidence; no P1/P2 finding is self-closed because none exist. |
-| Repository authority | PASS | Evidence index maps claims to canonical tests, reports, datasets, and docs. |
-| Deterministic gates own blocking decisions | PASS | T24 does not change validators or gate authority. |
-| Dataset and run identity are immutable | PASS | HTML links existing canonical run artifact and does not mutate it. |
-| Synthetic data only in v1 | PASS | Final docs preserve synthetic/local deterministic labels. |
-| Explicit candidate adapter boundary | PASS | T24 does not change adapter boundaries. |
-| Optional judge is budgeted and non-authoritative | PASS | Final docs keep judge non-authoritative. |
+| No self-review | PASS | Review artifacts record scoped review evidence; no Eval Lab P1/P2 finding is self-closed because none exist. |
+| Repository authority | PASS | Evidence index, known limits, task ledger, and journal were updated. |
+| Deterministic gates own blocking decisions | PASS | Adapter errors are validator failures; no judge or candidate self-report can override them. |
+| Dataset and run identity are immutable | PASS | No committed dataset or canonical baseline run was mutated. |
+| Synthetic data only in v1 | PASS | Live probe used synthetic local cases and synthetic local tenant fixtures. |
+| Explicit candidate adapter boundary | PASS | Network destination still comes from adapter config, not eval case input. |
+| Optional judge is budgeted and non-authoritative | PASS | T25 added no judge/provider calls. |
 
 ## ADR Compliance
 
@@ -38,20 +39,22 @@ Date: 2026-06-12
 
 ## Architecture Findings
 
-None.
+| ID | Sev | Description | Status |
+|----|-----|-------------|--------|
+| EXT-GDEV-001 | External | Current `gdev-agent` local `/webhook` path returns runtime 500s after health/auth pass: first observed RLS/tenant-context issue in `webhook_secrets`, then async-loop mismatch in budget checking. | Documented in `docs/KNOWN_LIMITS.md`; fix belongs upstream in `gdev-agent`. |
 
 ## Right-Sizing / Runtime Checks
 
 | Check | Verdict | Note |
 |-------|---------|------|
-| Solution shape still appropriate | PASS | T24 adds static derivative report and docs only, not dashboard or hosted runtime. |
-| Deterministic-owned areas remain deterministic | PASS | No metrics logic was added to HTML. |
-| Runtime tier unchanged / justified | PASS | No new runtime, dependency, service, or network requirement was added. |
+| Solution shape still appropriate | PASS | T25 hardens the existing adapter instead of adding a new integration layer. |
+| Deterministic-owned areas remain deterministic | PASS | Failures are represented as structured adapter outputs and validator results. |
+| Runtime tier unchanged / justified | PASS | No new runtime, dependency, service, model SDK/API, or hosted path was added. |
 | Human approval boundaries still valid | PASS | No threshold, judge authority, cost policy, or safety acceptance changes. |
-| Minimum viable control surface still proportionate | PASS | Final evidence pack closes the current local-first proof path. |
+| Minimum viable control surface still proportionate | PASS | The change is limited to network error handling and evidence docs. |
 
 ## Doc Patches Needed
 
 | File | Section | Change |
 |------|---------|--------|
-| none | n/a | No architecture/spec patch required for T24. |
+| none | n/a | Required T25 docs patches are included. |

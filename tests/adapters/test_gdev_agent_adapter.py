@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+from http.client import RemoteDisconnected
 
 import pytest
 
@@ -165,3 +166,25 @@ def test_adapter_uses_mocked_transport() -> None:
     assert result.output["status"] == "executed"
     assert result.output["category"] == "bug_report"
     assert result.output["requires_human"] is False
+
+
+def test_network_disconnect_normalizes_to_adapter_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def broken_urlopen(*_args: object, **_kwargs: object) -> object:
+        raise RemoteDisconnected("remote end closed connection without response")
+
+    monkeypatch.setattr(
+        "eval_ground_truth_lab.adapters.gdev_agent.request.urlopen",
+        broken_urlopen,
+    )
+    adapter = GdevAgentHttpAdapter(_config())
+
+    result = adapter.invoke(_case())
+
+    assert result.status_code == 599
+    assert result.exit_code == 1
+    assert result.output["status"] == "error"
+    assert result.output["category"] == "adapter_error"
+    assert result.output["adapter_error"] is True
+    assert "RemoteDisconnected" in result.output["risk_reason"]

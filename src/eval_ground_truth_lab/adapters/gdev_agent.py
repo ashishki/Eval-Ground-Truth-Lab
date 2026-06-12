@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import http.client as http_client
 import json
 import os
 from collections.abc import Callable, Mapping
@@ -171,6 +172,14 @@ def _post_signed_json(
         return GdevAgentHttpResponse(
             status_code=exc.code,
             output=_decode_json_body(raw_body),
+        )
+    except (error.URLError, TimeoutError, http_client.HTTPException, OSError) as exc:
+        return GdevAgentHttpResponse(
+            status_code=599,
+            output={
+                "detail": f"{exc.__class__.__name__}: {exc}",
+                "error_type": exc.__class__.__name__,
+            },
         )
 
 

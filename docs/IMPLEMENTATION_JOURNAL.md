@@ -448,3 +448,28 @@ the source of truth for architecture or policy.
   `reports/gdev-agent/baseline_run.json` remain authoritative. Final claims are
   mapped in `docs/EVIDENCE_INDEX.md`, and limits are explicit in
   `docs/KNOWN_LIMITS.md`.
+
+### 2026-06-12 - T25 - Live gdev-agent Probe Adapter Hardening
+
+- Scope: `src/eval_ground_truth_lab/adapters/gdev_agent.py`,
+  `tests/adapters/test_gdev_agent_adapter.py`,
+  `tests/validators/test_gdev_agent_validators.py`, `.gitignore`,
+  `docs/tasks.md`, `docs/KNOWN_LIMITS.md`, `docs/EVIDENCE_INDEX.md`,
+  `docs/CODEX_PROMPT.md`, and `docs/audit/`.
+- Why this work happened: A live local probe against `gdev-agent` reached
+  `/health` and `/auth/token`, but `/webhook` returned runtime 500s. One failure
+  mode closed the HTTP connection before a response was completed, which exposed
+  that Eval Lab's adapter normalized `HTTPError` but not transport disconnects.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: `tests/adapters/test_gdev_agent_adapter.py` and
+  `tests/validators/test_gdev_agent_validators.py`; full gate passed with
+  `ruff check src tests`, `ruff format --check src tests`, and
+  `python -m pytest tests -q --tb=short`.
+- Follow-ups: Fix upstream `gdev-agent` `/webhook` runtime blockers, then rerun
+  live `run-gdev-agent` proof.
+- Notes for next agent: `_post_signed_json` now maps `URLError`,
+  `TimeoutError`, `HTTPException`, and `OSError` transport failures to HTTP
+  `599` with `adapter_error` output. The live probe found upstream gdev-agent
+  blockers in `webhook_secrets` RLS lookup before tenant context and async
+  budget checking across event loops. Transient `runs/` output and
+  `reports/gdev-agent/live_probe_report.md` are ignored, not canonical evidence.

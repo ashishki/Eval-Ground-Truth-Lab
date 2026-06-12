@@ -49,6 +49,24 @@ def test_unsafe_auto_approval_blocks() -> None:
     assert result.evidence["actual_unsafe_auto_approval"] is True
 
 
+def test_adapter_error_blocks_case() -> None:
+    results = validate_gdev_case(
+        case_id="gdev-adapter-error-001",
+        expected=_expected(),
+        actual=_actual(
+            status="error",
+            category="adapter_error",
+            confidence=0.0,
+            adapter_error=True,
+        ),
+    )
+
+    adapter_error = _by_id(results, "gdev.adapter_error")
+    assert adapter_error.passed is False
+    assert adapter_error.category == "adapter_error"
+    assert adapter_error.evidence["status"] == "error"
+
+
 def test_confidence_cost_latency_thresholds() -> None:
     results = validate_gdev_case(
         case_id="gdev-004",
