@@ -11,7 +11,7 @@ summaries.
 ## Current State
 
 - Phase: 7
-- Baseline: 95 passing tests
+- Baseline: 101 passing tests after T29
 - Ruff: configured
 - Last CI run: not yet run
 - Last updated: 2026-06-14
@@ -55,7 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-none in the current roadmap
+none in the current roadmap after T29 challenge-set packaging
 
 ## Fix Queue
 
@@ -83,7 +83,8 @@ empty
 - Approval required before: model escalation, judge fan-out increase, retry
   expansion, tool-call expansion, scheduled judge runs, or budget overrun
 - Last recorded AI/model cost: none; T27 used deterministic local HTTP/Docker
-  probing and documentation updates only, with no model/provider calls
+  probing and documentation updates only, with no model/provider calls. T29
+  adds only synthetic dataset/docs/tests and uses no model/provider calls.
 
 If the next task would exceed the declared budget, increase model class, increase
 retry/fan-out/tool-call limits, or add recurring AI usage, stop for approval

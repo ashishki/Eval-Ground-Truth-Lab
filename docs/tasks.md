@@ -15,7 +15,7 @@ Mode: Standard
 
 ## Implementation Status
 
-Current status: complete through T27.
+Current status: complete through T29.
 
 | Range | Status | Evidence |
 |-------|--------|----------|
@@ -25,6 +25,8 @@ Current status: complete through T27.
 | T25 | complete | Live-probe adapter hardening for transport disconnects in `tests/adapters/test_gdev_agent_adapter.py` and `docs/EVIDENCE_INDEX.md`. |
 | T26 | complete | Live gdev-agent proof rerun summary in `reports/gdev-agent/live_probe_summary.md`. |
 | T27 | complete | Passing live local gdev-agent baseline and refreshed evidence pack in `reports/gdev-agent/baseline_report.md`, `reports/gdev-agent/baseline_run.json`, and `docs/EVIDENCE_INDEX.md`. |
+| T28 | complete | Three-project stack overview and eval-scope framing in `docs/STACK_OVERVIEW.md`, `README.md`, and `docs/EVIDENCE_INDEX.md`. |
+| T29 | complete | gdev-agent diagnostic challenge set in `datasets/gdev_agent/challenge_v1.jsonl`, `datasets/gdev_agent/challenge_manifest.json`, `docs/GDEV_AGENT_CHALLENGE_SET.md`, and `reports/gdev-agent/challenge_report.md`. |
 
 Next task: none in the current roadmap.
 
@@ -1031,3 +1033,88 @@ Context-Refs:
   - docs/KNOWN_LIMITS.md
   - reports/gdev-agent/baseline_report.md
   - reports/gdev-agent/baseline_run.json
+
+## T28: Stack Overview and Eval Scope Framing
+
+Owner: codex
+Phase: 8
+Type: docs
+Depends-On: T27
+
+Objective: |
+  Frame Eval Lab inside the three-project AI reliability stack and clarify that
+  the 55-case gdev-agent baseline is integration/conformance evidence, while a
+  harder challenge set remains a separate diagnostic layer.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "README and case study link the three-project stack map."
+    verify: "rg -n \"STACK_OVERVIEW|three-project|Runtime Grid\" README.md docs/CASE_STUDY.md docs/EVIDENCE_INDEX.md"
+  - id: AC-2
+    description: "Known limits and baseline report describe the 55-case baseline as conformance evidence, not a hard challenge set."
+    verify: "rg -n \"integration/conformance|challenge set|future work\" README.md docs/KNOWN_LIMITS.md reports/gdev-agent/baseline_report.md"
+
+Files:
+  - README.md
+  - docs/STACK_OVERVIEW.md
+  - docs/CASE_STUDY.md
+  - docs/KNOWN_LIMITS.md
+  - docs/EVIDENCE_INDEX.md
+  - reports/gdev-agent/baseline_report.md
+
+Context-Refs:
+  - docs/CASE_STUDY.md
+  - docs/KNOWN_LIMITS.md
+  - reports/gdev-agent/baseline_report.md
+
+## T29: gdev-agent Diagnostic Challenge Set
+
+Owner: codex
+Phase: 8
+Type: data/docs/tests
+Depends-On: T28
+
+Objective: |
+  Add a harder gdev-agent challenge set that makes ambiguous, policy-stress,
+  guard-stress, tenant-boundary, malformed-input, and expected-failure cases
+  reviewable without replacing the clean 55-case integration baseline.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Challenge dataset contains 100 unique synthetic cases across the required hard-case slices."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_challenge_dataset_shape_and_slices"
+  - id: AC-2
+    description: "Challenge cases keep the gdev expected-output contract and add diagnostic metadata for expected failures and human review."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_challenge_dataset_case_shape"
+  - id: AC-3
+    description: "Challenge thresholds define diagnostic expected-failure, unexpected-pass/fail, and human-review metrics while preserving zero unsafe auto-approval tolerance."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_challenge_thresholds_are_diagnostic"
+  - id: AC-4
+    description: "Docs and committed report link the challenge set while stating it is not a passing baseline."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_challenge_docs_and_report_are_linked"
+  - id: AC-5
+    description: "Challenge dataset remains synthetic and contains no secret or real-data markers."
+    test: "tests/datasets/test_gdev_agent_dataset.py::test_gdev_agent_challenge_dataset_contains_no_real_data"
+
+Files:
+  - datasets/gdev_agent/challenge_v1.jsonl
+  - datasets/gdev_agent/challenge_manifest.json
+  - datasets/gdev_agent/challenge_thresholds.json
+  - docs/GDEV_AGENT_CHALLENGE_SET.md
+  - reports/gdev-agent/challenge_report.md
+  - tests/datasets/test_gdev_agent_dataset.py
+  - README.md
+  - docs/CASE_STUDY.md
+  - docs/KNOWN_LIMITS.md
+  - docs/EVIDENCE_INDEX.md
+  - docs/README.md
+  - reports/gdev-agent/README.md
+  - docs/tasks.md
+  - docs/CODEX_PROMPT.md
+  - docs/IMPLEMENTATION_JOURNAL.md
+
+Context-Refs:
+  - docs/GDEV_AGENT_CHALLENGE_SET.md
+  - docs/EVIDENCE_INDEX.md
+  - docs/KNOWN_LIMITS.md
+  - docs/IMPLEMENTATION_CONTRACT.md#synthetic-data-only-in-v1

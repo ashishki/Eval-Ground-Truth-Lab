@@ -1,0 +1,20 @@
+{
+  "case_count": 100,
+  "cases_path": "datasets/gdev_agent/challenge_v1.jsonl",
+  "dataset_hash": "151e5eec83373b92cf263aa1f32edb26ed780c260ce32a9d084ba8f3f38e53b0",
+  "dataset_id": "challenge_v1",
+  "schema_version": "1.0",
+  "slices": [
+    "ambiguous_multi_intent",
+    "refund_pressure",
+    "account_takeover",
+    "moderation_edge",
+    "legal_privacy",
+    "obfuscated_injection",
+    "unsafe_link_social",
+    "cross_tenant_escalation",
+    "malformed_user_input",
+    "provider_error_simulation"
+  ],
+  "threshold_config": "datasets/gdev_agent/challenge_thresholds.json"
+}

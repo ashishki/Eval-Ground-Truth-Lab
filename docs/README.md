@@ -24,9 +24,10 @@ Lab.
 - Product capability profiles: RAG OFF, Tool-Use OFF, Agentic OFF, Planning OFF,
   Compliance OFF.
 - Optional LLM judge is disabled by default and budget-gated.
-- Current proof surface: seeded smoke gate, v1 synthetic evidence pack, and a
-  passing local gdev-agent integration proof, not a production eval
-  platform or hosted SaaS claim.
+- Current proof surface: seeded smoke gate, v1 synthetic evidence pack, a
+  passing local gdev-agent integration proof, and a committed gdev-agent
+  diagnostic challenge set, not a production eval platform or hosted SaaS
+  claim.
 
 ## Key Decisions
 
@@ -40,12 +41,15 @@ Lab.
 - `docs/EVIDENCE_INDEX.md` - proof retrieval index.
 - `reports/v1/evidence_report.md` - v1 synthetic evidence report.
 - `reports/gdev-agent/baseline_report.md` - gdev-agent local baseline report.
+- `docs/GDEV_AGENT_CHALLENGE_SET.md` - gdev-agent hard-case diagnostic dataset.
+- `reports/gdev-agent/challenge_report.md` - committed challenge-set scope
+  report.
 - `docs/audit/AUDIT_INDEX.md` - audit and deep-review index.
 
 ## Active Tasks
 
-- Current roadmap status: complete through the gdev-agent live local baseline
-  evidence refresh.
+- Current roadmap status: complete through the gdev-agent diagnostic challenge
+  set.
 
 ## Known Gaps
 
@@ -57,6 +61,8 @@ Lab.
   without credentials and budget.
 - File-backed human review queue is implemented.
 - Static HTML report and final evidence pack are implemented.
+- The challenge set is committed as diagnostic evidence, but live challenge-run
+  promotion and expected-failure summary metrics remain future work.
 - Dashboard, hosted service, continuous eval, and production platform claims are
   out of scope for the current proof.
 

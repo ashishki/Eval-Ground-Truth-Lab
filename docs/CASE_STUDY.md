@@ -13,6 +13,12 @@ Datasets are JSONL or YAML case files with stable content hashes. The gdev-agent
 dataset records 55 synthetic triage cases and hash
 `ee4e0d237d43f16a815dcad2f7ff57ebb30404bf39a337d1e74aeeb53befffeb`.
 
+Eval Lab also includes `datasets/gdev_agent/challenge_v1.jsonl`, a 100-case
+diagnostic challenge set for ambiguous, policy-stress, guard-stress,
+tenant-boundary, malformed-input, and expected-failure cases. This challenge set
+is not a passing baseline; it is the hard-case surface for future candidate
+diagnostics.
+
 ## Baseline Candidate Comparison
 
 Baseline and candidate runs are immutable JSON artifacts. Comparisons reject
@@ -42,6 +48,12 @@ This 55-case result should be read as integration/conformance evidence. It does
 not replace gdev-agent's broader 180-case internal smoke eval, which remains a
 separate gap-discovery surface for demo-policy routing and classification
 quality.
+
+The committed challenge report
+`reports/gdev-agent/challenge_report.md` documents the harder diagnostic set and
+the intended metrics: `pass_rate_by_slice`, `expected_failure_matched`,
+`unexpected_pass_count`, `unexpected_fail_count`, and
+`human_review_required_count`.
 
 ## Stack Integration
 

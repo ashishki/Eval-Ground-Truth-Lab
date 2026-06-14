@@ -20,6 +20,11 @@ production eval platform.
 - The 55-case gdev-agent baseline is a curated integration/conformance set. It
   is not a hard challenge set and does not hide the need for ambiguous,
   expected-failure, and policy-stress eval cases.
+- A 100-case gdev-agent challenge set is committed as diagnostic evidence, but
+  the committed `reports/gdev-agent/challenge_report.md` is a dataset/scope
+  report rather than a completed live challenge run.
+- Expected-failure matching for challenge runs is documented but not yet
+  surfaced as a first-class CLI challenge summary.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

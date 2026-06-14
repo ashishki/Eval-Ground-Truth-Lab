@@ -8,7 +8,7 @@ local evidence stack for reliable AI/agent systems.
 | Layer | Repository | Role | Current evidence |
 | --- | --- | --- | --- |
 | Governed workflow | `gdev-agent` | Multi-tenant support-triage workflow with webhook intake, guardrails, approval, audit, cost, and observability controls. | Local Compose demo, 285-test repository baseline, 180-case internal smoke eval. |
-| Quality layer | `Eval-Ground-Truth-Lab` | Deterministic evaluation framework for structured output, routing, unsafe auto-approval, cost, latency, and adapter behavior. | 55-case live local gdev-agent integration baseline, seeded regression smoke, immutable run artifacts. |
+| Quality layer | `Eval-Ground-Truth-Lab` | Deterministic evaluation framework for structured output, routing, unsafe auto-approval, cost, latency, and adapter behavior. | 55-case live local gdev-agent integration baseline, 100-case diagnostic challenge set, seeded regression smoke, immutable run artifacts. |
 | Runtime layer | `Agent-Runtime-Grid` | Queue-backed runtime for running many AI/agent jobs with retries, timeouts, idempotent finalization, artifacts, metrics, and cost controls. | 100-job smoke, 500-job reliability proof, failure-injection reports, and cross-project artifact proof. |
 
 ## Current End-To-End Evidence
@@ -27,6 +27,11 @@ Eval Ground Truth Lab
 That path validates 55 synthetic triage cases against a live local gdev-agent in
 `LLM_MODE=demo`. It is a conformance/integration baseline, not a production
 quality score and not a hard challenge benchmark.
+
+Eval Lab also commits a harder 100-case gdev-agent challenge set. That dataset
+is diagnostic evidence for ambiguous, policy-stress, guard-stress,
+tenant-boundary, malformed-input, and expected-failure cases; it is not a
+replacement for the canonical passing baseline.
 
 Runtime Grid currently adds an artifact-linked runtime proof:
 
@@ -77,4 +82,3 @@ Current provider facts:
 
 This stack is v1 local evidence. It does not claim external adoption, real user
 traffic, hosted operations, production SLOs, or universal agent safety.
-

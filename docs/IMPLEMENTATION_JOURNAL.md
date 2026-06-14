@@ -517,3 +517,29 @@ the source of truth for architecture or policy.
   canonical committed full-dataset run artifact. `runs/gdev-baseline-v1.json`
   is the CLI output source, while `reports/gdev-agent/baseline_report.md` and
   `.html` are the reviewable report surfaces.
+
+### 2026-06-14 - T29 - gdev-agent Diagnostic Challenge Set
+
+- Scope: `datasets/gdev_agent/challenge_v1.jsonl`,
+  `datasets/gdev_agent/challenge_manifest.json`,
+  `datasets/gdev_agent/challenge_thresholds.json`,
+  `docs/GDEV_AGENT_CHALLENGE_SET.md`,
+  `reports/gdev-agent/challenge_report.md`,
+  `tests/datasets/test_gdev_agent_dataset.py`, `README.md`,
+  `docs/CASE_STUDY.md`, `docs/KNOWN_LIMITS.md`, `docs/EVIDENCE_INDEX.md`,
+  `docs/README.md`, `reports/gdev-agent/README.md`, `docs/tasks.md`, and
+  `docs/CODEX_PROMPT.md`.
+- Why this work happened: The passing 55-case gdev-agent baseline was clean
+  integration/conformance evidence, but portfolio credibility needed a harder
+  diagnostic dataset with ambiguous cases, policy stress, guard stress,
+  tenant-boundary pressure, malformed inputs, and expected failures.
+- Decisions applied: deterministic validators remain authoritative; no judge,
+  live provider, or runtime tier expansion was introduced.
+- Evidence collected: focused dataset tests verify 100 unique synthetic cases,
+  required slices, expected-failure metadata, diagnostic threshold fields,
+  documentation/report links, and no real-data markers.
+- Follow-ups: Promote a live challenge run only after expected-failure matching
+  is surfaced as first-class CLI/report metrics.
+- Notes for next agent: `reports/gdev-agent/challenge_report.md` is a committed
+  scope report, not a completed live challenge run. The canonical passing
+  gdev-agent quality artifact remains `reports/gdev-agent/baseline_run.json`.

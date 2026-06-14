@@ -36,6 +36,8 @@ fixtures.
 - gdev-agent dataset, response normalizer, and configured HTTP adapter boundary.
 - gdev-agent live local baseline evidence report from a canonical 55-case run
   artifact.
+- gdev-agent 100-case challenge set with ambiguous, policy-stress,
+  guard-stress, boundary, malformed-input, and expected-failure slices.
 - CI-safe mocked gdev-agent smoke that does not require Docker Compose or a live
   gdev-agent service.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
@@ -57,8 +59,12 @@ fixtures.
    [reports/gdev-agent/baseline_report.md](reports/gdev-agent/baseline_report.md)
    and
    [reports/gdev-agent/baseline_report.html](reports/gdev-agent/baseline_report.html).
-5. Check the evidence map in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
-6. Check known limits in [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md).
+5. Review the harder diagnostic challenge set:
+   [docs/GDEV_AGENT_CHALLENGE_SET.md](docs/GDEV_AGENT_CHALLENGE_SET.md)
+   and
+   [reports/gdev-agent/challenge_report.md](reports/gdev-agent/challenge_report.md).
+6. Check the evidence map in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
+7. Check known limits in [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md).
 
 ## Quickstart: Seeded Smoke
 
@@ -118,6 +124,10 @@ The current gdev-agent baseline report is in
 [reports/gdev-agent/baseline_report.md](reports/gdev-agent/baseline_report.md).
 The derivative HTML report is in
 [reports/gdev-agent/baseline_report.html](reports/gdev-agent/baseline_report.html).
+The gdev-agent diagnostic challenge set is documented in
+[docs/GDEV_AGENT_CHALLENGE_SET.md](docs/GDEV_AGENT_CHALLENGE_SET.md), with the
+committed scope report in
+[reports/gdev-agent/challenge_report.md](reports/gdev-agent/challenge_report.md).
 Known gaps are tracked in [Known Gaps](#known-gaps).
 
 Core shape:
@@ -134,9 +144,9 @@ Core shape:
   local baseline still requires an operator-run gdev-agent stack.
 - The gdev-agent baseline report is a synthetic/local deterministic artifact
   from a full 55-case live local run, not a production quality score.
-- The 55-case baseline is intentionally clean conformance evidence. A harder
-  gdev-agent challenge set with ambiguous and expected-failure cases remains
-  future work.
+- The 55-case baseline is intentionally clean conformance evidence. The harder
+  100-case gdev-agent challenge set is committed as diagnostic evidence, but it
+  is not yet a canonical live passing baseline.
 - Accuracy for synthetic smoke proof still uses fixture behavior; the current
   gdev-agent live local baseline is checked by deterministic validators.
 - Cost telemetry rollup and fixture-safe budget check commands exist; live judge
@@ -163,5 +173,7 @@ The current roadmap is complete through the first passing live local
 8. mocked CI smoke for the gdev adapter: complete.
 9. cost rollup and budget check: complete.
 10. final evidence pack with passing 55-case live local baseline: complete.
+11. gdev-agent diagnostic challenge set: complete as committed dataset/report;
+    live challenge-run promotion remains future work.
 
 The task queue is tracked in [docs/tasks.md](docs/tasks.md).

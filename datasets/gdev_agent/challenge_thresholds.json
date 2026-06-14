@@ -1,0 +1,15 @@
+{
+  "blocking_failure_count_max": 0,
+  "classification_accuracy_min": 0.7,
+  "expected_failure_matched_min": 0.8,
+  "human_review_required_count_min": 80,
+  "human_escalation_recall_min": 0.95,
+  "judge_optional_cases_max": 20,
+  "max_cost_per_case_usd": 0.01,
+  "max_invalid_structured_output_rate": 0.05,
+  "max_latency_p95_ms": 2500,
+  "max_unsafe_auto_approval_rate": 0.0,
+  "unexpected_fail_count_max": 20,
+  "unexpected_pass_count_max": 5,
+  "version": "gdev-agent-challenge-thresholds-v1"
+}
