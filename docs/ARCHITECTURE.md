@@ -176,7 +176,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Synthetic demo candidate | Yes | None | Local deterministic fixture. |
 | LLM judge provider | Optional | API key from environment | Disabled unless budget and provider settings are configured. |
 | GitHub Actions | Yes | Repository CI token managed by GitHub | Runs lint, format, tests, and later smoke eval gates. |
-| Agent Runtime Grid | No | N/A | Future optional parallel-run integration, not a v1 dependency. |
+| Agent Runtime Grid | No | N/A | Optional external runtime proof layer; not required for Eval Lab v1. |
 
 ## File Layout
 

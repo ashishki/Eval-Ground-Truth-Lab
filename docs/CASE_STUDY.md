@@ -57,16 +57,19 @@ the intended metrics: `pass_rate_by_slice`, `expected_failure_matched`,
 
 ## Stack Integration
 
-The current stack has two concrete paths:
+The current stack has three concrete paths:
 
 - Eval Lab calls live local gdev-agent over HTTP and writes deterministic quality
   reports.
 - Agent Runtime Grid consumes ready Eval Lab/gdev evidence as queued artifact
   jobs and writes runtime reliability reports.
+- Agent Runtime Grid can also run an optional `full-stack-live-local` proof where
+  queued workers call a local gdev-agent HTTP endpoint and store sanitized
+  runtime artifacts.
 
-The second path is artifact-linked runtime proof today. A future
-`full-stack-live-local` mode would make Runtime Grid workers trigger Eval Lab or
-gdev-agent HTTP execution end to end.
+The Runtime Grid modes remain separate from Eval Lab's deterministic quality
+authority. Artifact proof is the reproducible default; live-local proof is
+operator-run local evidence, not production traffic or continuous eval.
 
 ## Synthetic vs Real Integration
 

@@ -17,6 +17,9 @@ production eval platform.
   deterministic validator failures.
 - The committed baseline run is full-dataset synthetic/local evidence, not a
   production quality score.
+- Runtime Grid live-local proof is an operator-run local HTTP path in the
+  runtime repository; it is not a hosted eval scheduler or production traffic
+  claim.
 - The 55-case gdev-agent baseline is a curated integration/conformance set. It
   is not a hard challenge set and does not hide the need for ambiguous,
   expected-failure, and policy-stress eval cases.

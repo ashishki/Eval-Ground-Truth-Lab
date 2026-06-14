@@ -9,7 +9,7 @@ local evidence stack for reliable AI/agent systems.
 | --- | --- | --- | --- |
 | Governed workflow | `gdev-agent` | Multi-tenant support-triage workflow with webhook intake, guardrails, approval, audit, cost, and observability controls. | Local Compose demo, 285-test repository baseline, 180-case internal smoke eval. |
 | Quality layer | `Eval-Ground-Truth-Lab` | Deterministic evaluation framework for structured output, routing, unsafe auto-approval, cost, latency, and adapter behavior. | 55-case live local gdev-agent integration baseline, 100-case diagnostic challenge set, seeded regression smoke, immutable run artifacts. |
-| Runtime layer | `Agent-Runtime-Grid` | Queue-backed runtime for running many AI/agent jobs with retries, timeouts, idempotent finalization, artifacts, metrics, and cost controls. | 100-job smoke, 500-job reliability proof, failure-injection reports, and cross-project artifact proof. |
+| Runtime layer | `Agent-Runtime-Grid` | Queue-backed runtime for running many AI/agent jobs with retries, timeouts, idempotent finalization, artifacts, metrics, and cost controls. | 100-job smoke, 500-job reliability proof, failure-injection reports, cross-project artifact proof, and optional live-local HTTP proof. |
 
 ## Current End-To-End Evidence
 
@@ -33,7 +33,7 @@ is diagnostic evidence for ambiguous, policy-stress, guard-stress,
 tenant-boundary, malformed-input, and expected-failure cases; it is not a
 replacement for the canonical passing baseline.
 
-Runtime Grid currently adds an artifact-linked runtime proof:
+Runtime Grid's default cross-project mode adds artifact-linked runtime proof:
 
 ```text
 Agent Runtime Grid
@@ -44,9 +44,11 @@ Agent Runtime Grid
   -> links back to Eval Lab quality evidence
 ```
 
-The Runtime Grid proof is intentionally named as artifact proof in current docs:
-it does not call live gdev-agent over HTTP by default. A future
-`full-stack-live-local` mode can connect workers to the Eval Lab/gdev HTTP path.
+That proof is intentionally named as artifact proof: it does not call live
+gdev-agent over HTTP by default. Runtime Grid also has a separate optional
+`full-stack-live-local` mode that runs queued workers against a local gdev-agent
+HTTP endpoint and writes sanitized runtime artifacts. That mode is still
+operator-run local evidence, not hosted operations or continuous eval.
 
 ## Agent And Provider Model
 
@@ -68,15 +70,16 @@ Current provider facts:
 - gdev-agent implements Anthropic as its live triage provider path.
 - Eval Lab has an optional OpenAI judge provider contract, but judge output is
   non-authoritative and disabled by default.
-- Runtime Grid enforces stub/live cost boundaries and is ready to host live jobs
-  only after an explicit model-router, egress, and budget task.
+- Runtime Grid keeps general model-router live jobs future; its current
+  live-local proof calls local gdev-agent HTTP instead of owning a model
+  provider.
 
 ## What This Proves
 
 - gdev-agent can be evaluated as a live local system under test.
 - Eval Lab can normalize, validate, and report deterministic quality signals.
 - Runtime Grid can run evidence-linked agent/eval jobs under queue-backed
-  lifecycle controls.
+  lifecycle controls, including an optional local HTTP proof path.
 
 ## What Is Not Claimed
 

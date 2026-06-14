@@ -63,6 +63,8 @@ Lab.
 - Static HTML report and final evidence pack are implemented.
 - The challenge set is committed as diagnostic evidence, but live challenge-run
   promotion and expected-failure summary metrics remain future work.
+- Runtime Grid live-local proof exists as an optional operator-run path in the
+  runtime repository; it is not a hosted eval scheduler.
 - Dashboard, hosted service, continuous eval, and production platform claims are
   out of scope for the current proof.
 
