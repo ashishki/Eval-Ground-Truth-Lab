@@ -21,8 +21,8 @@ Prompt, model, adapter, and guardrail changes can silently reduce quality,
 increase unsafe auto-approval, break structured output, raise cost, or worsen
 latency. Eval Lab creates a repeatable check before changes are promoted.
 
-The next proof target is a real local AI workflow system, `gdev-agent`. Eval Lab
-will evaluate it as the system under test rather than relying only on synthetic
+The current proof target is a real local AI workflow system, `gdev-agent`. Eval
+Lab evaluates it as the system under test rather than relying only on synthetic
 fixtures.
 
 ## What Works Today
@@ -34,7 +34,8 @@ fixtures.
 - Baseline/candidate comparison with CI-style exit codes.
 - Synthetic, HTTP, and CLI adapter boundaries.
 - gdev-agent dataset, response normalizer, and configured HTTP adapter boundary.
-- gdev-agent baseline evidence report from a canonical run artifact.
+- gdev-agent live local baseline evidence report from a canonical 55-case run
+  artifact.
 - CI-safe mocked gdev-agent smoke that does not require Docker Compose or a live
   gdev-agent service.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
@@ -75,13 +76,13 @@ accuracy regressions.
 
 ## Quickstart: gdev-agent Eval
 
-This path is the next local integration proof, not a production eval platform or
-hosted SaaS claim. It will evaluate a locally running `gdev-agent` in deterministic
-demo mode.
+This path is the current local integration proof, not a production eval platform
+or hosted SaaS claim. It evaluates a locally running `gdev-agent` in
+deterministic demo mode.
 
 ```bash
 cd ~/Documents/dev/ai-stack/projects/gdev-agent
-LLM_MODE=demo docker compose up --build -d
+LLM_MODE=demo docker-compose up --build -d postgres redis migrate agent
 make demo
 ```
 
@@ -91,6 +92,7 @@ python -m eval_ground_truth_lab.cli run-gdev-agent \
   --dataset datasets/gdev_agent/triage_v1.jsonl \
   --base-url http://localhost:8000 \
   --run-id gdev-baseline-v1 \
+  --candidate-version gdev-agent-demo-live-local-v2 \
   --report reports/gdev-agent/baseline_report.md
 ```
 
@@ -123,13 +125,12 @@ Core shape:
 
 ## Known Gaps
 
-- The gdev-agent adapter is unit-tested with mocked transport; live local
-  integration still needs an operator-run gdev-agent stack.
-- The gdev-agent baseline report is a compact synthetic/local deterministic
-  artifact; full live local validation still needs an operator-run gdev-agent
-  stack.
-- Accuracy for synthetic smoke proof still uses fixture behavior; real
-  gdev-agent correctness will come from deterministic validators.
+- The gdev-agent adapter is unit-tested with mocked transport in CI; the live
+  local baseline still requires an operator-run gdev-agent stack.
+- The gdev-agent baseline report is a synthetic/local deterministic artifact
+  from a full 55-case live local run, not a production quality score.
+- Accuracy for synthetic smoke proof still uses fixture behavior; the current
+  gdev-agent live local baseline is checked by deterministic validators.
 - Cost telemetry rollup and fixture-safe budget check commands exist; live judge
   cost gates require telemetry rollup artifacts and an approved policy.
 - Optional OpenAI judge provider contract exists, but no live provider call is

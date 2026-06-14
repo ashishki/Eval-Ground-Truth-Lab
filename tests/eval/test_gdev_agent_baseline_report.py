@@ -24,7 +24,8 @@ def test_baseline_report_generated_from_run_artifact() -> None:
         for validator in result.validator_results
         if validator.get("passed") is False
     ]
-    assert failing_case_ids
+    assert not failing_case_ids
+    assert "No case-level failures." in report
     for case_id in failing_case_ids:
         assert case_id in report
 
@@ -58,6 +59,8 @@ def test_baseline_report_contains_required_sections() -> None:
         "## Case-Level Failures",
         "## Known Limits",
         "## Reproduction Command",
+        "No failures.",
+        "No case-level failures.",
         "classification_accuracy",
         "risk_routing_recall",
         "human_escalation_recall",

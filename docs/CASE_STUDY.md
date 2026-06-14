@@ -32,19 +32,22 @@ mocked gdev CI smoke. The expected failure path exits with code `1`.
 
 The gdev-agent path evaluates a real local workflow boundary through the
 configured `/webhook` adapter. CI uses mocked transport; live local integration
-requires the operator to start gdev-agent in deterministic demo mode.
+requires the operator to start gdev-agent in deterministic demo mode. The
+current canonical live local baseline covers all 55 gdev-agent triage cases with
+zero adapter errors and zero deterministic validator failures.
 
 ## Synthetic vs Real Integration
 
 Committed datasets and reports are synthetic/local deterministic evidence. The
-integration boundary is real, but committed artifacts do not claim production
-quality or production traffic coverage.
+integration boundary is real for the live local baseline, but committed
+artifacts do not claim production quality or production traffic coverage.
 
 ## Cost and Latency
 
-Run artifacts record cost and latency per case. Cost telemetry rollup aggregates
-JSONL entries by model, workflow, and case, and budget-check exits `1` on
-overrun.
+Run artifacts record cost and latency per case. The current gdev-agent demo-mode
+baseline returns deterministic `0.0000` per-case cost telemetry. Cost telemetry
+rollup aggregates JSONL entries by model, workflow, and case, and budget-check
+exits `1` on overrun.
 
 ## Non-Authoritative Judge
 

@@ -24,8 +24,8 @@ Lab.
 - Product capability profiles: RAG OFF, Tool-Use OFF, Agentic OFF, Planning OFF,
   Compliance OFF.
 - Optional LLM judge is disabled by default and budget-gated.
-- Current proof surface: seeded smoke gate plus v1 synthetic evidence pack.
-- Next proof surface: local gdev-agent integration proof, not a production eval
+- Current proof surface: seeded smoke gate, v1 synthetic evidence pack, and a
+  passing local gdev-agent integration proof, not a production eval
   platform or hosted SaaS claim.
 
 ## Key Decisions
@@ -44,7 +44,8 @@ Lab.
 
 ## Active Tasks
 
-- Current roadmap status: complete through `docs/tasks.md#t24-static-html-report-and-final-evidence-pack`.
+- Current roadmap status: complete through the gdev-agent live local baseline
+  evidence refresh.
 
 ## Known Gaps
 
@@ -56,8 +57,6 @@ Lab.
   without credentials and budget.
 - File-backed human review queue is implemented.
 - Static HTML report and final evidence pack are implemented.
-- Cost telemetry exists, but rollup and CI budget enforcement are planned later.
-- File-backed human review and static HTML reporting are planned later.
 - Dashboard, hosted service, continuous eval, and production platform claims are
   out of scope for the current proof.
 

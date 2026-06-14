@@ -3,19 +3,22 @@
 Eval Ground Truth Lab is a local-first regression evaluation framework, not a
 production eval platform.
 
-- The committed gdev-agent baseline is synthetic/local deterministic evidence.
-- Live gdev-agent validation requires an operator-run local gdev-agent stack.
+- The committed gdev-agent baseline is synthetic/local deterministic live local
+  evidence, not production traffic evidence.
+- Reproducing live gdev-agent validation requires an operator-run local
+  gdev-agent stack.
 - A live gdev-agent probe on 2026-06-12 first exposed upstream `/webhook`
   runtime failures in `gdev-agent` and an Eval Lab transport-disconnect
   handling gap. After `gdev-agent` commit `901292d` and Eval Lab commit
   `8b052f2`, the local live path reaches `/health`, `/auth/token`, `make demo`,
   and all 55 eval cases with zero adapter errors.
-- The current live gdev-agent eval is still not a passing baseline. It exits
-  `1` because deterministic validators find real quality/telemetry gaps:
-  category/routing mismatches, unsafe auto-approval for expected-human cases,
-  guard expectation mismatches, and missing per-case cost output.
-- The committed baseline run is compact representative evidence, not a full
+- After `gdev-agent` commit `1db09d3`, the canonical live local run
+  `gdev-baseline-v1` covers all 55 cases with zero adapter errors and zero
+  deterministic validator failures.
+- The committed baseline run is full-dataset synthetic/local evidence, not a
   production quality score.
+- Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
+  case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake
   transport only.
 - Live judge cost gates require telemetry rollup output and an approved budget

@@ -1,7 +1,7 @@
 # Evidence Index - Eval Ground Truth Lab
 
 Version: 1.0
-Last updated: 2026-06-12
+Last updated: 2026-06-14
 
 This file indexes durable proof so agents can retrieve prior evidence quickly.
 It is not authoritative by itself. Every row must point to an actual artifact
@@ -61,8 +61,8 @@ Maintain this file for:
 | T18 CLI docs | docs | `docs/CLI.md` | Help, dataset-inspect, run-gdev-agent, and compare command examples | 2026-06-12 | Yes |
 | T18 deep review | review | `docs/audit/archive/CYCLE15_REVIEW_REPORT.md` | META, ARCH, CODE, CLI command, and consolidated review gate for T18 | 2026-06-12 | Yes |
 | T19 gdev-agent baseline report | test | `tests/eval/test_gdev_agent_baseline_report.py` | Report-to-run-artifact consistency, required report sections, synthetic/local deterministic scope labels, and evidence-index links | 2026-06-12 | Yes |
-| T19 gdev-agent baseline run | eval evidence | `reports/gdev-agent/baseline_run.json` | Canonical gdev-agent baseline run artifact with candidate version, dataset hash, metrics, and case-level validator evidence | 2026-06-12 | Yes |
-| T19 gdev-agent baseline report artifact | report | `reports/gdev-agent/baseline_report.md` | Dataset hash, environment, candidate version, metrics, thresholds, failure taxonomy, case-level failures, known limits, and reproduction command | 2026-06-12 | Yes |
+| T19 gdev-agent baseline run | eval evidence | `reports/gdev-agent/baseline_run.json` | Canonical gdev-agent baseline run artifact with candidate version, dataset hash, metrics, 55 case outputs, and case-level validator evidence | 2026-06-14 | Yes |
+| T19 gdev-agent baseline report artifact | report | `reports/gdev-agent/baseline_report.md` | Dataset hash, environment, candidate version, metrics, thresholds, failure taxonomy, zero case-level failures, known limits, and reproduction command | 2026-06-14 | Yes |
 | T19 deep review | review | `docs/audit/archive/CYCLE16_REVIEW_REPORT.md` | META, ARCH, CODE, baseline report, run artifact, and consolidated review gate for T19 | 2026-06-12 | Yes |
 | T20 mocked gdev CI smoke | test | `tests/eval/test_gdev_agent_smoke.py` | 55-case mocked gdev eval pass path, unsafe auto-approval regression exit `1`, and docs/workflow separation from live integration | 2026-06-12 | Yes |
 | T20 mocked gdev workflow step | ci | `.github/workflows/ci.yml` | Explicit mocked gdev-agent smoke step running smoke and adapter tests without Docker Compose | 2026-06-12 | Yes |
@@ -91,13 +91,15 @@ Maintain this file for:
 | T25 adapter-error blocking | test | `tests/validators/test_gdev_agent_validators.py` | Normalized adapter errors remain blocking deterministic eval failures | 2026-06-12 | Yes |
 | T25 live gdev-agent pre-fix probe | docs | `docs/KNOWN_LIMITS.md` | Pre-fix live local probe found upstream `webhook_secrets` RLS and async-loop runtime failures plus the Eval Lab transport-disconnect gap | 2026-06-12 | Yes |
 | T26 live gdev-agent proof rerun | report | `reports/gdev-agent/live_probe_summary.md` | Post-fix live run reaches all 55 cases with zero adapter errors and records remaining deterministic quality/telemetry failures | 2026-06-12 | Yes |
+| T27 gdev-agent passing live baseline | report | `reports/gdev-agent/baseline_report.md`, `reports/gdev-agent/baseline_run.json` | After gdev-agent demo policy and cost telemetry alignment, live local run covers all 55 cases with zero adapter errors and zero deterministic validator failures | 2026-06-14 | Yes |
+| T27 evidence pack refresh | docs | `README.md`, `docs/CASE_STUDY.md`, `docs/KNOWN_LIMITS.md`, `docs/EVIDENCE_INDEX.md` | Evidence package now points to the passing live local baseline while preserving production/platform limits | 2026-06-14 | Yes |
 | Final claim: dataset versioning | test/report | `tests/datasets/test_gdev_agent_dataset.py`, `datasets/gdev_agent/manifest.json`, `docs/CASE_STUDY.md` | Dataset hash and case count evidence | 2026-06-12 | Yes |
 | Final claim: baseline candidate comparison | test | `tests/compare/`, `tests/test_cli.py`, `docs/CASE_STUDY.md` | Comparison threshold and CLI compare behavior | 2026-06-12 | Yes |
 | Final claim: unsafe auto-approval | test/report | `tests/eval/test_seeded_smoke_gate.py`, `tests/validators/test_gdev_agent_validators.py`, `tests/eval/test_gdev_agent_smoke.py` | Seeded and gdev unsafe regression gates | 2026-06-12 | Yes |
-| Final claim: gdev-agent eval | test/report | `tests/eval/test_gdev_agent_smoke.py`, `reports/gdev-agent/baseline_report.md`, `reports/gdev-agent/baseline_run.json` | Local gdev-agent adapter/eval proof path | 2026-06-12 | Yes |
+| Final claim: gdev-agent eval | test/report | `tests/eval/test_gdev_agent_smoke.py`, `reports/gdev-agent/baseline_report.md`, `reports/gdev-agent/baseline_run.json` | Local gdev-agent adapter/eval proof path with full 55-case passing live local baseline | 2026-06-14 | Yes |
 | Final claim: cost and latency | test/docs | `tests/cost/test_rollup.py`, `tests/cost/test_budget_check.py`, `docs/COST_BUDGET.md` | Cost/latency rollup and budget-check evidence | 2026-06-12 | Yes |
 | Final claim: non-authoritative judge | test/docs | `tests/judging/test_provider_contract.py`, `tests/judging/test_authority.py`, `docs/JUDGE_CALIBRATION.md` | Judge disabled, budgeted, and cannot override deterministic failures | 2026-06-12 | Yes |
-| Final claim: known limits | docs | `docs/KNOWN_LIMITS.md`, `README.md` | Explicit non-production, synthetic/local, no-dashboard, and live-validation limits | 2026-06-12 | Yes |
+| Final claim: known limits | docs | `docs/KNOWN_LIMITS.md`, `README.md` | Explicit non-production, synthetic/local, no-dashboard, operator-run live-local, and deterministic demo-cost limits | 2026-06-14 | Yes |
 | T24 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, HTML report, final evidence docs, evidence index, and consolidated review gate for T24 | 2026-06-12 | Yes |
 | T25 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, live-probe transport hardening, known limits, and consolidated review gate for T25 | 2026-06-12 | Yes |
 | T26 deep review | review | `docs/audit/REVIEW_REPORT.md` | META, ARCH, CODE, live proof rerun summary, known limits, and consolidated review gate for T26 | 2026-06-12 | Yes |

@@ -4,8 +4,9 @@ Date: 2026-06-12
 
 ## Scope
 
-This is a concise record of the local live integration probe. It is not the
-canonical passing baseline. The canonical committed baseline remains
+This is a concise historical record of the 2026-06-12 local live integration
+probe before the gdev-agent demo-policy alignment. It is not the canonical
+passing baseline. The canonical committed baseline is
 `reports/gdev-agent/baseline_report.md` and
 `reports/gdev-agent/baseline_run.json`.
 
@@ -66,3 +67,10 @@ match the gdev-agent eval dataset expectations.
 Improve or explicitly version the gdev-agent demo policy so it aligns with the
 eval dataset for category, human-routing, guard behavior, unsafe auto-approval,
 and cost-per-case output. Then regenerate a canonical live baseline report.
+
+## Superseded By
+
+The next gdev-agent pass, recorded on 2026-06-14, aligned demo-mode
+classification, routing, guard behavior, unsafe auto-approval, and deterministic
+cost telemetry. The canonical `gdev-baseline-v1` artifacts now cover all 55
+cases with zero adapter errors and zero deterministic validator failures.

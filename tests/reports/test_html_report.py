@@ -23,7 +23,7 @@ def test_html_report_uses_markdown_report_data() -> None:
         "classification_accuracy",
         "unsafe_auto_approval_rate",
         "latency_p95_ms",
-        "wrong_category",
+        "No failures",
     ):
         assert markdown_value in committed_html
 

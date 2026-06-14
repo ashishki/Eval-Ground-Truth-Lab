@@ -134,7 +134,7 @@ Start gdev-agent in deterministic demo mode:
 
 ```bash
 cd ~/Documents/dev/ai-stack/projects/gdev-agent
-LLM_MODE=demo docker compose up --build -d
+LLM_MODE=demo docker-compose up --build -d postgres redis migrate agent
 make demo
 ```
 
@@ -147,6 +147,7 @@ python -m eval_ground_truth_lab.cli run-gdev-agent \
   --dataset datasets/gdev_agent/triage_v1.jsonl \
   --base-url http://localhost:8000 \
   --run-id gdev-baseline-v1 \
+  --candidate-version gdev-agent-demo-live-local-v2 \
   --report reports/gdev-agent/baseline_report.md
 ```
 
