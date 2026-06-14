@@ -15,7 +15,7 @@ Maintain this file for:
 - Seeded regression reports.
 - Baseline and candidate comparison reports.
 - Human review decisions.
-- Cost telemetry rollups once T09 exists.
+- Cost telemetry rollups and budget-check evidence.
 
 ## Evidence Table
 

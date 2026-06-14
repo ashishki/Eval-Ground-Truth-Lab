@@ -142,17 +142,18 @@ Core shape:
 
 ## Roadmap
 
-The next stage moves from synthetic proof to real local integration:
+The current roadmap is complete through the first passing live local
+`gdev-agent` baseline:
 
-1. README and evidence packaging.
-2. gdev-agent triage dataset.
-3. gdev-agent output normalizer.
-4. real gdev-agent HTTP adapter.
-5. gdev-agent deterministic validators.
-6. `dataset-inspect`, `run-gdev-agent`, and `compare` CLI commands.
-7. gdev-agent baseline report.
-8. mocked CI smoke for the gdev adapter.
-9. cost rollup and budget check.
-10. final evidence pack.
+1. README and evidence packaging: complete.
+2. gdev-agent triage dataset: complete.
+3. gdev-agent output normalizer: complete.
+4. real gdev-agent HTTP adapter: complete.
+5. gdev-agent deterministic validators: complete.
+6. `dataset-inspect`, `run-gdev-agent`, and `compare` CLI commands: complete.
+7. gdev-agent baseline report: complete.
+8. mocked CI smoke for the gdev adapter: complete.
+9. cost rollup and budget check: complete.
+10. final evidence pack with passing 55-case live local baseline: complete.
 
 The task queue is tracked in [docs/tasks.md](docs/tasks.md).
