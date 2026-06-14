@@ -83,6 +83,8 @@ No case-level failures.
   `gdev-agent` demo-mode stack. It is not a production quality score.
 - The source dataset contains 55 synthetic cases and all 55 are present in the
   canonical committed run artifact.
+- This is a curated integration/conformance baseline. It is not a hard
+  challenge set and does not replace broader gdev-agent internal smoke evals.
 - Cost telemetry is present on every normalized response. Demo-mode local
   execution reports deterministic `0.0000` cost per case, not billing
   reconciliation.

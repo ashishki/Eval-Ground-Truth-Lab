@@ -17,6 +17,9 @@ production eval platform.
   deterministic validator failures.
 - The committed baseline run is full-dataset synthetic/local evidence, not a
   production quality score.
+- The 55-case gdev-agent baseline is a curated integration/conformance set. It
+  is not a hard challenge set and does not hide the need for ambiguous,
+  expected-failure, and policy-stress eval cases.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

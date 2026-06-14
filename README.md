@@ -49,14 +49,16 @@ fixtures.
 
 ## 5-Minute Reviewer Path
 
-1. Read [docs/CASE_STUDY.md](docs/CASE_STUDY.md) for the project story.
-2. Run the seeded smoke command below and confirm it exits `1`.
-3. Review the gdev-agent eval command below and the baseline reports:
+1. Read [docs/STACK_OVERVIEW.md](docs/STACK_OVERVIEW.md) for the three-project
+   system map.
+2. Read [docs/CASE_STUDY.md](docs/CASE_STUDY.md) for the project story.
+3. Run the seeded smoke command below and confirm it exits `1`.
+4. Review the gdev-agent eval command below and the baseline reports:
    [reports/gdev-agent/baseline_report.md](reports/gdev-agent/baseline_report.md)
    and
    [reports/gdev-agent/baseline_report.html](reports/gdev-agent/baseline_report.html).
-4. Check the evidence map in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
-5. Check known limits in [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md).
+5. Check the evidence map in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
+6. Check known limits in [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md).
 
 ## Quickstart: Seeded Smoke
 
@@ -101,10 +103,13 @@ classification accuracy, risk-routing recall, unsafe auto-approval rate, invalid
 structured output rate, guard block rate, human escalation recall, cost per case,
 latency p95, failure taxonomy, and case-level failures:
 [reports/gdev-agent/baseline_report.md](reports/gdev-agent/baseline_report.md).
+It is a curated integration/conformance baseline, not a hard challenge-set
+benchmark.
 
 ## Architecture
 
 The canonical architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The cross-project stack map is in [docs/STACK_OVERVIEW.md](docs/STACK_OVERVIEW.md).
 CLI commands are documented in [docs/CLI.md](docs/CLI.md).
 The evidence index is in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
 The current v1 evidence report is in
@@ -129,6 +134,9 @@ Core shape:
   local baseline still requires an operator-run gdev-agent stack.
 - The gdev-agent baseline report is a synthetic/local deterministic artifact
   from a full 55-case live local run, not a production quality score.
+- The 55-case baseline is intentionally clean conformance evidence. A harder
+  gdev-agent challenge set with ambiguous and expected-failure cases remains
+  future work.
 - Accuracy for synthetic smoke proof still uses fixture behavior; the current
   gdev-agent live local baseline is checked by deterministic validators.
 - Cost telemetry rollup and fixture-safe budget check commands exist; live judge

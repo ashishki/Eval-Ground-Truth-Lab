@@ -4,6 +4,8 @@
 
 Eval Ground Truth Lab evaluates LLM and agent workflow regressions: structured
 output validity, unsafe auto-approval, routing, cost, latency, and accuracy.
+In the three-project stack, it is the quality layer between `gdev-agent` as the
+workflow under test and Agent Runtime Grid as the batch execution layer.
 
 ## Dataset Versioning
 
@@ -35,6 +37,24 @@ configured `/webhook` adapter. CI uses mocked transport; live local integration
 requires the operator to start gdev-agent in deterministic demo mode. The
 current canonical live local baseline covers all 55 gdev-agent triage cases with
 zero adapter errors and zero deterministic validator failures.
+
+This 55-case result should be read as integration/conformance evidence. It does
+not replace gdev-agent's broader 180-case internal smoke eval, which remains a
+separate gap-discovery surface for demo-policy routing and classification
+quality.
+
+## Stack Integration
+
+The current stack has two concrete paths:
+
+- Eval Lab calls live local gdev-agent over HTTP and writes deterministic quality
+  reports.
+- Agent Runtime Grid consumes ready Eval Lab/gdev evidence as queued artifact
+  jobs and writes runtime reliability reports.
+
+The second path is artifact-linked runtime proof today. A future
+`full-stack-live-local` mode would make Runtime Grid workers trigger Eval Lab or
+gdev-agent HTTP execution end to end.
 
 ## Synthetic vs Real Integration
 
