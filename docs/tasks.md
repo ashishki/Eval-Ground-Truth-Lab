@@ -1,7 +1,7 @@
 # Tasks - Eval Ground Truth Lab
 
 Version: 1.0
-Last updated: 2026-06-12
+Last updated: 2026-06-14
 Mode: Standard
 
 ## Task Rules
@@ -15,7 +15,7 @@ Mode: Standard
 
 ## Implementation Status
 
-Current status: complete through T26.
+Current status: complete through T27.
 
 | Range | Status | Evidence |
 |-------|--------|----------|
@@ -24,10 +24,9 @@ Current status: complete through T26.
 | T19-T24 | complete | gdev baseline report, mocked CI smoke, cost rollup, optional judge provider contract, file-backed review, HTML report, and final evidence pack in `docs/EVIDENCE_INDEX.md`. |
 | T25 | complete | Live-probe adapter hardening for transport disconnects in `tests/adapters/test_gdev_agent_adapter.py` and `docs/EVIDENCE_INDEX.md`. |
 | T26 | complete | Live gdev-agent proof rerun summary in `reports/gdev-agent/live_probe_summary.md`. |
+| T27 | complete | Passing live local gdev-agent baseline and refreshed evidence pack in `reports/gdev-agent/baseline_report.md`, `reports/gdev-agent/baseline_run.json`, and `docs/EVIDENCE_INDEX.md`. |
 
-Next task: align gdev-agent demo classification/routing/guard/cost behavior
-with `datasets/gdev_agent/triage_v1.jsonl`, then regenerate a canonical passing
-live baseline report.
+Next task: none in the current roadmap.
 
 ## T01: Project Skeleton
 
@@ -967,11 +966,11 @@ Acceptance-Criteria:
     description: "Live probe summary records gdev-agent and Eval Lab versions, commands, case count, adapter-error count, and top failure categories."
     verify: "rg -n \"gdev-agent Live Probe Summary|Adapter errors|wrong routing|unsafe auto-approval|901292d|8b052f2\" reports/gdev-agent/live_probe_summary.md"
   - id: AC-2
-    description: "Known limits state that live HTTP integration now reaches all cases but does not yet pass deterministic quality gates."
-    verify: "rg -n \"zero adapter errors|not a passing baseline|category/routing mismatches|missing per-case cost\" docs/KNOWN_LIMITS.md"
+    description: "Historical live probe summary records the pre-T27 quality and telemetry gaps after adapter errors reached zero."
+    verify: "rg -n \"Adapter errors|wrong routing|cost regression|Superseded By\" reports/gdev-agent/live_probe_summary.md"
   - id: AC-3
-    description: "Next task points to gdev-agent demo/eval alignment, not runtime adapter repair."
-    verify: "rg -n \"align gdev-agent demo classification/routing/guard/cost behavior\" docs/tasks.md docs/CODEX_PROMPT.md"
+    description: "Task ledger marks the later passing baseline refresh as T27 instead of leaving T26 as the current next task."
+    verify: "rg -n \"T27: Passing gdev-agent Live Baseline Evidence Refresh|Next task: none in the current roadmap\" docs/tasks.md docs/CODEX_PROMPT.md"
 
 Files:
   - reports/gdev-agent/live_probe_summary.md
@@ -985,3 +984,50 @@ Context-Refs:
   - docs/GDEV_AGENT_ADAPTER.md
   - docs/KNOWN_LIMITS.md
   - reports/gdev-agent/live_probe_summary.md
+
+## T27: Passing gdev-agent Live Baseline Evidence Refresh
+
+Owner: codex
+Phase: 7
+Type: docs
+Depends-On: T26
+
+Objective: |
+  Refresh Eval Lab evidence after gdev-agent demo-mode classification, routing,
+  guard behavior, unsafe auto-approval, and deterministic cost telemetry are
+  aligned with `datasets/gdev_agent/triage_v1.jsonl`.
+
+Acceptance-Criteria:
+  - id: AC-1
+    description: "Canonical baseline report records a full 55-case live local run with zero failures."
+    verify: "rg -n \"Committed run artifact case count: `55`|zero deterministic validator failures|No case-level failures\" reports/gdev-agent/baseline_report.md docs/CASE_STUDY.md"
+  - id: AC-2
+    description: "Canonical run artifact contains all 55 cases and zero validator failures."
+    test: "tests/eval/test_gdev_agent_baseline_report.py::test_baseline_report_generated_from_run_artifact"
+  - id: AC-3
+    description: "Evidence package points to the passing live local baseline while preserving non-production limits."
+    test: "tests/docs/test_final_evidence_pack.py"
+  - id: AC-4
+    description: "Static HTML report remains a derivative of canonical markdown."
+    test: "tests/reports/test_html_report.py"
+
+Files:
+  - README.md
+  - docs/CASE_STUDY.md
+  - docs/EVIDENCE_INDEX.md
+  - docs/GDEV_AGENT_ADAPTER.md
+  - docs/KNOWN_LIMITS.md
+  - docs/README.md
+  - docs/CODEX_PROMPT.md
+  - docs/IMPLEMENTATION_JOURNAL.md
+  - docs/tasks.md
+  - docs/audit/
+  - reports/gdev-agent/
+  - tests/eval/test_gdev_agent_baseline_report.py
+  - tests/reports/test_html_report.py
+
+Context-Refs:
+  - docs/GDEV_AGENT_ADAPTER.md
+  - docs/KNOWN_LIMITS.md
+  - reports/gdev-agent/baseline_report.md
+  - reports/gdev-agent/baseline_run.json

@@ -1,8 +1,8 @@
 # CODEX_PROMPT.md
 
 Version: 1.0
-Date: 2026-06-11
-Phase: 1
+Date: 2026-06-14
+Phase: 7
 
 This file is the session-state handoff for Codex work. Repository artifacts,
 tests, eval outputs, CI, and audit reports outrank chat memory and generated
@@ -14,7 +14,7 @@ summaries.
 - Baseline: 95 passing tests
 - Ruff: configured
 - Last CI run: not yet run
-- Last updated: 2026-06-12
+- Last updated: 2026-06-14
 - Session tokens (approx): not tracked
 - Cumulative phase tokens (approx): not tracked
 - Session cost (approx): not tracked
@@ -55,9 +55,7 @@ Implementation rules:
 
 ## Next Task
 
-align gdev-agent demo classification/routing/guard/cost behavior with
-`datasets/gdev_agent/triage_v1.jsonl`, then regenerate a canonical passing live
-baseline report
+none in the current roadmap
 
 ## Fix Queue
 
@@ -84,8 +82,8 @@ empty
 - Monthly project budget: provisional 25 USD until revised
 - Approval required before: model escalation, judge fan-out increase, retry
   expansion, tool-call expansion, scheduled judge runs, or budget overrun
-- Last recorded AI/model cost: none; T26 used deterministic local HTTP/Docker
-  probing only and no model/provider calls
+- Last recorded AI/model cost: none; T27 used deterministic local HTTP/Docker
+  probing and documentation updates only, with no model/provider calls
 
 If the next task would exceed the declared budget, increase model class, increase
 retry/fan-out/tool-call limits, or add recurring AI usage, stop for approval

@@ -493,3 +493,27 @@ the source of truth for architecture or policy.
   remaining gap is not adapter/runtime connectivity; it is product-quality and
   telemetry alignment between `gdev-agent` demo behavior and
   `datasets/gdev_agent/triage_v1.jsonl`.
+
+### 2026-06-14 - T27 - Passing gdev-agent Live Baseline Evidence Refresh
+
+- Scope: `README.md`, `docs/CASE_STUDY.md`, `docs/EVIDENCE_INDEX.md`,
+  `docs/GDEV_AGENT_ADAPTER.md`, `docs/KNOWN_LIMITS.md`, `docs/README.md`,
+  `docs/tasks.md`, `docs/CODEX_PROMPT.md`, `reports/gdev-agent/`,
+  `tests/eval/test_gdev_agent_baseline_report.py`,
+  `tests/reports/test_html_report.py`, and `docs/audit/`.
+- Why this work happened: After `gdev-agent` commit `1db09d3` aligned demo-mode
+  classification, routing, guard behavior, unsafe auto-approval, and
+  deterministic cost telemetry with `datasets/gdev_agent/triage_v1.jsonl`, Eval
+  Lab needed its canonical baseline and evidence package refreshed from the
+  passing live local run.
+- Decisions applied: `D-002`, `D-004`
+- Evidence collected: live `run-gdev-agent` against local `gdev-agent` produced
+  `gdev-baseline-v1` with 55 case results, zero adapter errors, zero
+  deterministic validator failures, deterministic `0.0000` cost per case, and
+  p95 latency around 239 ms. Local gates passed with `ruff check src tests`,
+  `ruff format --check src tests`, and `python -m pytest tests -q`.
+- Follow-ups: none in the current roadmap.
+- Notes for next agent: `reports/gdev-agent/baseline_run.json` is now the
+  canonical committed full-dataset run artifact. `runs/gdev-baseline-v1.json`
+  is the CLI output source, while `reports/gdev-agent/baseline_report.md` and
+  `.html` are the reviewable report surfaces.
