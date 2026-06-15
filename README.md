@@ -176,4 +176,6 @@ The current roadmap is complete through the first passing live local
 11. gdev-agent diagnostic challenge set: complete as committed dataset/report;
     live challenge-run promotion remains future work.
 
-The task queue is tracked in [docs/tasks.md](docs/tasks.md).
+Current evidence surfaces are linked from
+[docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md) and
+[docs/STACK_OVERVIEW.md](docs/STACK_OVERVIEW.md).

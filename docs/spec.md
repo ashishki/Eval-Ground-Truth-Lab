@@ -18,7 +18,7 @@ approval.
 | AI engineer | Run local evals before changing prompts, models, or guardrails. |
 | Eval engineer | Maintain datasets, validators, failure taxonomy, and thresholds. |
 | Platform engineer | Integrate CI gates and keep run storage reproducible. |
-| Eval reviewer | Inspect baseline evidence, seeded regression proof, and report quality. |
+| Eval operator | Inspect baseline evidence, seeded regression proof, and report quality. |
 
 ## Feature Area: Dataset Registry
 

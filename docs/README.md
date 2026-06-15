@@ -4,18 +4,17 @@ Status: active
 
 ## Purpose
 
-This docs folder owns the architecture, task state, implementation contract,
-budget rules, continuity surfaces, and validation evidence for Eval Ground Truth
-Lab.
+This docs folder owns the architecture, budget rules, continuity surfaces, and
+validation evidence for Eval Ground Truth Lab.
 
 ## Start Here
 
 - `docs/PROJECT_BRIEF.md` - input brief distilled into project-local context.
 - `docs/ARCHITECTURE.md` - canonical architecture and mode/profile decisions.
 - `docs/spec.md` - feature behavior and acceptance criteria.
-- `docs/tasks.md` - implementation task queue and verification requirements.
-- `docs/CODEX_PROMPT.md` - current Codex session state.
-- `docs/IMPLEMENTATION_CONTRACT.md` - implementation rules and forbidden actions.
+- `docs/STACK_OVERVIEW.md` - three-project reliability stack map.
+- `docs/EVIDENCE_INDEX.md` - durable proof retrieval index.
+- `docs/KNOWN_LIMITS.md` - explicit local and production-boundary limits.
 
 ## Current State
 
@@ -36,7 +35,6 @@ Lab.
 
 ## Contracts, Proof, and Evals
 
-- `docs/IMPLEMENTATION_CONTRACT.md` - implementation authority.
 - `docs/COST_BUDGET.md` - judge/model budget boundary.
 - `docs/EVIDENCE_INDEX.md` - proof retrieval index.
 - `reports/v1/evidence_report.md` - v1 synthetic evidence report.
@@ -44,7 +42,6 @@ Lab.
 - `docs/GDEV_AGENT_CHALLENGE_SET.md` - gdev-agent hard-case diagnostic dataset.
 - `reports/gdev-agent/challenge_report.md` - committed challenge-set scope
   report.
-- `docs/audit/AUDIT_INDEX.md` - audit and deep-review index.
 
 ## Active Tasks
 
@@ -71,4 +68,4 @@ Lab.
 ## Authority
 
 This README is a navigation index. Canonical artifacts, tests, evals, ADRs,
-proof receipts, and review reports remain authoritative.
+proof receipts, and report artifacts remain authoritative.

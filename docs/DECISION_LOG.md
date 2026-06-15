@@ -22,7 +22,7 @@ wins and this file must be corrected.
 | D-001 | 2026-06-11 | Active | Use Standard adoption mode. | The project needs CI, auditability, recurring evidence, and budget controls, but v1 has synthetic data and no privileged autonomous runtime. | `docs/ARCHITECTURE.md#solution-shape` | none |
 | D-002 | 2026-06-11 | Active | Use hybrid deterministic subsystem plus fixed workflow orchestration at runtime tier T1. | Deterministic validators own the core gates; fixed orchestration coordinates baseline, candidate, comparison, report, and review flow. | `docs/ARCHITECTURE.md#solution-shape` | none |
 | D-003 | 2026-06-11 | Active | Keep RAG, Tool-Use, Agentic, Planning, and Compliance profiles OFF in Phase 1. | The brief does not require retrieval-backed answering, LLM-directed tools, autonomous loops, primary plan output, or compliance evidence in v1. | `docs/ARCHITECTURE.md#capability-profiles` | none |
-| D-004 | 2026-06-11 | Active | Optional judge output is budgeted and non-authoritative. | A model judge can assist subjective review but cannot override deterministic validators or become blocking authority without approval and calibration evidence. | `docs/IMPLEMENTATION_CONTRACT.md#optional-judge-is-budgeted-and-non-authoritative` | none |
+| D-004 | 2026-06-11 | Active | Optional judge output is budgeted and non-authoritative. | A model judge can assist subjective review but cannot override deterministic validators or become blocking authority without approval and calibration evidence. | `docs/JUDGE_CALIBRATION.md` | none |
 
 ## Retrieval Notes
 
@@ -31,4 +31,3 @@ wins and this file must be corrected.
   tradeoff.
 - If a task has `Context-Refs`, prefer those entries over scanning this file
   top-to-bottom.
-

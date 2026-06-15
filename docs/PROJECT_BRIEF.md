@@ -18,12 +18,12 @@ workarounds rely on small pytest sets, manual prompt checks, ad hoc spreadsheets
 one-off eval scripts, and subjective sample review.
 
 The first operator maintains gdev-agent and other LLM workflows. A secondary
-reader is an AI platform or eval reviewer checking whether the project
+reader is an AI platform operator or eval maintainer checking whether the project
 demonstrates rigorous evaluation infrastructure.
 
 ## V1 Success
 
-A reviewer can run evals against gdev-agent or a demo candidate, compare baseline
+An operator can run evals against gdev-agent or a demo candidate, compare baseline
 and candidate behavior, see pass/fail decisions, inspect failure categories, and
 verify that seeded unsafe regressions fail CI.
 

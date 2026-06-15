@@ -14,7 +14,7 @@ human review, and where the eval harness should preserve expected failures
 instead of turning every run into a clean demo.
 
 The challenge set is not a production benchmark and is not claimed as a
-quality score. It is synthetic/local portfolio evidence for eval maturity.
+quality score. It is synthetic/local diagnostic evidence for eval maturity.
 
 ## Scope Split
 

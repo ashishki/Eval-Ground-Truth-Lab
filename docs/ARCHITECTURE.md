@@ -7,9 +7,9 @@ Status: Draft
 ## System Overview
 
 Eval Ground Truth Lab is a local-first regression evaluation platform for LLM and
-agent workflows. It serves AI engineers, eval engineers, platform engineers, and
-reviewers who need reproducible evidence that a candidate workflow did not
-regress against a baseline. The system is deterministic by default: datasets,
+agent workflows. It serves AI engineers, eval engineers, and platform engineers
+who need reproducible evidence that a candidate workflow did not regress against
+a baseline. The system is deterministic by default: datasets,
 validators, run identity, thresholds, cost accounting, latency accounting, and CI
 decisions are owned by code and stored artifacts; optional model judging is
 bounded, budgeted, calibrated, and routed to human review where ambiguity remains.
@@ -23,7 +23,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Concrete operational pain | Prompt, model, adapter, and guardrail changes can silently reduce quality, increase unsafe auto-approval, raise cost, or worsen latency. |
 | Current workaround | Small pytest sets, manual prompt checks, ad hoc spreadsheets, one-off eval scripts, and subjective sample review. |
 | Why existing process is insufficient | The current process lacks versioned datasets, baseline comparison, failure taxonomy, CI gating, cost/latency tracking, and a clear split between deterministic validation and judge-based scoring. |
-| First user / operator who feels the pain | The operator maintaining gdev-agent and related LLM workflows; secondarily, AI platform/eval reviewers inspecting the project. |
+| First user / operator who feels the pain | The operator maintaining gdev-agent and related LLM workflows; secondarily, AI platform/eval maintainers inspecting run evidence. |
 | What would make v1 not worth adopting | A generic score without failure explanations, pass/fail controlled only by an uncalibrated judge, missing baseline comparison, or inability to catch seeded regressions. |
 | First proof of value | At least 100 eval cases, at least 5 seeded regressions, and CI failure for unsafe regression, invalid structured output, excessive cost increase, and material accuracy drop. |
 
@@ -185,19 +185,14 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 |-- .github/workflows/ci.yml
 |-- docs/
 |   |-- ARCHITECTURE.md
-|   |-- CODEX_PROMPT.md
 |   |-- COST_BUDGET.md
 |   |-- DECISION_LOG.md
 |   |-- EVIDENCE_INDEX.md
-|   |-- IMPLEMENTATION_CONTRACT.md
-|   |-- IMPLEMENTATION_JOURNAL.md
+|   |-- KNOWN_LIMITS.md
 |   |-- PROJECT_BRIEF.md
 |   |-- README.md
+|   |-- STACK_OVERVIEW.md
 |   |-- spec.md
-|   |-- tasks.md
-|   `-- audit/
-|       |-- AUDIT_INDEX.md
-|       `-- PHASE1_AUDIT.md
 |-- src/eval_ground_truth_lab/
 |   |-- adapters/
 |   |-- compare/
@@ -227,22 +222,18 @@ Canonical truth surfaces:
 
 - `docs/ARCHITECTURE.md`
 - `docs/spec.md`
-- `docs/tasks.md`
-- `docs/CODEX_PROMPT.md`
-- `docs/IMPLEMENTATION_CONTRACT.md`
 - ADRs once introduced
-- tests, CI output, eval reports, and audit reports
+- tests, CI output, eval reports, and committed evidence artifacts
 
 Retrieval convenience surfaces:
 
 - `docs/DECISION_LOG.md`
-- `docs/IMPLEMENTATION_JOURNAL.md`
 - `docs/EVIDENCE_INDEX.md`
-- task-level `Context-Refs`
+- `docs/STACK_OVERVIEW.md`
+- `docs/KNOWN_LIMITS.md`
 
 Scoped retrieval rules:
 
-- Read `Context-Refs` before broad searching.
 - Read the decision log before changing architecture, runtime tier, cost policy,
   threshold policy, or judge authority.
 - Read the evidence index before changing seeded regression gates, baseline
