@@ -9,7 +9,7 @@ local evidence stack for reliable AI/agent systems.
 | --- | --- | --- | --- |
 | Governed workflow | `gdev-agent` | Multi-tenant support-triage workflow with webhook intake, guardrails, approval, audit, cost, and observability controls. | Local Compose demo, 285-test repository baseline, 180-case internal smoke eval. |
 | Quality layer | `Eval-Ground-Truth-Lab` | Deterministic evaluation framework for structured output, routing, unsafe auto-approval, cost, latency, and adapter behavior. | 55-case live local gdev-agent integration baseline, 100-case diagnostic challenge set, seeded regression smoke, immutable run artifacts. |
-| Runtime layer | `Agent-Runtime-Grid` | Queue-backed runtime for running many AI/agent jobs with retries, timeouts, idempotent finalization, artifacts, metrics, and cost controls. | 100-job smoke, 500-job reliability proof, failure-injection reports, cross-project artifact proof, and optional live-local HTTP proof. |
+| Runtime layer | `Agent-Runtime-Grid` | Queue-backed runtime for running many AI/agent jobs with retries, timeouts, idempotent finalization, artifacts, metrics, and cost controls. | 100-job smoke, 500-job reliability proof, failure-injection reports, cross-project artifact proof, and 20-job operator-run live-local HTTP proof snapshot. |
 
 ## Current End-To-End Evidence
 
@@ -48,7 +48,9 @@ That proof is intentionally named as artifact proof: it does not call live
 gdev-agent over HTTP by default. Runtime Grid also has a separate optional
 `full-stack-live-local` mode that runs queued workers against a local gdev-agent
 HTTP endpoint and writes sanitized runtime artifacts. That mode is still
-operator-run local evidence, not hosted operations or continuous eval.
+operator-run local evidence, not hosted operations or continuous eval. The
+latest committed Runtime Grid snapshot records 20/20 queued local HTTP jobs
+completed against a local demo-mode gdev-agent stack on 2026-06-15.
 
 ## Agent And Provider Model
 

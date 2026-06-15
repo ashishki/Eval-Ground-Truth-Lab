@@ -69,7 +69,9 @@ The current stack has three concrete paths:
 
 The Runtime Grid modes remain separate from Eval Lab's deterministic quality
 authority. Artifact proof is the reproducible default; live-local proof is
-operator-run local evidence, not production traffic or continuous eval.
+operator-run local evidence, not production traffic or continuous eval. The
+latest committed Runtime Grid snapshot records 20/20 queued local HTTP jobs
+against local demo-mode gdev-agent on 2026-06-15.
 
 ## Synthetic vs Real Integration
 
