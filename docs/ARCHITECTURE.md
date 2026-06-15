@@ -2,7 +2,7 @@
 
 Version: 1.0
 Last updated: 2026-06-11
-Status: Draft
+Status: Active
 
 ## System Overview
 
@@ -112,13 +112,13 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 
 ## Capability Profiles
 
-| Profile | Status | Evaluation Artifact | Justification |
-|---------|--------|---------------------|---------------|
-| RAG | OFF | `docs/retrieval_eval.md` | Retrieval may help display prior similar failures later, but v1 core does not require a retrieval-backed answer system, corpus ingestion, embeddings, citations, or insufficient-evidence behavior. |
-| Tool-Use | OFF | `docs/tool_eval.md` | Candidate adapters are deterministic configured integrations. LLM-directed tool calls that choose or mutate external state are out of scope for v1. |
-| Agentic | OFF | `docs/agent_eval.md` | Eval orchestration is a fixed deterministic workflow, not a multi-step autonomous loop. |
-| Planning | OFF | `docs/plan_eval.md` | The product emits reports and review queues, not structured plans as its primary deliverable. |
-| Compliance | OFF | `docs/compliance_eval.md` | V1 uses synthetic data only and has no named regulatory framework launch gate. |
+| Profile | Status | Activation note | Justification |
+|---------|--------|-----------------|---------------|
+| RAG | OFF | Future activation requires a dedicated eval artifact. | Retrieval may help display prior similar failures later, but v1 core does not require a retrieval-backed answer system, corpus ingestion, embeddings, citations, or insufficient-evidence behavior. |
+| Tool-Use | OFF | Future activation requires a dedicated eval artifact. | Candidate adapters are deterministic configured integrations. LLM-directed tool calls that choose or mutate external state are out of scope for v1. |
+| Agentic | OFF | Future activation requires a dedicated eval artifact. | Eval orchestration is a fixed deterministic workflow, not a multi-step autonomous loop. |
+| Planning | OFF | Future activation requires a dedicated eval artifact. | The product emits reports and review queues, not structured plans as its primary deliverable. |
+| Compliance | OFF | Future activation requires a dedicated eval artifact. | V1 uses synthetic data only and has no named regulatory framework launch gate. |
 
 ## Component Table
 
@@ -157,7 +157,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Storage | SQLite by default; Postgres-compatible repository boundary | Local mode stays simple while preserving a path to Postgres. |
 | Reports | Markdown first; Jinja2/HTML later | Markdown is reviewable in CI and easy to diff. |
 | Tests | pytest and ruff | Standard Python verification gate. |
-| CI | GitHub Actions | Required Phase 1 gate for lint, format, and tests. |
+| CI | GitHub Actions | Required v1 gate for lint, format, and tests. |
 
 ## Security Boundaries
 

@@ -1,8 +1,5 @@
 # Project Brief - Eval Ground Truth Lab
 
-Source: `/home/ashishki/Downloads/PROJECT_BRIEF_eval_ground_truth_lab.md`
-Imported: 2026-06-11
-
 ## Summary
 
 Eval Ground Truth Lab is a regression-evaluation platform for LLM and agent
@@ -17,9 +14,9 @@ increase unsafe auto-approval, increase cost, or worsen latency. Current
 workarounds rely on small pytest sets, manual prompt checks, ad hoc spreadsheets,
 one-off eval scripts, and subjective sample review.
 
-The first operator maintains gdev-agent and other LLM workflows. A secondary
-reader is an AI platform operator or eval maintainer checking whether the project
-demonstrates rigorous evaluation infrastructure.
+The first operator maintains gdev-agent and other LLM workflows. Eval maintainers
+need reproducible evidence that prompt, adapter, guardrail, and model changes do
+not regress key behavior.
 
 ## V1 Success
 
@@ -27,7 +24,7 @@ An operator can run evals against gdev-agent or a demo candidate, compare baseli
 and candidate behavior, see pass/fail decisions, inspect failure categories, and
 verify that seeded unsafe regressions fail CI.
 
-Adoption proof for v1:
+V1 proof:
 
 - Add at least 100 eval cases for gdev-agent-like workflows.
 - Seed at least 5 known regressions.

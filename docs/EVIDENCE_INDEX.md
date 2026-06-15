@@ -87,8 +87,8 @@ Maintain this file for:
 
 ## Retrieval Rules
 
-- Prefer rows that match the current task's `Context-Refs`, open findings, or
-  seeded regression gates.
+- Prefer rows that match the current change area, open findings, or seeded
+  regression gates.
 - If an evidence row points to a stale or missing artifact, fix the artifact or
   remove the row.
 - Do not treat a journal note as proof when a test, eval, or CI
