@@ -43,6 +43,9 @@ fixtures.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
 - Optional OpenAI judge provider contract, disabled by default and tested with
   fake transport only.
+- Harness metadata sidecar for comparing model, prompt, tools, memory policy,
+  permissions, recovery policy, trace schema, environment, scorer, and budget as
+  one eval unit.
 - Cost telemetry rollup and fixture-safe budget check commands.
 - Markdown reports and failure taxonomy.
 - Append-only human review notes and file-backed review entries/decisions.
@@ -118,6 +121,8 @@ The canonical architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 The cross-project stack map is in [docs/STACK_OVERVIEW.md](docs/STACK_OVERVIEW.md).
 CLI commands are documented in [docs/CLI.md](docs/CLI.md).
 The evidence index is in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
+Harness comparison metadata is documented in
+[docs/HARNESS_COMPARISON.md](docs/HARNESS_COMPARISON.md).
 The current v1 evidence report is in
 [reports/v1/evidence_report.md](reports/v1/evidence_report.md).
 The current gdev-agent baseline report is in

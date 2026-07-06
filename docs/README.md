@@ -15,6 +15,8 @@ validation evidence for Eval Ground Truth Lab.
 - `docs/STACK_OVERVIEW.md` - three-project reliability stack map.
 - `docs/EVIDENCE_INDEX.md` - durable proof retrieval index.
 - `docs/KNOWN_LIMITS.md` - explicit local and production-boundary limits.
+- `docs/HARNESS_COMPARISON.md` - harness metadata and trace completeness
+  sidecar contract.
 
 ## Current State
 
@@ -37,6 +39,8 @@ validation evidence for Eval Ground Truth Lab.
 
 - `docs/COST_BUDGET.md` - judge/model budget boundary.
 - `docs/EVIDENCE_INDEX.md` - proof retrieval index.
+- `docs/HARNESS_COMPARISON.md` - harness comparison metadata contract.
+- `reports/eval_cost_report.md` - starter eval cost report.
 - `reports/v1/evidence_report.md` - v1 synthetic evidence report.
 - `reports/gdev-agent/baseline_report.md` - gdev-agent local baseline report.
 - `docs/GDEV_AGENT_CHALLENGE_SET.md` - gdev-agent hard-case diagnostic dataset.

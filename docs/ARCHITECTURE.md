@@ -129,6 +129,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Validator engine | `src/eval_ground_truth_lab/validators/` | Apply deterministic schema, policy, safety, confidence, and evidence-required checks. |
 | Adapter layer | `src/eval_ground_truth_lab/adapters/` | Invoke synthetic demo candidates and explicit gdev-agent HTTP/CLI candidates. |
 | Comparison engine | `src/eval_ground_truth_lab/compare/` | Compare baseline and candidate metrics and calculate regression deltas. |
+| Harness metadata | `src/eval_ground_truth_lab/harness/` | Store sidecar harness config/run metadata, validate trace completeness, and report harness-aware comparison context. |
 | Judge and review | `src/eval_ground_truth_lab/judging/` | Run optional budget-capped judge calls and route ambiguous outputs to human review. |
 | Reporting | `src/eval_ground_truth_lab/reports/` | Produce markdown/HTML reports with metrics, failure taxonomy, and seeded regression evidence. |
 | CLI | `src/eval_ground_truth_lab/cli.py` | Provide local commands for dataset inspection, runs, comparison, and CI smoke evals. |
