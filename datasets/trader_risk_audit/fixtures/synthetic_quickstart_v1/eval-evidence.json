@@ -1,0 +1,99 @@
+{
+  "artifact_digests": [
+    {
+      "name": "attribution_summary",
+      "sha256": "df478b3e7b3ae85ea2a30c8a95c593c87548daf7fd05f4f7128d0a4c9a0632d4"
+    },
+    {
+      "name": "delivery_packet",
+      "sha256": "3e465a84078f0597b03ff229dfcfb008ba5201cb22c3fd7ba3dd04f5842b7207"
+    },
+    {
+      "name": "normalized_trades",
+      "sha256": "65263dde9bc8b164b7c4de1bb497cb02cafaf9c019bf9e16bd5f9d7d6ed7da86"
+    },
+    {
+      "name": "policy_file",
+      "sha256": "8ca101c84ea629cd20c126e8766a6be4d9e78172e804947640a4ca514aba5eb1"
+    },
+    {
+      "name": "report_markdown",
+      "sha256": "40e5b4d9965e20ddcca53817c1249ed477ea29f98af2ddeffbe6376de73c98d4"
+    },
+    {
+      "name": "source_export",
+      "sha256": "8b4ab06da61f5da9ddcef01fb9dc0cb035f0e877329b173d42d0f6334a05f78c"
+    },
+    {
+      "name": "violations",
+      "sha256": "a157c4bb4fa1cb13be25e948bf39bd6bc1f7030e7475bf7a9307d785c1ad574f"
+    }
+  ],
+  "candidate": {
+    "package": "trader-risk-audit",
+    "version": "0.2.0"
+  },
+  "case_id": "synthetic-quickstart-v1",
+  "checks": {
+    "all_violation_source_rows_resolve": true,
+    "all_violations_have_source_rows": true,
+    "manifest_artifacts_verified": true,
+    "manifest_content_hash_verified": true,
+    "pnl_reconciled": true
+  },
+  "contract_version": "trader-risk-audit-evidence-v1",
+  "evaluation_boundary": {
+    "applies_ground_truth": false,
+    "applies_thresholds": false,
+    "bundles_eval_ground_truth_lab": false,
+    "description": "Verified audit observations for consumption by a separately configured evaluation harness.",
+    "trace_reference_scheme": "sha256-v1"
+  },
+  "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
+  "manifest_content_hash": "54bf4fb9aa8ba05d2119db564bbf65ddc365d5627c850a32e5d1dbb90fadb3f6",
+  "metrics": {
+    "normalized_trade_count": 4,
+    "pnl_reconciliation_delta": "0",
+    "resolved_trace_rate": 1.0,
+    "traceability_rate": 1.0,
+    "violation_count": 7
+  },
+  "status": "evidence_ready",
+  "trace_preview": [
+    {
+      "rule_ref": "rule_9b61523d298a8aef7a3a32da",
+      "source_row_refs": [
+        "row_63e1ddd6c8a0c60e9c967066"
+      ],
+      "violation_ref": "violation_95db4256913aa4cac3ef2afb"
+    },
+    {
+      "rule_ref": "rule_c76b0a02784c905b4f9ee097",
+      "source_row_refs": [
+        "row_63e1ddd6c8a0c60e9c967066"
+      ],
+      "violation_ref": "violation_71e2490da6f0a2c370f6a7c0"
+    },
+    {
+      "rule_ref": "rule_7206234d508331420edb42cb",
+      "source_row_refs": [
+        "row_63e1ddd6c8a0c60e9c967066"
+      ],
+      "violation_ref": "violation_76af8525d22aa962a6df0f48"
+    },
+    {
+      "rule_ref": "rule_e9f2526638413fa608d9151c",
+      "source_row_refs": [
+        "row_63e1ddd6c8a0c60e9c967066"
+      ],
+      "violation_ref": "violation_f4083d318b76d31a1d0a00f9"
+    },
+    {
+      "rule_ref": "rule_9b61523d298a8aef7a3a32da",
+      "source_row_refs": [
+        "row_2481519e49c0fb6139ca9f47"
+      ],
+      "violation_ref": "violation_b62a93e9aed785d9665abacb"
+    }
+  ]
+}

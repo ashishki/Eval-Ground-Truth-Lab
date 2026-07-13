@@ -1,0 +1,13 @@
+{
+  "case_count": 1,
+  "dataset_file": "synthetic_quickstart_v1.jsonl",
+  "dataset_hash": "7bac4907ef71734b5ce492d547c50db736a8b9f5d12903213efb9deedbca2944",
+  "dataset_id": "synthetic_quickstart_v1",
+  "dataset_raw_sha256": "fa0c0579b297850c52c4bf4cae007e4a897601c88ae1841c9c1f0988435fa5fe",
+  "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
+  "evidence_file": "fixtures/synthetic_quickstart_v1/eval-evidence.json",
+  "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
+  "provenance_file": "synthetic_quickstart_v1.provenance.json",
+  "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
+  "schema_version": "1.0"
+}
