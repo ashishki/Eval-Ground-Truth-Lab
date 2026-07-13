@@ -69,9 +69,9 @@ Implementation commit: `56de400bd4e157f70cf1538fbc464b9dbc00257b`
 | Canonical input byte comparison | PASS |
 | Canonical symlink, workstation-path, and secret-marker scan | clean |
 
-The locally built wheel is
+The wheel built twice from a clean archive of the implementation commit is
 `eval_ground_truth_lab-0.2.0-py3-none-any.whl`, SHA-256
-`690d0abc2d326b8f6456dd0700da9f1af3e339e423afa0f6b5e78531f3feaf8e`.
+`2d79198673c73906449d42827056c15f4c3ccf7a068d6857631ff6053a370fca`.
 Archive inspection found the HTML report template and the four Trader replay
 resource files. The installed console replay used no explicit input paths.
 The second clean build produced the same SHA-256. Its installed package payload
