@@ -21,7 +21,8 @@ diagnostics.
 
 ## Baseline Candidate Comparison
 
-Baseline and candidate runs are immutable JSON artifacts. Comparisons reject
+Baseline and candidate runs are atomic, checksum-sealed JSON artifacts whose
+terminal state cannot be mutated through RunStore. Comparisons reject
 dataset hash mismatch and report accuracy, invalid output, unsafe
 auto-approval, latency, and cost deltas against thresholds.
 

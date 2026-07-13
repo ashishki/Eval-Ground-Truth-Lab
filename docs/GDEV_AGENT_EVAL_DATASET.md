@@ -48,3 +48,10 @@ The dataset must not contain real user data, secrets, tokens, credential paths,
 network destinations, shell commands, or package installation instructions.
 Adapter configuration owns any gdev-agent URL or webhook secret used during live
 local integration.
+
+## License and scope
+
+These authored synthetic fixtures are licensed under Apache-2.0 with the rest
+of this repository. The 55 cases are an external integration/conformance set;
+they are separate from Eval Lab's 100-case hard challenge and gdev-agent's
+180-case internal smoke.

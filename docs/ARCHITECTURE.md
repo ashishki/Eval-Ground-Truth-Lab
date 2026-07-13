@@ -48,14 +48,16 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 
 | Rejected option | Why it is insufficient |
 |-----------------|------------------------|
-| Manual spreadsheets and sample review | They do not provide dataset hashes, immutable run records, reproducible baseline comparison, or CI gates. |
+| Manual spreadsheets and sample review | They do not provide dataset hashes, checksum-sealed run records, reproducible baseline comparison, or CI gates. |
 | One-off eval scripts | They can calculate a score but do not create durable failure taxonomy, review queues, budget boundaries, or reusable adapters. |
 | Judge-only scoring | It overtrusts an uncalibrated model and misses deterministic failures such as invalid JSON, unsafe action flags, and cost or latency regression. |
 
 ### Minimum Viable Control Surface
 
 - Dataset identity is a content hash plus schema version; eval runs reference the dataset hash.
-- Run records are immutable once completed; reruns create new run IDs.
+- RunStore rejects mutation once a run is terminal; reruns create new run IDs.
+  Atomic writes and checksum seals detect local corruption but do not make the
+  filesystem immutable.
 - Deterministic validators own schema validity, policy checks, thresholds, cost, and latency.
 - Optional judge calls are sampled or routed, budget-capped, and never become blocking authority without human approval.
 - CI fails on configured regression thresholds and on seeded unsafe smoke cases.
@@ -79,7 +81,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Dataset identity/versioning | Deterministic | Hashes, schema versions, and file paths must be reproducible. |
 | Structured output validation | Deterministic | JSON schema, required fields, enums, forbidden fields, and unsafe flags are code-owned. |
 | Metrics and thresholds | Deterministic | Accuracy, invalid output rate, unsafe auto-approval rate, p95 latency, and cost deltas must be repeatable. |
-| Run idempotency and audit records | Deterministic | Duplicate prevention and immutable records cannot depend on model judgment. |
+| Run idempotency and audit records | Deterministic | Duplicate prevention and terminal-state enforcement cannot depend on model judgment. |
 | Subjective explanation quality | LLM-assisted, human-reviewed | Optional judge output can help triage but needs calibration and human adjudication. |
 | Failure summaries and suggested labels | LLM-assisted, non-authoritative | Suggestions reduce review effort but canonical taxonomy labels remain auditable data. |
 
@@ -88,7 +90,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Property | Decision |
 |----------|----------|
 | Isolation boundary | T1 container and CI job boundary for local service dependencies and verification. |
-| Persistence model | SQLite or Postgres for run metadata; filesystem for datasets and reports. Eval run records are immutable. |
+| Persistence model | SQLite or Postgres for run metadata; filesystem for datasets and reports. Eval run records use atomic writes, terminal-state guards, and checksum seals. |
 | Network model | Candidate adapters may call explicit configured HTTP endpoints. Eval case data cannot declare arbitrary network calls. Optional judge calls require explicit provider configuration and budget. |
 | Secrets model | Secrets live in environment variables or GitHub Actions secrets. No secrets are committed. Optional judge key is unavailable by default. |
 | Runtime mutation boundary | Package and service changes occur through committed dependency files and CI. Runtime package installation by eval cases is forbidden. |
@@ -125,7 +127,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Component | File / Directory | Responsibility |
 |-----------|------------------|----------------|
 | Dataset registry | `src/eval_ground_truth_lab/datasets/` | Load JSONL/YAML cases, validate schema, compute dataset hash, and expose dataset metadata. |
-| Run store | `src/eval_ground_truth_lab/runs/` | Persist baseline and candidate run metadata, case results, cost, latency, and immutable run status. |
+| Run store | `src/eval_ground_truth_lab/runs/` | Persist baseline and candidate metadata, case results, cost, latency, terminal status, and checksum seals. |
 | Validator engine | `src/eval_ground_truth_lab/validators/` | Apply deterministic schema, policy, safety, confidence, and evidence-required checks. |
 | Adapter layer | `src/eval_ground_truth_lab/adapters/` | Invoke synthetic demo candidates and explicit gdev-agent HTTP/CLI candidates. |
 | Comparison engine | `src/eval_ground_truth_lab/compare/` | Compare baseline and candidate metrics and calculate regression deltas. |
@@ -138,8 +140,8 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 
 1. Operator registers or selects a dataset file.
 2. Dataset registry validates case schema and computes a dataset hash.
-3. Baseline runner invokes the baseline candidate and stores immutable case results.
-4. Candidate runner invokes the candidate system with the same dataset hash and stores immutable case results.
+3. Baseline runner invokes the baseline candidate and atomically stores case results.
+4. Candidate runner invokes the candidate system with the same dataset hash and atomically stores case results.
 5. Validator engine applies deterministic validators to every case result.
 6. Optional judge scores configured subjective cases within the declared budget.
 7. Comparison engine computes metric deltas against the baseline and threshold config.

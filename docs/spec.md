@@ -56,8 +56,9 @@ Acceptance criteria:
 1. A run record includes run ID, run type, dataset hash, candidate version,
    validator version, threshold config version, start time, completion time,
    status, cost, and latency fields.
-2. A completed run is immutable; a rerun creates a new run ID linked to the same
-   dataset hash.
+2. RunStore rejects mutation after a run becomes terminal; a rerun creates a new
+   run ID linked to the same dataset hash. Local files are atomic and
+   checksum-sealed, not filesystem-immutable.
 3. If a run is interrupted, completed case results remain readable and the run
    status records the interruption without mutating a prior completed run.
 4. Candidate calls retry at most once unless configuration explicitly changes the

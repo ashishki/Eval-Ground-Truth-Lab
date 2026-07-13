@@ -17,4 +17,3 @@ __all__ = [
     "TraceCompletenessValidator",
     "build_harness_comparison_report",
 ]
-

@@ -7,8 +7,9 @@ auto-approval, routing, cost, latency, and accuracy before changes are promoted.
 ## What This Is
 
 The project is a CLI-first eval framework for comparing a baseline workflow
-against a candidate workflow with versioned datasets, immutable run artifacts,
-deterministic validators, threshold comparisons, reports, and CI gates.
+against a candidate workflow with versioned datasets, atomically written and
+checksum-sealed terminal run records, deterministic validators, threshold
+comparisons, reports, and CI gates.
 
 It is deterministic by default. Dataset identity, pass/fail validators,
 thresholds, cost/latency accounting, and CI decisions are owned by code and
@@ -28,7 +29,9 @@ fixtures.
 ## What Works Today
 
 - Dataset registry for JSONL/YAML eval cases with stable dataset hashes.
-- Immutable run records for baseline and candidate outputs.
+- Atomic run records with strict identifiers and checksum-sealed terminal state.
+- Content-addressed evidence manifests that detect missing, modified, or
+  undeclared files.
 - Deterministic validators for structured output, unsafe auto-approval, cost,
   and latency.
 - Baseline/candidate comparison with CI-style exit codes.
@@ -36,8 +39,8 @@ fixtures.
 - gdev-agent dataset, response normalizer, and configured HTTP adapter boundary.
 - gdev-agent live local baseline evidence report from a canonical 55-case run
   artifact.
-- gdev-agent 100-case challenge set with ambiguous, policy-stress,
-  guard-stress, boundary, malformed-input, and expected-failure slices.
+- Executable gdev-agent 100-case challenge with expected-failure reconciliation,
+  per-slice metrics, deterministic provider-fault injection, and honest gates.
 - CI-safe mocked gdev-agent smoke that does not require Docker Compose or a live
   gdev-agent service.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
@@ -115,6 +118,34 @@ latency p95, failure taxonomy, and case-level failures:
 It is a curated integration/conformance baseline, not a hard challenge-set
 benchmark.
 
+The three gdev scopes are intentionally distinct: the 55 cases here are an
+external conformance/integration baseline; the 100-case challenge is Eval Lab's
+hard diagnostic surface; the 180-case smoke referenced in stack documentation
+belongs to gdev-agent itself and is not added to either Eval Lab result.
+
+## Quickstart: gdev-agent Challenge
+
+The challenge command requires explicit component provenance and writes JSON,
+Markdown, a terminal run record, and a content-addressed manifest. Its ten
+provider-error cases are deterministic harness injections; the remaining 90
+cases call the configured candidate. A failed threshold returns exit code `1`.
+
+```bash
+eval-ground-truth-lab run-gdev-agent-challenge \
+  --base-url http://localhost:8000 \
+  --candidate-version gdev-agent-demo \
+  --component-revision <full-gdev-git-sha> \
+  --component-worktree-state clean \
+  --environment-label local-compose-demo \
+  --evidence-dir /tmp/gdev-challenge-evidence
+
+eval-ground-truth-lab verify-evidence \
+  --manifest /tmp/gdev-challenge-evidence/sha256-*.manifest.json
+```
+
+No canonical challenge result is committed until the fixed external gdev-agent
+service can be run and its exact revision captured.
+
 ## Architecture
 
 The canonical architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -150,8 +181,8 @@ Core shape:
 - The gdev-agent baseline report is a synthetic/local deterministic artifact
   from a full 55-case live local run, not a production quality score.
 - The 55-case baseline is intentionally clean conformance evidence. The harder
-  100-case gdev-agent challenge set is committed as diagnostic evidence, but it
-  is not yet a canonical live passing baseline.
+  100-case command is executable, but it is not yet a canonical live result
+  because the external fixed gdev-agent service must be run separately.
 - Accuracy for synthetic smoke proof still uses fixture behavior; the current
   gdev-agent live local baseline is checked by deterministic validators.
 - Cost telemetry rollup and fixture-safe budget check commands exist; live judge
@@ -178,8 +209,16 @@ The current roadmap is complete through the first passing live local
 8. mocked CI smoke for the gdev adapter: complete.
 9. cost rollup and budget check: complete.
 10. final evidence pack with passing 55-case live local baseline: complete.
-11. gdev-agent diagnostic challenge set: complete as committed dataset/report;
-    live challenge-run promotion remains future work.
+11. gdev-agent diagnostic challenge engine: complete; canonical external-system
+    execution and release promotion remain operator work.
+
+## License
+
+Code, documentation, and authored synthetic datasets are available under the
+[Apache License 2.0](LICENSE). Dataset scope and contribution boundaries are in
+[datasets/README.md](datasets/README.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+The installed-version compatibility review is in
+[docs/LICENSE_REVIEW.md](docs/LICENSE_REVIEW.md).
 
 Current evidence surfaces are linked from
 [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md) and
