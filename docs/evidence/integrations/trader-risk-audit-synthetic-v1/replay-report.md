@@ -21,7 +21,7 @@ audit, external-user case study, investment recommendation, or production claim.
 
 - Run ID: `trader-synthetic-quickstart-v1-20260713`
 - Candidate version: `trader-risk-audit-0.2.0@bf755a24450f`
-- Dataset: `synthetic_quickstart_v1` / `7bac4907ef71734b5ce492d547c50db736a8b9f5d12903213efb9deedbca2944`
+- Dataset: `synthetic_quickstart_v1` / `df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a`
 - Dataset cases: `1`
 - Validator: `trader-risk-audit-exact-replay-validators-v1`
 

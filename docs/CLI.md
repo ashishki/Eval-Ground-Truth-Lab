@@ -83,12 +83,14 @@ eval-ground-truth-lab run-trader-risk-audit-replay \
   --evidence-dir /tmp/eval-lab-trader-evidence
 ```
 
-The default dataset, evidence export, and provenance paths select the committed
-fully synthetic quickstart fixture. The adapter verifies the source pin, file
-SHA-256, Git blob, upstream contract shape, and evidence content hash before
-exact deterministic Eval validators run. The command writes a sealed run and a
-seven-artifact content-addressed evidence pack. A validator mismatch exits `1`
-and retains the pack; malformed or tampered source evidence fails closed.
+The default dataset, evidence export, and provenance are package resources for
+the fully synthetic quickstart fixture, so an installed wheel works outside a
+repository checkout. The command reads every input once and uses those exact
+bytes for validation, hashing, replay, and packaging. It requires exactly one
+v1 case, verifies the complete sealed result without unknown nested fields, and
+writes a seven-artifact content-addressed evidence pack. A validator mismatch
+exits `1` and retains the pack; malformed, tampered, empty, or multi-case input
+fails closed without a PASS pack.
 
 This is a contract compatibility replay, not a live Trader execution, financial
 policy benchmark, external-user case study, or production evidence. See

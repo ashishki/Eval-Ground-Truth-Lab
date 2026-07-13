@@ -12,6 +12,10 @@ once stable releases begin.
 - Add exact deterministic validators, a sealed CLI replay, content-addressed
   evidence packaging, fixture tests, documentation, and explicit financial,
   production, and external-validation boundaries.
+- Seal one-read input snapshots, validate every nested result field, bind source
+  path and provenance-file identity, and reject vacuous non-singleton v1 datasets.
+- Ship the default synthetic Trader replay inputs in the wheel and exercise its
+  console command from an unrelated working directory in CI.
 
 ## 0.2.0 - 2026-07-13
 

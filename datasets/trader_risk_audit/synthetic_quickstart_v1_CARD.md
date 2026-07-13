@@ -7,7 +7,9 @@ Status: self-authored compatibility fixture; public, deterministic, and not blin
 This one-case dataset checks whether Eval Ground Truth Lab can fail closed while
 loading the sanitized `trader-risk-audit-evidence-v1` export from the separately
 versioned Trader Risk Audit product. It applies exact expectations to contract,
-source, manifest, evidence, check, and observation fields.
+source path, provenance-file identity, evaluation boundary, artifact receipts,
+trace preview, manifest, evidence, check, and observation fields. The entire
+sealed adapter result is expected; unrecognized nested fields fail closed.
 
 The dataset tests an adapter boundary. It does not re-run the Trader rule engine,
 validate raw trades, choose suitable risk limits, assess strategy performance, or
@@ -34,8 +36,9 @@ bundle digest is a provenance pin; the bundle itself is not distributed here.
 ## Expected decision
 
 The unmodified fixture passes exact deterministic validators. A modified export,
-provenance file, source pin, contract shape, check, metric, or expected value must
-fail loading or the Eval gate.
+provenance file, source pin/path, contract shape, evaluation boundary, artifact,
+trace, check, metric, or expected value must fail loading or the Eval gate. An
+empty or multi-case v1 dataset is rejected before a PASS pack can be written.
 
 PASS means compatibility with this single synthetic contract fixture. It is not
 external validation, investment advice, a production claim, or a general quality

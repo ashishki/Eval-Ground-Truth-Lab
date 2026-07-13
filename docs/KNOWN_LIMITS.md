@@ -40,6 +40,9 @@ production eval platform.
   export from a separate path-purged publication candidate. It does not invoke
   the Trader rule engine or inspect raw trades. Its PASS is contract-compatibility
   evidence, not a financial-quality score, external case study, or user proof.
+- Trader replay v1 accepts exactly one case. Installed defaults are packaged
+  resources; explicit input paths are read once, and the validated byte snapshots
+  are the bytes sealed into the evidence pack.
 - Trader source commit/tree/blob and protected bundle digest are pinned. The
   adapter verifies the fixture SHA-256, Git blob, and evidence content hash, but
   local hashes do not authenticate the publisher and the protected bundle is not

@@ -110,6 +110,7 @@
         },
         "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
         "privacy_classification": "fully-synthetic-sanitized-export",
+        "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
         "source": {
           "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
           "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
@@ -117,7 +118,8 @@
           "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
           "package": "trader-risk-audit",
           "package_version": "0.2.0",
-          "repository_state": "path-purged-publication-candidate"
+          "repository_state": "path-purged-publication-candidate",
+          "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
         }
       },
       "validator_results": [
@@ -151,7 +153,8 @@
               "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
               "package": "trader-risk-audit",
               "package_version": "0.2.0",
-              "repository_state": "path-purged-publication-candidate"
+              "repository_state": "path-purged-publication-candidate",
+              "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
             },
             "expected": {
               "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
@@ -160,7 +163,8 @@
               "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
               "package": "trader-risk-audit",
               "package_version": "0.2.0",
-              "repository_state": "path-purged-publication-candidate"
+              "repository_state": "path-purged-publication-candidate",
+              "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
             }
           },
           "message": "pinned Trader Risk Audit source provenance matches the pinned expectation",
@@ -174,12 +178,14 @@
             "actual": {
               "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
               "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
-              "manifest_content_hash": "54bf4fb9aa8ba05d2119db564bbf65ddc365d5627c850a32e5d1dbb90fadb3f6"
+              "manifest_content_hash": "54bf4fb9aa8ba05d2119db564bbf65ddc365d5627c850a32e5d1dbb90fadb3f6",
+              "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402"
             },
             "expected": {
               "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
               "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
-              "manifest_content_hash": "54bf4fb9aa8ba05d2119db564bbf65ddc365d5627c850a32e5d1dbb90fadb3f6"
+              "manifest_content_hash": "54bf4fb9aa8ba05d2119db564bbf65ddc365d5627c850a32e5d1dbb90fadb3f6",
+              "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402"
             }
           },
           "message": "sanitized evidence identity matches the pinned expectation",
@@ -190,12 +196,210 @@
           "case_id": "synthetic-quickstart-v1",
           "category": "none",
           "evidence": {
-            "actual": "0.2.0",
-            "expected": "0.2.0"
+            "actual": {
+              "package": "trader-risk-audit",
+              "version": "0.2.0"
+            },
+            "expected": {
+              "package": "trader-risk-audit",
+              "version": "0.2.0"
+            }
           },
           "message": "Trader Risk Audit candidate version matches the pinned expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.candidate_version"
+        },
+        {
+          "case_id": "synthetic-quickstart-v1",
+          "category": "none",
+          "evidence": {
+            "actual": {
+              "case_id": "synthetic-quickstart-v1",
+              "contract_version": "trader-risk-audit-evidence-v1"
+            },
+            "expected": {
+              "case_id": "synthetic-quickstart-v1",
+              "contract_version": "trader-risk-audit-evidence-v1"
+            }
+          },
+          "message": "evidence case and contract identity matches the pinned expectation",
+          "passed": true,
+          "validator_id": "trader_risk_audit.case_contract"
+        },
+        {
+          "case_id": "synthetic-quickstart-v1",
+          "category": "none",
+          "evidence": {
+            "actual": {
+              "applies_ground_truth": false,
+              "applies_thresholds": false,
+              "bundles_eval_ground_truth_lab": false,
+              "description": "Verified audit observations for consumption by a separately configured evaluation harness.",
+              "trace_reference_scheme": "sha256-v1"
+            },
+            "expected": {
+              "applies_ground_truth": false,
+              "applies_thresholds": false,
+              "bundles_eval_ground_truth_lab": false,
+              "description": "Verified audit observations for consumption by a separately configured evaluation harness.",
+              "trace_reference_scheme": "sha256-v1"
+            }
+          },
+          "message": "evaluation boundary matches the pinned expectation",
+          "passed": true,
+          "validator_id": "trader_risk_audit.evaluation_boundary"
+        },
+        {
+          "case_id": "synthetic-quickstart-v1",
+          "category": "none",
+          "evidence": {
+            "actual": [
+              {
+                "name": "attribution_summary",
+                "sha256": "df478b3e7b3ae85ea2a30c8a95c593c87548daf7fd05f4f7128d0a4c9a0632d4"
+              },
+              {
+                "name": "delivery_packet",
+                "sha256": "3e465a84078f0597b03ff229dfcfb008ba5201cb22c3fd7ba3dd04f5842b7207"
+              },
+              {
+                "name": "normalized_trades",
+                "sha256": "65263dde9bc8b164b7c4de1bb497cb02cafaf9c019bf9e16bd5f9d7d6ed7da86"
+              },
+              {
+                "name": "policy_file",
+                "sha256": "8ca101c84ea629cd20c126e8766a6be4d9e78172e804947640a4ca514aba5eb1"
+              },
+              {
+                "name": "report_markdown",
+                "sha256": "40e5b4d9965e20ddcca53817c1249ed477ea29f98af2ddeffbe6376de73c98d4"
+              },
+              {
+                "name": "source_export",
+                "sha256": "8b4ab06da61f5da9ddcef01fb9dc0cb035f0e877329b173d42d0f6334a05f78c"
+              },
+              {
+                "name": "violations",
+                "sha256": "a157c4bb4fa1cb13be25e948bf39bd6bc1f7030e7475bf7a9307d785c1ad574f"
+              }
+            ],
+            "expected": [
+              {
+                "name": "attribution_summary",
+                "sha256": "df478b3e7b3ae85ea2a30c8a95c593c87548daf7fd05f4f7128d0a4c9a0632d4"
+              },
+              {
+                "name": "delivery_packet",
+                "sha256": "3e465a84078f0597b03ff229dfcfb008ba5201cb22c3fd7ba3dd04f5842b7207"
+              },
+              {
+                "name": "normalized_trades",
+                "sha256": "65263dde9bc8b164b7c4de1bb497cb02cafaf9c019bf9e16bd5f9d7d6ed7da86"
+              },
+              {
+                "name": "policy_file",
+                "sha256": "8ca101c84ea629cd20c126e8766a6be4d9e78172e804947640a4ca514aba5eb1"
+              },
+              {
+                "name": "report_markdown",
+                "sha256": "40e5b4d9965e20ddcca53817c1249ed477ea29f98af2ddeffbe6376de73c98d4"
+              },
+              {
+                "name": "source_export",
+                "sha256": "8b4ab06da61f5da9ddcef01fb9dc0cb035f0e877329b173d42d0f6334a05f78c"
+              },
+              {
+                "name": "violations",
+                "sha256": "a157c4bb4fa1cb13be25e948bf39bd6bc1f7030e7475bf7a9307d785c1ad574f"
+              }
+            ]
+          },
+          "message": "artifact digest receipts matches the pinned expectation",
+          "passed": true,
+          "validator_id": "trader_risk_audit.artifact_digests"
+        },
+        {
+          "case_id": "synthetic-quickstart-v1",
+          "category": "none",
+          "evidence": {
+            "actual": [
+              {
+                "rule_ref": "rule_9b61523d298a8aef7a3a32da",
+                "source_row_refs": [
+                  "row_63e1ddd6c8a0c60e9c967066"
+                ],
+                "violation_ref": "violation_95db4256913aa4cac3ef2afb"
+              },
+              {
+                "rule_ref": "rule_c76b0a02784c905b4f9ee097",
+                "source_row_refs": [
+                  "row_63e1ddd6c8a0c60e9c967066"
+                ],
+                "violation_ref": "violation_71e2490da6f0a2c370f6a7c0"
+              },
+              {
+                "rule_ref": "rule_7206234d508331420edb42cb",
+                "source_row_refs": [
+                  "row_63e1ddd6c8a0c60e9c967066"
+                ],
+                "violation_ref": "violation_76af8525d22aa962a6df0f48"
+              },
+              {
+                "rule_ref": "rule_e9f2526638413fa608d9151c",
+                "source_row_refs": [
+                  "row_63e1ddd6c8a0c60e9c967066"
+                ],
+                "violation_ref": "violation_f4083d318b76d31a1d0a00f9"
+              },
+              {
+                "rule_ref": "rule_9b61523d298a8aef7a3a32da",
+                "source_row_refs": [
+                  "row_2481519e49c0fb6139ca9f47"
+                ],
+                "violation_ref": "violation_b62a93e9aed785d9665abacb"
+              }
+            ],
+            "expected": [
+              {
+                "rule_ref": "rule_9b61523d298a8aef7a3a32da",
+                "source_row_refs": [
+                  "row_63e1ddd6c8a0c60e9c967066"
+                ],
+                "violation_ref": "violation_95db4256913aa4cac3ef2afb"
+              },
+              {
+                "rule_ref": "rule_c76b0a02784c905b4f9ee097",
+                "source_row_refs": [
+                  "row_63e1ddd6c8a0c60e9c967066"
+                ],
+                "violation_ref": "violation_71e2490da6f0a2c370f6a7c0"
+              },
+              {
+                "rule_ref": "rule_7206234d508331420edb42cb",
+                "source_row_refs": [
+                  "row_63e1ddd6c8a0c60e9c967066"
+                ],
+                "violation_ref": "violation_76af8525d22aa962a6df0f48"
+              },
+              {
+                "rule_ref": "rule_e9f2526638413fa608d9151c",
+                "source_row_refs": [
+                  "row_63e1ddd6c8a0c60e9c967066"
+                ],
+                "violation_ref": "violation_f4083d318b76d31a1d0a00f9"
+              },
+              {
+                "rule_ref": "rule_9b61523d298a8aef7a3a32da",
+                "source_row_refs": [
+                  "row_2481519e49c0fb6139ca9f47"
+                ],
+                "violation_ref": "violation_b62a93e9aed785d9665abacb"
+              }
+            ]
+          },
+          "message": "opaque trace preview matches the pinned expectation",
+          "passed": true,
+          "validator_id": "trader_risk_audit.trace_preview"
         },
         {
           "case_id": "synthetic-quickstart-v1",
@@ -257,17 +461,17 @@
       ]
     }
   ],
-  "completed_at": "2026-07-13T14:21:35.821632+00:00",
+  "completed_at": "2026-07-13T15:01:01.974276+00:00",
   "cost_per_case_usd": 0.0,
   "cost_total_usd": 0.0,
-  "dataset_hash": "7bac4907ef71734b5ce492d547c50db736a8b9f5d12903213efb9deedbca2944",
+  "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
   "interrupted_at": null,
   "latency_ms_p50": 0.0,
   "latency_ms_p95": 0.0,
   "max_candidate_retries": 1,
   "run_id": "trader-synthetic-quickstart-v1-20260713",
   "run_type": "trader_risk_audit_evidence_replay",
-  "started_at": "2026-07-13T14:21:35.796847+00:00",
+  "started_at": "2026-07-13T15:01:01.938682+00:00",
   "status": "completed",
   "threshold_config_version": "exact-versioned-synthetic-expectation-v1",
   "validator_version": "trader-risk-audit-exact-replay-validators-v1"

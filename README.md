@@ -204,8 +204,10 @@ passing workload or production-quality claim.
 
 This path loads a committed, fully synthetic sanitized export from the separate
 Trader Risk Audit publication candidate. It verifies source and content pins,
-applies exact deterministic expectations, writes a sealed run, and packages the
-decision. It does not run a financial audit or read raw trades.
+applies exact deterministic expectations to every sealed export field, writes a
+sealed run, and packages the exact input bytes it validated. The default inputs
+are package resources, so the command works from an unrelated directory after
+wheel installation. It does not run a financial audit or read raw trades.
 
 ```bash
 eval-ground-truth-lab run-trader-risk-audit-replay \
@@ -223,7 +225,7 @@ production claim. See
 [docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
 [dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
 [committed replay pack](docs/evidence/integrations/README.md) verifies at content
-address `sha256:ed96a622a850f72dda4e0c804e4d4251932e646ac7384ed1499d379afef203c9`.
+address `sha256:c57f858899962179179109d33e165f0c8fbc3744c3cfaaffaea27e9179a0dd63`.
 
 ## Architecture
 

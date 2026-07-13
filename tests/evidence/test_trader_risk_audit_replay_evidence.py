@@ -12,7 +12,7 @@ from eval_ground_truth_lab.validators import trader_risk_audit as validator_modu
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "docs/evidence/integrations/trader-risk-audit-synthetic-v1"
 MANIFEST = PACK / (
-    "sha256-ed96a622a850f72dda4e0c804e4d4251932e646ac7384ed1499d379afef203c9.manifest.json"
+    "sha256-c57f858899962179179109d33e165f0c8fbc3744c3cfaaffaea27e9179a0dd63.manifest.json"
 )
 
 
@@ -23,11 +23,11 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
 
     assert verification.artifact_count == 7
     assert verification.content_address == (
-        "sha256:ed96a622a850f72dda4e0c804e4d4251932e646ac7384ed1499d379afef203c9"
+        "sha256:c57f858899962179179109d33e165f0c8fbc3744c3cfaaffaea27e9179a0dd63"
     )
     assert result["gate"] == {"failed_validator_count": 0, "passed": True}
     assert result["dataset"]["dataset_hash"] == (
-        "7bac4907ef71734b5ce492d547c50db736a8b9f5d12903213efb9deedbca2944"
+        "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a"
     )
     expected_implementation = {
         "adapter": sha256_file(Path(adapter_module.__file__)),
@@ -38,6 +38,15 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
     assert manifest["metadata"]["implementation_sha256"] == expected_implementation
     assert manifest["metadata"]["source_git_commit"] == ("bf755a24450ff7c17328fa6d447f36bea8ea0fe5")
     assert manifest["metadata"]["source_git_tree"] == ("1a2c4ff91a7504642a1bae05a9487fa2e898e0b6")
+    assert manifest["metadata"]["source_git_blob_sha1"] == (
+        "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9"
+    )
+    assert manifest["metadata"]["source_path"] == (
+        "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
+    )
+    assert manifest["metadata"]["provenance_sha256"] == (
+        "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402"
+    )
 
 
 def test_committed_trader_run_seal_and_claim_boundary_are_intact() -> None:
