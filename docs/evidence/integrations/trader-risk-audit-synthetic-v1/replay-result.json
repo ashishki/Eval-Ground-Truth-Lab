@@ -28,32 +28,46 @@
     "harness_version": "eval-ground-truth-lab-0.2.0",
     "implementation": {
       "components_sha256": {
-        "adapter": "ebd94503609802ea7852c0b610657b048963e9a96f67b3104cd64e86aadc818d",
-        "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
-        "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
-        "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
-        "runner": "5486c981e64883c7e4c74063dc24862ed084ded4eb75b2cf06f3c11f89dcc062",
-        "validators": "355466bb62e0d1882b6380e38488b5e50f2238e01dcf8370a214c333c6e721ca"
+        "adapter": "f93b99c46d0af491c18bfdfcc367857c6ea0e9c1195aa1e56c54205729a22a7d",
+        "adapter_base": "402716e7fd3f372cdd20f008a599c419cb289d741a564300798c7e27fa8f7699",
+        "dataset_parser": "08982af85e2ec54da227bcb2c8ef626ef67bb6e0f582cb89efe6a293a4c348e6",
+        "evidence_manifest": "ad0dcbd8439dcfecea1dbe76a6bb452085e75bf660f0f61603845df0ba1c046e",
+        "execution_binding": "60f86c77bc33c2121b71b037aaca2c6992037a03cc7bfae535faa31d6e6b746b",
+        "implementation_provenance": "e8fa6b98d655264a65360859ad732061c81af230e1bba576da04a4a2e69fedac",
+        "run_store": "7c9205e193e7f6df2dc3a334470e1dbf300c61ac90968ae3b65406223c2c0258",
+        "runner": "7e42444fe2eb525806e88d46a9624e18bc9d25960ee561b3fd88df6531fae9c7",
+        "source_identity": "501f614ed944e91ca0ad0ae6fc3aeca6c6946fa8af0d31dce4ca6753f5a4854c",
+        "validation_result": "cf1167522351189ac57ede0d9305382191966fb9631fd0638bc49f23d3208fce",
+        "validators": "b3fa78f1374a44bc2de5c74ff09a14a1aa6b2b6a9a57558192d01adc90adc8de"
+      },
+      "execution_binding": {
+        "schema_version": "eval-lab-loaded-execution-binding-v1",
+        "sha256": "33c0e48b7eff1fcd4656418cbb75491d408d16f01bdea1860c818997893cc5b6"
       },
       "package_payload": {
-        "file_count": 55,
-        "sha256": "5b612f5adfc63d2dcea19886bab347853646a62bd5b51e6b017877722c585bf9"
+        "file_count": 56,
+        "sha256": "33f9455c2ffd9ff88c9f12387ce86e402a3345cadfb3cb53051295dda37d276e"
       },
-      "schema_version": "eval-lab-implementation-provenance-v1",
+      "schema_version": "eval-lab-implementation-provenance-v2",
       "source": {
-        "commit": "c85d512cae53a2c20b994f2909c763695b8a5155",
+        "commit": "f810e3a7a9ef6c077371ef401c345f56da3c8c27",
         "kind": "git_worktree",
         "measured_package_matches_head": true,
-        "tree": "52b64e4541d4f9d6e67fd4711f31c6293fc65358"
+        "tree": "8da573207b40329f125a999165163b73f4b0e8c0"
       }
     },
     "implementation_sha256": {
-      "adapter": "ebd94503609802ea7852c0b610657b048963e9a96f67b3104cd64e86aadc818d",
-      "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
-      "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
-      "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
-      "runner": "5486c981e64883c7e4c74063dc24862ed084ded4eb75b2cf06f3c11f89dcc062",
-      "validators": "355466bb62e0d1882b6380e38488b5e50f2238e01dcf8370a214c333c6e721ca"
+      "adapter": "f93b99c46d0af491c18bfdfcc367857c6ea0e9c1195aa1e56c54205729a22a7d",
+      "adapter_base": "402716e7fd3f372cdd20f008a599c419cb289d741a564300798c7e27fa8f7699",
+      "dataset_parser": "08982af85e2ec54da227bcb2c8ef626ef67bb6e0f582cb89efe6a293a4c348e6",
+      "evidence_manifest": "ad0dcbd8439dcfecea1dbe76a6bb452085e75bf660f0f61603845df0ba1c046e",
+      "execution_binding": "60f86c77bc33c2121b71b037aaca2c6992037a03cc7bfae535faa31d6e6b746b",
+      "implementation_provenance": "e8fa6b98d655264a65360859ad732061c81af230e1bba576da04a4a2e69fedac",
+      "run_store": "7c9205e193e7f6df2dc3a334470e1dbf300c61ac90968ae3b65406223c2c0258",
+      "runner": "7e42444fe2eb525806e88d46a9624e18bc9d25960ee561b3fd88df6531fae9c7",
+      "source_identity": "501f614ed944e91ca0ad0ae6fc3aeca6c6946fa8af0d31dce4ca6753f5a4854c",
+      "validation_result": "cf1167522351189ac57ede0d9305382191966fb9631fd0638bc49f23d3208fce",
+      "validators": "b3fa78f1374a44bc2de5c74ff09a14a1aa6b2b6a9a57558192d01adc90adc8de"
     },
     "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
     "runtime": {
@@ -74,12 +88,12 @@
   },
   "run": {
     "candidate_version": "trader-risk-audit-0.2.0@bf755a24450f",
-    "completed_at": "2026-07-13T17:49:55.460327+00:00",
+    "completed_at": "2026-07-13T18:26:16.197494+00:00",
     "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
-    "record_sha256": "b4c4ca2a5eef5dfd45cd9cdbd776a40469ddafa23c79032a70f1b369763f0422",
+    "record_sha256": "de971adfdac3ca723f3b18c1db25ff7b73216e9e152696e94860e10fbfc10ccf",
     "run_id": "trader-synthetic-quickstart-v1-20260713",
-    "seal_sha256": "26eaa0ba582b4bb9b61731e7f762a1c8cc72455013b0903c2a1b55139f43d5e4",
-    "started_at": "2026-07-13T17:49:55.431211+00:00",
+    "seal_sha256": "baee0b8bf0ce7ad07be8382b6d87f315e4a3215ed24609f7dc6626c833c2e6ed",
+    "started_at": "2026-07-13T18:26:16.171800+00:00",
     "status": "completed",
     "validator_version": "trader-risk-audit-exact-replay-validators-v1"
   },

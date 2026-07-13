@@ -5,18 +5,23 @@ import json
 from pathlib import Path
 
 from eval_ground_truth_lab import evidence as evidence_module
+from eval_ground_truth_lab import execution_binding as execution_binding_module
+from eval_ground_truth_lab import implementation_provenance as implementation_provenance_module
 from eval_ground_truth_lab import trader_replay as replay_module
+from eval_ground_truth_lab import trader_source_identity as source_identity_module
+from eval_ground_truth_lab.adapters import base as adapter_base_module
 from eval_ground_truth_lab.adapters import trader_risk_audit as adapter_module
 from eval_ground_truth_lab.datasets import registry as dataset_module
 from eval_ground_truth_lab.evidence import verify_evidence_manifest
 from eval_ground_truth_lab.implementation_provenance import build_implementation_provenance
 from eval_ground_truth_lab.runs import store as run_store_module
+from eval_ground_truth_lab.validators import result as validator_result_module
 from eval_ground_truth_lab.validators import trader_risk_audit as validator_module
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "docs/evidence/integrations/trader-risk-audit-synthetic-v1"
 MANIFEST = PACK / (
-    "sha256-ae5f4152cebd3c819f62b5facc09ff4c82f2dd9e9c3d1256b8b1c7b83d1eecd2.manifest.json"
+    "sha256-1b228a37ea3686cc9c57132c7b2d2048a49c71995fd63b4d020d619bf30f72c3.manifest.json"
 )
 
 
@@ -27,7 +32,7 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
 
     assert verification.artifact_count == 8
     assert verification.content_address == (
-        "sha256:ae5f4152cebd3c819f62b5facc09ff4c82f2dd9e9c3d1256b8b1c7b83d1eecd2"
+        "sha256:1b228a37ea3686cc9c57132c7b2d2048a49c71995fd63b4d020d619bf30f72c3"
     )
     assert result["gate"] == {"failed_validator_count": 0, "passed": True}
     assert result["dataset"]["dataset_hash"] == (
@@ -36,22 +41,32 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
     measured = build_implementation_provenance(
         component_paths={
             "adapter": Path(adapter_module.__file__),
+            "adapter_base": Path(adapter_base_module.__file__),
             "dataset_parser": Path(dataset_module.__file__),
             "evidence_manifest": Path(evidence_module.__file__),
+            "execution_binding": Path(execution_binding_module.__file__),
+            "implementation_provenance": Path(implementation_provenance_module.__file__),
             "run_store": Path(run_store_module.__file__),
             "runner": Path(replay_module.__file__),
+            "source_identity": Path(source_identity_module.__file__),
+            "validation_result": Path(validator_result_module.__file__),
             "validators": Path(validator_module.__file__),
         },
         package_root=Path(replay_module.__file__).parent,
+        require_execution_binding=True,
     )
     implementation = result["provenance"]["implementation"]
     assert implementation["components_sha256"] == measured["components_sha256"]
     assert implementation["package_payload"] == measured["package_payload"]
     assert implementation["source"] == {
-        "commit": "c85d512cae53a2c20b994f2909c763695b8a5155",
+        "commit": "f810e3a7a9ef6c077371ef401c345f56da3c8c27",
         "kind": "git_worktree",
         "measured_package_matches_head": True,
-        "tree": "52b64e4541d4f9d6e67fd4711f31c6293fc65358",
+        "tree": "8da573207b40329f125a999165163b73f4b0e8c0",
+    }
+    assert implementation["execution_binding"] == {
+        "schema_version": "eval-lab-loaded-execution-binding-v1",
+        "sha256": "33c0e48b7eff1fcd4656418cbb75491d408d16f01bdea1860c818997893cc5b6",
     }
     assert manifest["metadata"]["implementation"] == implementation
     assert result["provenance"]["implementation_sha256"] == implementation["components_sha256"]

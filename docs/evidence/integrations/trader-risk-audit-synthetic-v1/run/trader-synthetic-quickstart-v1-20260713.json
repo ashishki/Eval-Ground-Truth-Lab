@@ -472,7 +472,7 @@
       ]
     }
   ],
-  "completed_at": "2026-07-13T17:49:55.460327+00:00",
+  "completed_at": "2026-07-13T18:26:16.197494+00:00",
   "cost_per_case_usd": 0.0,
   "cost_total_usd": 0.0,
   "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
@@ -482,7 +482,7 @@
   "max_candidate_retries": 1,
   "run_id": "trader-synthetic-quickstart-v1-20260713",
   "run_type": "trader_risk_audit_evidence_replay",
-  "started_at": "2026-07-13T17:49:55.431211+00:00",
+  "started_at": "2026-07-13T18:26:16.171800+00:00",
   "status": "completed",
   "threshold_config_version": "exact-versioned-synthetic-expectation-v1",
   "validator_version": "trader-risk-audit-exact-replay-validators-v1"
