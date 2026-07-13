@@ -55,6 +55,9 @@ checks all of the following:
 - opaque `sha256-v1` rule, row, and violation trace-reference shapes;
 - exact evaluation-boundary, artifact-receipt, trace-preview, source-path, and
   provenance-file expectations with no unknown nested fields;
+- dataset cases allow only `id`, `input`, `expected`, and `metadata`; the Trader
+  case id/input and synthetic metadata keys and values are exact;
+- duplicate JSON or YAML mapping keys are rejected recursively;
 - dataset cases cannot select a different evidence path or configure execution.
 
 Eval validators then compare the verified export with the versioned one-case
@@ -62,13 +65,33 @@ synthetic expectation, including every field that the adapter seals into its
 result. A mismatch returns a failing gate and still writes evidence. A malformed
 or tampered source fails loading before a gate can be claimed. V1 requires
 exactly one dataset case; empty or multi-case inputs fail before a run or PASS
-pack can be created.
+pack can be created. Unknown fields, secret metadata, malformed nested expected
+payloads, and duplicate keys fail before either run or evidence directories are
+created.
 
 The replay reads dataset, evidence, and provenance bytes once, then derives
 parsing, validation, hashing, execution, and packaged inputs from those immutable
 snapshots. Adapter invocations return fresh nested containers. Mutating an input
 path or a prior result cannot change a later result or the bytes written to the
 pack.
+
+Dataset fixture/privacy claims are not inferred from metadata alone. Only bytes
+that are identical to the packaged dataset under its canonical name are marked
+as the reviewed synthetic fixture. A schema-valid caller override may produce a
+diagnostic PASS or FAIL, but the result and manifest mark it as non-fixture and
+`caller-supplied-dataset-not-privacy-reviewed`.
+
+Run completion returns the exact terminal JSON and checksum-seal bytes created
+while holding the RunStore lock. Replay packaging never reopens those mutable
+source paths. The terminal record SHA-256, seal SHA-256, run id, candidate,
+dataset hash, validator, and completed status are identical in the packaged run,
+replay result, and content-addressed manifest.
+
+Implementation provenance covers the adapter, dataset parser, RunStore,
+manifest writer, replay runner, and validators individually, plus a digest of
+the complete installed package payload. Source executions record the exact Eval
+commit/tree and whether the worktree was clean; installed-wheel executions bind
+the installed package digest instead.
 
 ## Reproduce
 
@@ -95,6 +118,10 @@ deterministic for the pinned inputs; timestamps and the resulting pack content
 address identify the individual execution and therefore are not expected to be
 byte-identical across new runs.
 
+Wheel builds are made byte-reproducible by setting `SOURCE_DATE_EPOCH` from the
+Eval commit timestamp. CI performs two cache-disabled clean builds and requires
+their wheel bytes to compare equal before installing either artifact.
+
 ## Evidence interpretation
 
 The committed input contains four invented trade observations and seven
@@ -111,4 +138,4 @@ milestones that cannot be satisfied by this repository-authored fixture.
 
 The committed 2026-07-13 replay is indexed at
 `docs/evidence/integrations/README.md` and verifies at content address
-`sha256:c57f858899962179179109d33e165f0c8fbc3744c3cfaaffaea27e9179a0dd63`.
+`sha256:094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44`.

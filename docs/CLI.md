@@ -88,9 +88,20 @@ the fully synthetic quickstart fixture, so an installed wheel works outside a
 repository checkout. The command reads every input once and uses those exact
 bytes for validation, hashing, replay, and packaging. It requires exactly one
 v1 case, verifies the complete sealed result without unknown nested fields, and
-writes a seven-artifact content-addressed evidence pack. A validator mismatch
-exits `1` and retains the pack; malformed, tampered, empty, or multi-case input
-fails closed without a PASS pack.
+writes a seven-artifact content-addressed evidence pack. Exact case/input and
+synthetic metadata allowlists, recursive duplicate-key rejection, and strict
+expected-payload shapes run before any output directory is created. Only the
+byte-identical packaged dataset receives fixture/privacy claims; schema-valid
+overrides are marked caller-supplied and not privacy-reviewed. A validator
+mismatch exits `1` and retains the pack; malformed, tampered, empty, or
+multi-case input fails closed without a PASS pack.
+
+The packaged terminal JSON and seal come directly from the immutable RunStore
+completion snapshot. Result and manifest bind their hashes plus run id,
+candidate, dataset, validator, and completed status. Implementation provenance
+also binds the parser, RunStore, manifest writer, remaining decision modules,
+complete package payload, and either clean source commit/tree or installed
+artifact digest.
 
 This is a contract compatibility replay, not a live Trader execution, financial
 policy benchmark, external-user case study, or production evidence. See

@@ -208,6 +208,11 @@ applies exact deterministic expectations to every sealed export field, writes a
 sealed run, and packages the exact input bytes it validated. The default inputs
 are package resources, so the command works from an unrelated directory after
 wheel installation. It does not run a financial audit or read raw trades.
+The run JSON and seal come from the locked completion snapshot, and their
+identity is cross-bound to result and manifest. Unknown dataset fields,
+noncanonical synthetic metadata, and duplicate JSON/YAML keys fail before any
+output directory is created; caller overrides never inherit fixture/privacy
+claims merely by declaring synthetic metadata.
 
 ```bash
 eval-ground-truth-lab run-trader-risk-audit-replay \
@@ -225,7 +230,7 @@ production claim. See
 [docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
 [dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
 [committed replay pack](docs/evidence/integrations/README.md) verifies at content
-address `sha256:c57f858899962179179109d33e165f0c8fbc3744c3cfaaffaea27e9179a0dd63`.
+address `sha256:094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44`.
 
 ## Architecture
 

@@ -2,8 +2,8 @@
 
 Gate: **PASS**
 
-This is a deterministic compatibility replay of one fully synthetic, sanitized
-Trader Risk Audit export. It is not a financial-performance evaluation, live-data
+This is a deterministic compatibility replay of one fully synthetic, sanitized expectation dataset.
+The source evidence is a pinned sanitized Trader Risk Audit export. It is not a financial-performance evaluation, live-data
 audit, external-user case study, investment recommendation, or production claim.
 
 ## Source pins
@@ -23,7 +23,10 @@ audit, external-user case study, investment recommendation, or production claim.
 - Candidate version: `trader-risk-audit-0.2.0@bf755a24450f`
 - Dataset: `synthetic_quickstart_v1` / `df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a`
 - Dataset cases: `1`
+- Dataset fixture: `True`
+- Dataset privacy classification: `fully-synthetic-sanitized-export`
 - Validator: `trader-risk-audit-exact-replay-validators-v1`
+- Run status: `completed`
 
 ## Case decisions
 

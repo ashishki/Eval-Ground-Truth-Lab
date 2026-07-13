@@ -43,6 +43,14 @@ production eval platform.
 - Trader replay v1 accepts exactly one case. Installed defaults are packaged
   resources; explicit input paths are read once, and the validated byte snapshots
   are the bytes sealed into the evidence pack.
+- Only the canonical-name, byte-identical packaged Trader dataset receives the
+  synthetic fixture/privacy classification. Schema-valid caller overrides are
+  diagnostic inputs marked non-fixture and not privacy-reviewed; unknown fields,
+  noncanonical metadata, and duplicate mapping keys fail before output creation.
+- The terminal run record and seal are immutable completion snapshots and their
+  identities are cross-bound in result/manifest. This remains tamper-evidence,
+  not filesystem immutability against an actor that can replace the entire pack
+  and its published content address.
 - Trader source commit/tree/blob and protected bundle digest are pinned. The
   adapter verifies the fixture SHA-256, Git blob, and evidence content hash, but
   local hashes do not authenticate the publisher and the protected bundle is not

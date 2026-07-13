@@ -39,6 +39,14 @@ The unmodified fixture passes exact deterministic validators. A modified export,
 provenance file, source pin/path, contract shape, evaluation boundary, artifact,
 trace, check, metric, or expected value must fail loading or the Eval gate. An
 empty or multi-case v1 dataset is rejected before a PASS pack can be written.
+Cases allow only `id`, `input`, `expected`, and `metadata`; the case id/input and
+metadata schema and values are exact. Duplicate JSON/YAML mapping keys are
+rejected recursively. These checks run before output directories are created.
+
+Fixture/privacy classification also requires byte identity with the packaged
+dataset under its canonical name. A caller-supplied schema-valid override is
+marked non-fixture and not privacy-reviewed even when its metadata repeats the
+trusted synthetic labels.
 
 PASS means compatibility with this single synthetic contract fixture. It is not
 external validation, investment advice, a production claim, or a general quality

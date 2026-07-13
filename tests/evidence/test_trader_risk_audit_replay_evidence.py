@@ -4,15 +4,19 @@ import hashlib
 import json
 from pathlib import Path
 
+from eval_ground_truth_lab import evidence as evidence_module
 from eval_ground_truth_lab import trader_replay as replay_module
 from eval_ground_truth_lab.adapters import trader_risk_audit as adapter_module
-from eval_ground_truth_lab.evidence import sha256_file, verify_evidence_manifest
+from eval_ground_truth_lab.datasets import registry as dataset_module
+from eval_ground_truth_lab.evidence import verify_evidence_manifest
+from eval_ground_truth_lab.implementation_provenance import build_implementation_provenance
+from eval_ground_truth_lab.runs import store as run_store_module
 from eval_ground_truth_lab.validators import trader_risk_audit as validator_module
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "docs/evidence/integrations/trader-risk-audit-synthetic-v1"
 MANIFEST = PACK / (
-    "sha256-c57f858899962179179109d33e165f0c8fbc3744c3cfaaffaea27e9179a0dd63.manifest.json"
+    "sha256-094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44.manifest.json"
 )
 
 
@@ -23,19 +27,35 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
 
     assert verification.artifact_count == 7
     assert verification.content_address == (
-        "sha256:c57f858899962179179109d33e165f0c8fbc3744c3cfaaffaea27e9179a0dd63"
+        "sha256:094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44"
     )
     assert result["gate"] == {"failed_validator_count": 0, "passed": True}
     assert result["dataset"]["dataset_hash"] == (
         "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a"
     )
-    expected_implementation = {
-        "adapter": sha256_file(Path(adapter_module.__file__)),
-        "runner": sha256_file(Path(replay_module.__file__)),
-        "validators": sha256_file(Path(validator_module.__file__)),
+    measured = build_implementation_provenance(
+        component_paths={
+            "adapter": Path(adapter_module.__file__),
+            "dataset_parser": Path(dataset_module.__file__),
+            "evidence_manifest": Path(evidence_module.__file__),
+            "run_store": Path(run_store_module.__file__),
+            "runner": Path(replay_module.__file__),
+            "validators": Path(validator_module.__file__),
+        },
+        package_root=Path(replay_module.__file__).parent,
+    )
+    implementation = result["provenance"]["implementation"]
+    assert implementation["components_sha256"] == measured["components_sha256"]
+    assert implementation["package_payload"] == measured["package_payload"]
+    assert implementation["source"] == {
+        "commit": "64f57f3e037589741df236cf51e9742871a68a91",
+        "kind": "git_worktree",
+        "tree": "e743f3d52438eec55c9c4b043cde7fddce081dd7",
+        "worktree_clean": True,
     }
-    assert result["provenance"]["implementation_sha256"] == expected_implementation
-    assert manifest["metadata"]["implementation_sha256"] == expected_implementation
+    assert manifest["metadata"]["implementation"] == implementation
+    assert result["provenance"]["implementation_sha256"] == implementation["components_sha256"]
+    assert manifest["metadata"]["implementation_sha256"] == implementation["components_sha256"]
     assert manifest["metadata"]["source_git_commit"] == ("bf755a24450ff7c17328fa6d447f36bea8ea0fe5")
     assert manifest["metadata"]["source_git_tree"] == ("1a2c4ff91a7504642a1bae05a9487fa2e898e0b6")
     assert manifest["metadata"]["source_git_blob_sha1"] == (
@@ -54,8 +74,31 @@ def test_committed_trader_run_seal_and_claim_boundary_are_intact() -> None:
     seal_path = PACK / "run/trader-synthetic-quickstart-v1-20260713.sha256"
     expected_seal = f"sha256:{hashlib.sha256(run_path.read_bytes()).hexdigest()}  {run_path.name}"
     report = (PACK / "replay-report.md").read_text(encoding="utf-8").lower()
+    result = _json(PACK / "replay-result.json")
+    manifest = _json(MANIFEST)
 
     assert seal_path.read_text(encoding="utf-8").strip() == expected_seal
+    assert result["run"]["status"] == "completed"
+    assert manifest["metadata"]["run"] == {
+        field: result["run"][field]
+        for field in (
+            "candidate_version",
+            "dataset_hash",
+            "record_sha256",
+            "run_id",
+            "seal_sha256",
+            "status",
+            "validator_version",
+        )
+    }
+    assert (
+        manifest["metadata"]["run"]["record_sha256"]
+        == hashlib.sha256(run_path.read_bytes()).hexdigest()
+    )
+    assert (
+        manifest["metadata"]["run"]["seal_sha256"]
+        == hashlib.sha256(seal_path.read_bytes()).hexdigest()
+    )
     for required in (
         "fully synthetic",
         "not a financial-performance evaluation",

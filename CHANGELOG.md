@@ -16,6 +16,14 @@ once stable releases begin.
   path and provenance-file identity, and reject vacuous non-singleton v1 datasets.
 - Ship the default synthetic Trader replay inputs in the wheel and exercise its
   console command from an unrelated working directory in CI.
+- Package the exact locked terminal RunStore JSON/seal snapshot and cross-bind
+  its hashes and run identity through result and manifest.
+- Reject unknown dataset fields, noncanonical Trader metadata, malformed nested
+  expectations, and recursive JSON/YAML duplicate keys before output creation;
+  withhold fixture/privacy claims from caller-supplied dataset overrides.
+- Bind the full replay decision path and package payload to source commit/tree or
+  installed-artifact identity, and require two commit-epoch wheel builds to be
+  byte-identical in least-privilege, time-bounded CI.
 
 ## 0.2.0 - 2026-07-13
 
