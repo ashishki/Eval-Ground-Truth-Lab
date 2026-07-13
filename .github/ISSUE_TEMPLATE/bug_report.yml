@@ -1,0 +1,28 @@
+name: Bug report
+description: Report a reproducible defect without secrets or production data.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, personal data, or unpatched vulnerability details.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include synthetic inputs, commands, actual output, and expected output.
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification context
+      description: OS, Python version, and relevant adapter mode.
+    validations:
+      required: true

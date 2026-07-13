@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "pip"
@@ -31,6 +31,26 @@ jobs:
 
       - name: Run tests
         run: python -m pytest tests -q --tb=short
+
+      - name: Build and smoke-test wheel
+        run: |
+          python -m pip wheel --no-deps . -w dist
+          python -m venv /tmp/eval-lab-wheel
+          /tmp/eval-lab-wheel/bin/pip install dist/*.whl
+          /tmp/eval-lab-wheel/bin/pip check
+          /tmp/eval-lab-wheel/bin/eval-ground-truth-lab --help
+          /tmp/eval-lab-wheel/bin/python - <<'PY'
+          from eval_ground_truth_lab.reports.html import render_html_report
+
+          output = render_html_report(
+              markdown_report="# installed wheel",
+              canonical_markdown_path="report.md",
+              run_artifact_path="run.json",
+              title="wheel smoke",
+              scope_label="packaging",
+          )
+          assert "installed wheel" in output
+          PY
 
       - name: Mocked gdev-agent smoke
         run: python -m pytest tests/eval/test_gdev_agent_smoke.py tests/adapters/test_gdev_agent_adapter.py -q --tb=short
