@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import stat
 import subprocess
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +15,15 @@ IMPLEMENTATION_PROVENANCE_SCHEMA_VERSION = "eval-lab-implementation-provenance-v
 
 class ImplementationProvenanceError(RuntimeError):
     """Raised when local implementation identity cannot be measured safely."""
+
+
+@dataclass(frozen=True)
+class _PackageFileSnapshot:
+    path: str
+    sha256: str
+    size_bytes: int
+    git_blob_sha1: str
+    git_mode: str
 
 
 def build_implementation_provenance(
@@ -26,23 +38,25 @@ def build_implementation_provenance(
         name: _sha256_file(_require_regular_file(Path(path), label=name))
         for name, path in sorted(component_paths.items())
     }
-    package_payload, package_paths = _package_payload_identity(root)
+    package_payload, package_files = _package_payload_identity(root)
     return {
         "components_sha256": components,
         "package_payload": package_payload,
         "schema_version": IMPLEMENTATION_PROVENANCE_SCHEMA_VERSION,
         "source": _source_identity(
             root,
-            package_paths=package_paths,
+            package_files=package_files,
             package_payload_sha256=package_payload["sha256"],
         ),
     }
 
 
-def _package_payload_identity(root: Path) -> tuple[dict[str, Any], tuple[str, ...]]:
+def _package_payload_identity(
+    root: Path,
+) -> tuple[dict[str, Any], tuple[_PackageFileSnapshot, ...]]:
     if root.is_symlink() or not root.is_dir():
         raise ImplementationProvenanceError(f"Package root is not a directory: {root}")
-    entries: list[dict[str, Any]] = []
+    files: list[_PackageFileSnapshot] = []
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
         if "__pycache__" in relative.parts or path.suffix in {".pyc", ".pyo"}:
@@ -52,15 +66,34 @@ def _package_payload_identity(root: Path) -> tuple[dict[str, Any], tuple[str, ..
                 f"Package payload cannot contain symlinks: {relative.as_posix()}"
             )
         if path.is_file():
-            entries.append(
-                {
-                    "path": relative.as_posix(),
-                    "sha256": _sha256_file(path),
-                    "size_bytes": path.stat().st_size,
-                }
+            with path.open("rb") as source:
+                measured_bytes = source.read()
+                measured_stat = os.fstat(source.fileno())
+            if not stat.S_ISREG(measured_stat.st_mode):
+                raise ImplementationProvenanceError(
+                    f"Package payload entry is not a regular file: {relative.as_posix()}"
+                )
+            executable_bits = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+            files.append(
+                _PackageFileSnapshot(
+                    path=relative.as_posix(),
+                    sha256=hashlib.sha256(measured_bytes).hexdigest(),
+                    size_bytes=len(measured_bytes),
+                    git_blob_sha1=_git_blob_sha1(measured_bytes),
+                    git_mode=("100755" if measured_stat.st_mode & executable_bits else "100644"),
+                )
             )
-    if not entries:
+    if not files:
         raise ImplementationProvenanceError("Package payload contains no regular files")
+    entries = [
+        {
+            "mode": file.git_mode,
+            "path": file.path,
+            "sha256": file.sha256,
+            "size_bytes": file.size_bytes,
+        }
+        for file in files
+    ]
     payload = json.dumps(
         entries,
         ensure_ascii=False,
@@ -72,14 +105,14 @@ def _package_payload_identity(root: Path) -> tuple[dict[str, Any], tuple[str, ..
             "file_count": len(entries),
             "sha256": hashlib.sha256(payload).hexdigest(),
         },
-        tuple(str(entry["path"]) for entry in entries),
+        tuple(files),
     )
 
 
 def _source_identity(
     package_root: Path,
     *,
-    package_paths: tuple[str, ...],
+    package_files: tuple[_PackageFileSnapshot, ...],
     package_payload_sha256: str,
 ) -> dict[str, Any]:
     repository_root = _try_git(package_root, "rev-parse", "--show-toplevel")
@@ -93,22 +126,23 @@ def _source_identity(
             "Git repository root does not contain the measured package"
         ) from exc
     commit = _try_git(root, "rev-parse", "--verify", "HEAD^{commit}")
-    tree = _try_git(root, "rev-parse", "--verify", "HEAD^{tree}")
-    if commit is None or tree is None:
+    if commit is None:
+        return _installed_package_identity(package_payload_sha256)
+    tree = _try_git(root, "rev-parse", "--verify", f"{commit}^{{tree}}")
+    if tree is None:
         return _installed_package_identity(package_payload_sha256)
     if not _package_payload_is_tracked_at_head(
         repository_root=root,
         package_root=package_root,
-        package_paths=package_paths,
+        package_files=package_files,
         commit=commit,
     ):
         return _installed_package_identity(package_payload_sha256)
-    status = _required_git(root, "status", "--porcelain=v1", "--untracked-files=all")
     return {
         "commit": commit,
         "kind": "git_worktree",
+        "measured_package_matches_head": True,
         "tree": tree,
-        "worktree_clean": status == "",
     }
 
 
@@ -116,20 +150,90 @@ def _package_payload_is_tracked_at_head(
     *,
     repository_root: Path,
     package_root: Path,
-    package_paths: tuple[str, ...],
+    package_files: tuple[_PackageFileSnapshot, ...],
     commit: str,
 ) -> bool:
     package_prefix = package_root.relative_to(repository_root)
-    for package_path in package_paths:
-        repository_path = (package_prefix / package_path).as_posix()
-        # A colon is ambiguous in Git's <tree-ish>:<path> syntax. Conservatively
-        # classify such an installation as an artifact instead of claiming a
-        # worktree identity that was not proven.
-        if ":" in repository_path:
+    repository_paths = {
+        (
+            package_file.path
+            if package_prefix == Path(".")
+            else (package_prefix / package_file.path).as_posix()
+        ): package_file
+        for package_file in package_files
+    }
+    head_entries = _git_tree_entries_under_path(
+        repository_root,
+        commit=commit,
+        repository_path=package_prefix.as_posix(),
+    )
+    if head_entries is None or set(head_entries) != set(repository_paths):
+        return False
+    for repository_path, package_file in repository_paths.items():
+        entry = head_entries[repository_path]
+        git_mode, object_type, object_id = entry
+        if object_type != "blob":
             return False
-        if _try_git(repository_root, "cat-file", "-t", f"{commit}:{repository_path}") != "blob":
+        if object_id != package_file.git_blob_sha1:
+            return False
+        if git_mode != package_file.git_mode:
             return False
     return True
+
+
+def _git_tree_entries_under_path(
+    repository_root: Path,
+    *,
+    commit: str,
+    repository_path: str,
+) -> dict[str, tuple[str, str, str]] | None:
+    try:
+        completed = subprocess.run(
+            (
+                "git",
+                "-C",
+                str(repository_root),
+                "ls-tree",
+                "-r",
+                "-z",
+                "--full-tree",
+                commit,
+                "--",
+                repository_path,
+            ),
+            check=False,
+            capture_output=True,
+            env={**os.environ, "GIT_LITERAL_PATHSPECS": "1"},
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if completed.returncode != 0 or (completed.stdout and not completed.stdout.endswith(b"\0")):
+        return None
+    records = completed.stdout[:-1].split(b"\0") if completed.stdout else []
+    entries: dict[str, tuple[str, str, str]] = {}
+    for record in records:
+        if b"\t" not in record:
+            return None
+        header, encoded_path = record.split(b"\t", 1)
+        fields = header.split(b" ")
+        path = os.fsdecode(encoded_path)
+        if len(fields) != 3 or path in entries:
+            return None
+        try:
+            entries[path] = (
+                fields[0].decode("ascii"),
+                fields[1].decode("ascii"),
+                fields[2].decode("ascii"),
+            )
+        except UnicodeDecodeError:
+            return None
+    return entries
+
+
+def _git_blob_sha1(payload: bytes) -> str:
+    header = f"blob {len(payload)}\0".encode()
+    return hashlib.sha1(header + payload, usedforsecurity=False).hexdigest()
 
 
 def _installed_package_identity(package_payload_sha256: str) -> dict[str, str]:
@@ -153,15 +257,6 @@ def _try_git(cwd: Path, *args: str) -> str | None:
     if completed.returncode != 0:
         return None
     return completed.stdout.strip()
-
-
-def _required_git(cwd: Path, *args: str) -> str:
-    value = _try_git(cwd, *args)
-    if value is None:
-        raise ImplementationProvenanceError(
-            "Cannot measure required Git implementation provenance: " + " ".join(args)
-        )
-    return value
 
 
 def _require_regular_file(path: Path, *, label: str) -> Path:

@@ -4,6 +4,8 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from eval_ground_truth_lab.implementation_provenance import build_implementation_provenance
 
 
@@ -86,10 +88,99 @@ def test_ignored_installed_package_inside_unrelated_repo_is_not_a_git_worktree(
     }
 
 
-def _git(repository: Path, *args: str) -> None:
-    subprocess.run(
+def test_git_identity_claim_is_limited_to_measured_package_bytes_and_modes(
+    tmp_path: Path,
+) -> None:
+    repository, package, component = _tracked_package_repository(tmp_path)
+    commit = _git(repository, "rev-parse", "HEAD")
+    tree = _git(repository, "rev-parse", "HEAD^{tree}")
+    (repository / "README.md").write_text("dirty unrelated file\n", encoding="utf-8")
+
+    provenance = build_implementation_provenance(
+        component_paths={"runner": component},
+        package_root=package,
+    )
+
+    assert provenance["source"] == {
+        "commit": commit,
+        "kind": "git_worktree",
+        "measured_package_matches_head": True,
+        "tree": tree,
+    }
+    assert "worktree_clean" not in provenance["source"]
+
+
+@pytest.mark.parametrize("index_flag", ["--assume-unchanged", "--skip-worktree"])
+@pytest.mark.parametrize("mutation", ["bytes", "executable_mode"])
+def test_hidden_measured_package_mutation_cannot_claim_git_head_identity(
+    tmp_path: Path,
+    index_flag: str,
+    mutation: str,
+) -> None:
+    repository, package, component = _tracked_package_repository(tmp_path)
+    before = build_implementation_provenance(
+        component_paths={"runner": component},
+        package_root=package,
+    )
+    _git(repository, "update-index", index_flag, "package/runner.py")
+    if mutation == "bytes":
+        component.write_text("VALUE = 2\n", encoding="utf-8")
+    else:
+        component.chmod(component.stat().st_mode | 0o111)
+
+    assert _git(repository, "status", "--porcelain=v1", "--untracked-files=all") == ""
+    provenance = build_implementation_provenance(
+        component_paths={"runner": component},
+        package_root=package,
+    )
+
+    assert provenance["source"] == {
+        "installed_artifact_sha256": provenance["package_payload"]["sha256"],
+        "kind": "installed_package",
+    }
+    assert provenance["package_payload"]["sha256"] != before["package_payload"]["sha256"]
+
+
+def test_skip_worktree_cannot_hide_deleted_tracked_package_file(tmp_path: Path) -> None:
+    repository, package, component = _tracked_package_repository(tmp_path)
+    remaining = package / "fixture.json"
+    _git(repository, "update-index", "--skip-worktree", "package/runner.py")
+    component.unlink()
+
+    assert _git(repository, "status", "--porcelain=v1", "--untracked-files=all") == ""
+    provenance = build_implementation_provenance(
+        component_paths={"fixture": remaining},
+        package_root=package,
+    )
+
+    assert provenance["source"] == {
+        "installed_artifact_sha256": provenance["package_payload"]["sha256"],
+        "kind": "installed_package",
+    }
+
+
+def _tracked_package_repository(tmp_path: Path) -> tuple[Path, Path, Path]:
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    _git(repository, "init", "--initial-branch=main")
+    _git(repository, "config", "user.name", "Eval Lab Test")
+    _git(repository, "config", "user.email", "eval-lab-test@example.invalid")
+    package = repository / "package"
+    package.mkdir()
+    component = package / "runner.py"
+    component.write_text("VALUE = 1\n", encoding="utf-8")
+    (package / "fixture.json").write_text('{"synthetic":true}\n', encoding="utf-8")
+    (repository / "README.md").write_text("# repository\n", encoding="utf-8")
+    _git(repository, "add", "README.md", "package")
+    _git(repository, "commit", "-m", "test: create tracked package")
+    return repository, package, component
+
+
+def _git(repository: Path, *args: str) -> str:
+    completed = subprocess.run(
         ("git", "-C", str(repository), *args),
         check=True,
         capture_output=True,
         text=True,
     )
+    return completed.stdout.strip()
