@@ -3,7 +3,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
 from eval_ground_truth_lab.validators.result import ValidationResult
+
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
 
 TRADER_RISK_AUDIT_VALIDATOR_VERSION = "trader-risk-audit-exact-replay-validators-v1"
 

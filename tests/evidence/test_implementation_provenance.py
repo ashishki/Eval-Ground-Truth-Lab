@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import os
+import re
+import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
 from eval_ground_truth_lab import implementation_provenance as provenance_module
+from eval_ground_truth_lab import trader_replay as replay_module
 from eval_ground_truth_lab.implementation_provenance import (
     ImplementationProvenanceError,
     build_implementation_provenance,
+    derive_execution_binding_sha256,
 )
 
 
@@ -74,6 +78,59 @@ def test_named_component_must_be_inside_package_root(tmp_path: Path) -> None:
             component_paths={"runner": outside},
             package_root=package,
         )
+
+
+def test_execution_binding_rejects_changed_package_without_refresh(tmp_path: Path) -> None:
+    source_package = Path(provenance_module.__file__).parent
+    package = tmp_path / "eval_ground_truth_lab"
+    shutil.copytree(source_package, package, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    adapter = package / "adapters/trader_risk_audit.py"
+    adapter.write_text(
+        adapter.read_text(encoding="utf-8") + "\n# stale binding probe\n", encoding="utf-8"
+    )
+
+    with pytest.raises(ImplementationProvenanceError, match="does not match"):
+        build_implementation_provenance(
+            component_paths={"adapter": adapter},
+            package_root=package,
+            require_execution_binding=True,
+        )
+
+
+def test_refreshed_disk_binding_differs_from_already_loaded_modules(tmp_path: Path) -> None:
+    source_package = Path(provenance_module.__file__).parent
+    package = tmp_path / "eval_ground_truth_lab"
+    shutil.copytree(source_package, package, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    adapter = package / "adapters/trader_risk_audit.py"
+    adapter.write_text(
+        adapter.read_text(encoding="utf-8")
+        + "\nraise RuntimeError('new on-disk adapter must not be attributed to old loaded code')\n",
+        encoding="utf-8",
+    )
+    derived = derive_execution_binding_sha256(package_root=package)
+    binding = package / "execution_binding.py"
+    binding_text = binding.read_text(encoding="utf-8")
+    refreshed, count = re.subn(
+        r'(?m)^(EXECUTION_BINDING_SHA256 = ")[0-9a-f]{64}("$)',
+        rf"\g<1>{derived}\g<2>",
+        binding_text,
+    )
+    assert count == 1
+    binding.write_text(refreshed, encoding="utf-8")
+
+    implementation = build_implementation_provenance(
+        component_paths={"adapter": adapter},
+        package_root=package,
+        require_execution_binding=True,
+    )
+
+    assert implementation["execution_binding"]["sha256"] == derived
+    assert derived != provenance_module.LOADED_EXECUTION_BINDING_SHA256
+    with pytest.raises(
+        replay_module.TraderRiskAuditReplayConfigurationError,
+        match="Loaded Eval implementation",
+    ):
+        replay_module._require_loaded_execution_binding(implementation)
 
 
 def test_component_package_and_head_identity_share_one_immutable_snapshot(

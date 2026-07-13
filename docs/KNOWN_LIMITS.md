@@ -64,13 +64,15 @@ production eval platform.
   offline Git-object proof derived from the protected bundle. The bundle digest
   is bound, but the full bundle is not distributed and Eval Lab's reviewed trust
   anchor does not authenticate an external publisher identity.
-- Eval implementation provenance proves only the measured package payload, not
-  whole-worktree cleanliness. A `git_worktree` identity requires the exact
-  recursive HEAD path set plus byte-for-byte and executable-mode equality;
-  hidden index flags or deletions downgrade it to `installed_package`. Named
-  components and package/HEAD identity come from one snapshot-time recursive
-  capture; this does not claim filesystem immutability after capture or prove
-  that those bytes executed before they were measured.
+- Eval implementation provenance does not claim whole-worktree cleanliness. A
+  `git_worktree` identity requires the exact recursive HEAD path set plus
+  byte-for-byte and executable-mode equality; hidden index flags or deletions
+  downgrade it to `installed_package`. Named components, package/HEAD identity,
+  and a generated package-wide execution digest come from one pre-execution
+  recursive capture. Every loaded Trader decision module captures that digest at
+  import, so stale loaded code or newer on-disk code fails before run creation.
+  This is a process-local execution binding, not protection against an actor
+  that can arbitrarily rewrite Python objects in memory after the check.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

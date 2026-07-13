@@ -16,10 +16,12 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
           cache: "pip"
@@ -27,11 +29,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt -e .
 
+      - name: Verify loaded-code execution binding
+        run: PYTHONPATH=src python tools/update_execution_binding.py --check
+
       - name: Lint
-        run: ruff check src tests
+        run: ruff check src tests tools
 
       - name: Format check
-        run: ruff format --check src tests
+        run: ruff format --check src tests tools
 
       - name: Run tests
         run: python -m pytest tests -q --tb=short

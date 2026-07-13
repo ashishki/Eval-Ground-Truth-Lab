@@ -10,11 +10,13 @@ from typing import Any
 import pytest
 
 from eval_ground_truth_lab import cli
+from eval_ground_truth_lab import execution_binding as execution_binding_module
 from eval_ground_truth_lab.adapters import (
     UNASSESSED_PRIVACY_CLASSIFICATION,
     AdapterResult,
     TraderRiskAuditEvidenceAdapter,
 )
+from eval_ground_truth_lab.adapters import trader_risk_audit as adapter_module
 from eval_ground_truth_lab.datasets import DatasetValidationError
 from eval_ground_truth_lab.evidence import verify_evidence_manifest
 from eval_ground_truth_lab.runs import RunStore
@@ -91,12 +93,22 @@ def test_cli_replays_trader_export_and_writes_verified_evidence_pack(
     implementation = result["provenance"]["implementation"]
     assert set(implementation["components_sha256"]) == {
         "adapter",
+        "adapter_base",
         "dataset_parser",
         "evidence_manifest",
+        "execution_binding",
+        "implementation_provenance",
         "run_store",
         "runner",
+        "source_identity",
+        "validation_result",
         "validators",
     }
+    assert implementation["execution_binding"] == {
+        "schema_version": "eval-lab-loaded-execution-binding-v1",
+        "sha256": execution_binding_module.EXECUTION_BINDING_SHA256,
+    }
+    assert len(implementation["execution_binding"]["sha256"]) == 64
     assert implementation["package_payload"]["file_count"] > 6
     assert implementation["source"]["kind"] == "git_worktree"
     assert manifest["metadata"]["gate_passed"] is True
@@ -302,6 +314,25 @@ def test_evidentiary_replay_rejects_subclass_adapter_override_before_execution(
         )
 
     assert adapter.invoked is False
+    assert not pack.exists()
+    assert not runs.exists()
+
+
+def test_evidentiary_replay_rejects_old_loaded_adapter_against_new_disk_binding(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(adapter_module, "LOADED_EXECUTION_BINDING_SHA256", "0" * 64)
+    pack = tmp_path / "pack"
+    runs = tmp_path / "runs"
+
+    with pytest.raises(TraderRiskAuditReplayConfigurationError, match="Loaded Eval implementation"):
+        run_trader_risk_audit_replay(
+            evidence_dir=pack,
+            run_dir=runs,
+            run_id="stale-loaded-adapter",
+        )
+
     assert not pack.exists()
     assert not runs.exists()
 

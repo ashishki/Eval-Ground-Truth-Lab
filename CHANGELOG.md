@@ -41,6 +41,10 @@ once stable releases begin.
 - Derive named component hashes, recursive package identity, and HEAD comparison
   from one immutable bytes/modes/paths snapshot; reject components outside the
   package root and fail closed on mutation during recursive capture.
+- Capture implementation provenance before evidentiary execution and bind every
+  loaded Trader decision module to the same generated package-wide snapshot
+  digest; stale imported code or stale on-disk source now fails before a run or
+  evidence directory is created.
 
 ## 0.2.0 - 2026-07-13
 

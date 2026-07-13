@@ -121,14 +121,21 @@ dataset hash, validator, and completed status are identical in the packaged run,
 replay result, and content-addressed manifest.
 
 Implementation provenance covers the adapter, dataset parser, RunStore,
-manifest writer, replay runner, and validators individually, plus a digest of
-the complete installed package payload, including normalized executable modes.
+manifest writer, replay runner, source-proof verifier, provenance builder,
+adapter/result contracts, and validators individually, plus a digest of the
+complete installed package payload, including normalized executable modes.
 One immutable recursive capture records every included root-relative path,
 executable mode, and file byte. Named component hashes, package digest, Git blob
 ids, and HEAD comparison all derive from that same snapshot; named components
 must resolve inside the package root. Namespace or metadata mutation during the
 capture fails closed, while mutation after capture cannot mix identities from two
-filesystem states. Source executions record an Eval commit/tree with
+filesystem states. The capture occurs before adapter execution. A generated
+package-wide digest normalizes only its own embedded marker; every loaded
+decision module captures that marker at import. Replay compares all captured
+module values with the immutable snapshot before dataset parsing, adapter
+construction, run creation, or output. Thus an old loaded module paired with
+newer committed files cannot receive the newer commit/component identity.
+Source executions record an Eval commit/tree with
 `measured_package_matches_head=true` only when the exact recursive package path
 set, every byte, and every executable mode match that commit. This is deliberately
 not a whole-worktree cleanliness claim. Index hints such as `assume-unchanged`

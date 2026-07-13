@@ -8,6 +8,10 @@ from typing import Any
 
 import yaml
 
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
+
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
+
 DEFAULT_SCHEMA_VERSION = "1.0"
 REQUIRED_CASE_FIELDS = ("id", "input", "expected")
 ALLOWED_CASE_FIELDS = frozenset({*REQUIRED_CASE_FIELDS, "metadata"})

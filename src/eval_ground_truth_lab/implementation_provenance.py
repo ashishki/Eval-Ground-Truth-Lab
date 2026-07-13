@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import stat
 import subprocess
 from collections.abc import Mapping
@@ -10,7 +11,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-IMPLEMENTATION_PROVENANCE_SCHEMA_VERSION = "eval-lab-implementation-provenance-v1"
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
+
+IMPLEMENTATION_PROVENANCE_SCHEMA_VERSION = "eval-lab-implementation-provenance-v2"
+EXECUTION_BINDING_SCHEMA_VERSION = "eval-lab-loaded-execution-binding-v1"
+EXECUTION_BINDING_RELATIVE_PATH = "execution_binding.py"
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
+
+_EXECUTION_BINDING_PATTERN = re.compile(rb'(?m)^EXECUTION_BINDING_SHA256 = "([0-9a-f]{64})"$')
+_EXECUTION_BINDING_PLACEHOLDER = b"0" * 64
 
 
 class ImplementationProvenanceError(RuntimeError):
@@ -45,6 +54,7 @@ def build_implementation_provenance(
     *,
     component_paths: Mapping[str, str | Path],
     package_root: str | Path,
+    require_execution_binding: bool = False,
 ) -> dict[str, Any]:
     """Bind named decision components and the complete installed package payload."""
 
@@ -62,7 +72,7 @@ def build_implementation_provenance(
         snapshot=snapshot,
     )
     package_payload = _package_payload_identity(snapshot)
-    return {
+    result = {
         "components_sha256": components,
         "package_payload": package_payload,
         "schema_version": IMPLEMENTATION_PROVENANCE_SCHEMA_VERSION,
@@ -72,6 +82,19 @@ def build_implementation_provenance(
             package_payload_sha256=package_payload["sha256"],
         ),
     }
+    if require_execution_binding:
+        result["execution_binding"] = _execution_binding_identity(snapshot)
+    return result
+
+
+def derive_execution_binding_sha256(*, package_root: str | Path) -> str:
+    """Derive the generated execution binding from one immutable package snapshot."""
+
+    unresolved_root = Path(package_root)
+    if unresolved_root.is_symlink():
+        raise ImplementationProvenanceError(f"Package root is not a directory: {unresolved_root}")
+    root = unresolved_root.resolve()
+    return _derive_execution_binding_sha256(_capture_package_snapshot(root))
 
 
 def _component_relative_paths(
@@ -225,6 +248,71 @@ def _package_payload_identity(snapshot: _PackageSnapshot) -> dict[str, Any]:
         "file_count": len(entries),
         "sha256": hashlib.sha256(payload).hexdigest(),
     }
+
+
+def _execution_binding_identity(snapshot: _PackageSnapshot) -> dict[str, str]:
+    snapshot_by_path = {file.path: file for file in snapshot.files}
+    binding_file = snapshot_by_path.get(EXECUTION_BINDING_RELATIVE_PATH)
+    if binding_file is None:
+        raise ImplementationProvenanceError(
+            f"Package execution binding is missing: {EXECUTION_BINDING_RELATIVE_PATH}"
+        )
+    matches = list(_EXECUTION_BINDING_PATTERN.finditer(binding_file.payload))
+    if len(matches) != 1:
+        raise ImplementationProvenanceError(
+            "Package execution binding must contain exactly one canonical SHA-256 marker"
+        )
+    embedded = matches[0].group(1).decode("ascii")
+    derived = _derive_execution_binding_sha256(snapshot)
+    if embedded != derived:
+        raise ImplementationProvenanceError(
+            "Package execution binding does not match the immutable package snapshot"
+        )
+    return {
+        "schema_version": EXECUTION_BINDING_SCHEMA_VERSION,
+        "sha256": derived,
+    }
+
+
+def _derive_execution_binding_sha256(snapshot: _PackageSnapshot) -> str:
+    entries: list[dict[str, Any]] = []
+    binding_seen = False
+    for file in snapshot.files:
+        payload = file.payload
+        if file.path == EXECUTION_BINDING_RELATIVE_PATH:
+            matches = list(_EXECUTION_BINDING_PATTERN.finditer(payload))
+            if len(matches) != 1:
+                raise ImplementationProvenanceError(
+                    "Package execution binding must contain exactly one canonical SHA-256 marker"
+                )
+            payload = (
+                payload[: matches[0].start(1)]
+                + _EXECUTION_BINDING_PLACEHOLDER
+                + payload[matches[0].end(1) :]
+            )
+            binding_seen = True
+        entries.append(
+            {
+                "mode": file.git_mode,
+                "path": file.path,
+                "sha256": hashlib.sha256(payload).hexdigest(),
+                "size_bytes": len(payload),
+            }
+        )
+    if not binding_seen:
+        raise ImplementationProvenanceError(
+            f"Package execution binding is missing: {EXECUTION_BINDING_RELATIVE_PATH}"
+        )
+    payload = json.dumps(
+        {
+            "files": entries,
+            "schema_version": EXECUTION_BINDING_SCHEMA_VERSION,
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode()
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _source_identity(

@@ -9,6 +9,10 @@ from dataclasses import asdict, dataclass
 from pathlib import PurePosixPath
 from typing import Any
 
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
+
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
+
 TRADER_SOURCE_IDENTITY_PROOF_SCHEMA_VERSION = "eval-lab-trader-source-git-proof-v1"
 
 _DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}\Z")

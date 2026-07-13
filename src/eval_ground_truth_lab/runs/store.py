@@ -16,6 +16,10 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
+
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
+
 RUNNING = "running"
 COMPLETED = "completed"
 INTERRUPTED = "interrupted"

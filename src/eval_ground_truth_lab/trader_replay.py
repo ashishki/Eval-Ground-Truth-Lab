@@ -12,6 +12,10 @@ from typing import Any
 
 from eval_ground_truth_lab import __version__
 from eval_ground_truth_lab import evidence as evidence_module
+from eval_ground_truth_lab import execution_binding as execution_binding_module
+from eval_ground_truth_lab import implementation_provenance as implementation_provenance_module
+from eval_ground_truth_lab import trader_source_identity as source_identity_module
+from eval_ground_truth_lab.adapters import base as adapter_base_module
 from eval_ground_truth_lab.adapters import trader_risk_audit as adapter_module
 from eval_ground_truth_lab.adapters.trader_risk_audit import (
     SYNTHETIC_PRIVACY_CLASSIFICATION,
@@ -29,6 +33,7 @@ from eval_ground_truth_lab.evidence import (
     verify_evidence_manifest,
     write_evidence_manifest,
 )
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
 from eval_ground_truth_lab.implementation_provenance import build_implementation_provenance
 from eval_ground_truth_lab.runs import CaseResult, RunRecord, RunStore
 from eval_ground_truth_lab.runs import store as run_store_module
@@ -37,6 +42,7 @@ from eval_ground_truth_lab.trader_source_identity import (
     VerifiedTraderSourceIdentity,
     verify_trader_source_identity_proof,
 )
+from eval_ground_truth_lab.validators import result as validator_result_module
 from eval_ground_truth_lab.validators import trader_risk_audit as validator_module
 from eval_ground_truth_lab.validators.trader_risk_audit import (
     TRADER_RISK_AUDIT_VALIDATOR_VERSION,
@@ -61,6 +67,7 @@ _TRUSTED_DATASET_PRIVACY = "fully-synthetic-packaged-expectation-dataset"
 _UNTRUSTED_DATASET_PRIVACY = "caller-supplied-dataset-not-privacy-reviewed"
 _UNTRUSTED_EVIDENCE_PRIVACY = "caller-supplied-evidence-not-privacy-reviewed"
 _CANONICAL_ADAPTER_INVOKE = TraderRiskAuditEvidenceAdapter.invoke
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
 
 
 class TraderRiskAuditReplayConfigurationError(ValueError):
@@ -74,7 +81,7 @@ class _TraderReplayInputSnapshot:
     evidence_bytes: bytes
     provenance_bytes: bytes
     source_identity_proof_bytes: bytes
-    trusted_source_identity: VerifiedTraderSourceIdentity
+    trusted_evidence_resource_bytes: bytes
     trusted_dataset_bytes_match: bool
     trusted_evidence_bytes_match: bool
     trusted_provenance_bytes_match: bool
@@ -143,6 +150,8 @@ def run_trader_risk_audit_replay(
         # Production CLI calls cannot configure it, and all later work continues
         # from the immutable bytes captured above.
         _after_input_snapshot_hook()
+    implementation = _capture_and_verify_loaded_implementation()
+    trusted_source_identity = _verify_packaged_source_identity(snapshot)
     dataset = load_dataset_bytes(
         snapshot.dataset_bytes,
         source_path=snapshot.dataset_source_name,
@@ -155,7 +164,11 @@ def run_trader_risk_audit_replay(
     )
     _require_canonical_evidentiary_adapter(selected_adapter)
     _require_adapter_snapshot_match(adapter=selected_adapter, snapshot=snapshot)
-    source_trust = _classify_source_trust(adapter=selected_adapter, snapshot=snapshot)
+    source_trust = _classify_source_trust(
+        adapter=selected_adapter,
+        snapshot=snapshot,
+        trusted_source_identity=trusted_source_identity,
+    )
     source_provenance = _source_provenance_mapping(
         adapter=selected_adapter,
         source_trust=source_trust,
@@ -211,17 +224,6 @@ def run_trader_risk_audit_replay(
         completed,
         record_bytes=terminal_snapshot.record_bytes,
         seal_bytes=terminal_snapshot.seal_bytes,
-    )
-    implementation = build_implementation_provenance(
-        component_paths={
-            "adapter": Path(adapter_module.__file__),
-            "dataset_parser": Path(dataset_module.__file__),
-            "evidence_manifest": Path(evidence_module.__file__),
-            "run_store": Path(run_store_module.__file__),
-            "runner": Path(__file__),
-            "validators": Path(validator_module.__file__),
-        },
-        package_root=Path(__file__).parent,
     )
     runtime = {
         "platform": platform.platform(),
@@ -553,15 +555,6 @@ def _load_input_snapshot(
     trusted_evidence_bytes = _load_resource_bytes(_DEFAULT_EVIDENCE_NAME)
     trusted_provenance_bytes = _load_resource_bytes(_DEFAULT_PROVENANCE_NAME)
     source_identity_proof_bytes = _load_resource_bytes(_DEFAULT_SOURCE_IDENTITY_PROOF_NAME)
-    try:
-        trusted_source_identity = verify_trader_source_identity_proof(
-            proof_bytes=source_identity_proof_bytes,
-            evidence_bytes=trusted_evidence_bytes,
-        )
-    except TraderSourceIdentityProofError as exc:
-        raise TraderRiskAuditReplayConfigurationError(
-            "Packaged Trader source identity proof is invalid"
-        ) from exc
     if dataset_path is None:
         dataset_bytes = trusted_dataset_bytes
         dataset_source_name = _DEFAULT_DATASET_NAME
@@ -591,13 +584,27 @@ def _load_input_snapshot(
         evidence_bytes=evidence_bytes,
         provenance_bytes=provenance_bytes,
         source_identity_proof_bytes=source_identity_proof_bytes,
-        trusted_source_identity=trusted_source_identity,
+        trusted_evidence_resource_bytes=trusted_evidence_bytes,
         trusted_dataset_bytes_match=(
             dataset_source_name == _DEFAULT_DATASET_NAME and dataset_bytes == trusted_dataset_bytes
         ),
         trusted_evidence_bytes_match=evidence_bytes == trusted_evidence_bytes,
         trusted_provenance_bytes_match=provenance_bytes == trusted_provenance_bytes,
     )
+
+
+def _verify_packaged_source_identity(
+    snapshot: _TraderReplayInputSnapshot,
+) -> VerifiedTraderSourceIdentity:
+    try:
+        return verify_trader_source_identity_proof(
+            proof_bytes=snapshot.source_identity_proof_bytes,
+            evidence_bytes=snapshot.trusted_evidence_resource_bytes,
+        )
+    except TraderSourceIdentityProofError as exc:
+        raise TraderRiskAuditReplayConfigurationError(
+            "Packaged Trader source identity proof is invalid"
+        ) from exc
 
 
 def _load_input_bytes(
@@ -685,8 +692,9 @@ def _classify_source_trust(
     *,
     adapter: TraderRiskAuditEvidenceAdapter,
     snapshot: _TraderReplayInputSnapshot,
+    trusted_source_identity: VerifiedTraderSourceIdentity,
 ) -> _TraderSourceTrust:
-    expected_identity = snapshot.trusted_source_identity
+    expected_identity = trusted_source_identity
     provenance = adapter.provenance
     identity_matches_proof = (
         provenance.source_bundle_sha256 == expected_identity.source_bundle_sha256
@@ -928,6 +936,58 @@ def _require_canonical_evidentiary_adapter(adapter: TraderRiskAuditEvidenceAdapt
         raise TraderRiskAuditReplayConfigurationError(
             "Evidentiary Trader replay requires the exact canonical "
             "TraderRiskAuditEvidenceAdapter implementation"
+        )
+
+
+def _capture_and_verify_loaded_implementation() -> dict[str, Any]:
+    """Bind loaded decision modules to one immutable package source snapshot."""
+
+    implementation = build_implementation_provenance(
+        component_paths={
+            "adapter": Path(adapter_module.__file__),
+            "adapter_base": Path(adapter_base_module.__file__),
+            "dataset_parser": Path(dataset_module.__file__),
+            "evidence_manifest": Path(evidence_module.__file__),
+            "execution_binding": Path(execution_binding_module.__file__),
+            "implementation_provenance": Path(implementation_provenance_module.__file__),
+            "run_store": Path(run_store_module.__file__),
+            "runner": Path(__file__),
+            "source_identity": Path(source_identity_module.__file__),
+            "validation_result": Path(validator_result_module.__file__),
+            "validators": Path(validator_module.__file__),
+        },
+        package_root=Path(__file__).parent,
+        require_execution_binding=True,
+    )
+    _require_loaded_execution_binding(implementation)
+    return implementation
+
+
+def _require_loaded_execution_binding(implementation: Mapping[str, Any]) -> None:
+    """Reject stale imported modules before replay decisions or output."""
+
+    binding = _mapping(implementation.get("execution_binding"), "implementation.execution_binding")
+    expected = binding.get("sha256")
+    loaded = {
+        "adapter": adapter_module.LOADED_EXECUTION_BINDING_SHA256,
+        "adapter_base": adapter_base_module.LOADED_EXECUTION_BINDING_SHA256,
+        "dataset_parser": dataset_module.LOADED_EXECUTION_BINDING_SHA256,
+        "evidence_manifest": evidence_module.LOADED_EXECUTION_BINDING_SHA256,
+        "execution_binding": execution_binding_module.EXECUTION_BINDING_SHA256,
+        "implementation_provenance": (
+            implementation_provenance_module.LOADED_EXECUTION_BINDING_SHA256
+        ),
+        "run_store": run_store_module.LOADED_EXECUTION_BINDING_SHA256,
+        "runner": LOADED_EXECUTION_BINDING_SHA256,
+        "source_identity": source_identity_module.LOADED_EXECUTION_BINDING_SHA256,
+        "validation_result": validator_result_module.LOADED_EXECUTION_BINDING_SHA256,
+        "validators": validator_module.LOADED_EXECUTION_BINDING_SHA256,
+    }
+    stale = sorted(name for name, digest in loaded.items() if digest != expected)
+    if stale:
+        raise TraderRiskAuditReplayConfigurationError(
+            "Loaded Eval implementation does not match the immutable package snapshot: "
+            + ", ".join(stale)
         )
 
 

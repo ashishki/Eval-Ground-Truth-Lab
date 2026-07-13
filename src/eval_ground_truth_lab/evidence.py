@@ -9,6 +9,10 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
+
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
+
 EVIDENCE_SCHEMA_VERSION = "eval-lab-evidence-v1"
 
 

@@ -13,6 +13,9 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from eval_ground_truth_lab.adapters.base import AdapterError, AdapterResult, UnsafeAdapterInputError
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
+
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
 
 TRADER_RISK_AUDIT_ADAPTER_VERSION = "eval-lab-trader-risk-audit-adapter-v1"
 TRADER_RISK_AUDIT_CONTRACT_VERSION = "trader-risk-audit-evidence-v1"

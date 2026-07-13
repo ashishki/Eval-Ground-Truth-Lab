@@ -99,6 +99,28 @@ Candidate code remains in the system-under-test repository.
 
 ## 5-Minute Reviewer Path
 
+Start from a clean clone with only `git` and Python 3.12+ on `PATH`; the project
+does not assume a `python` alias exists:
+
+```bash
+git clone https://github.com/ashishki/Eval-Ground-Truth-Lab.git
+cd Eval-Ground-Truth-Lab
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt -e .
+set +e
+.venv/bin/python -m eval_ground_truth_lab.cli seeded-smoke \
+  --dataset datasets/smoke/seeded_regressions.jsonl \
+  --report /tmp/eval-lab-seeded-smoke.md
+smoke_status=$?
+set -e
+test "$smoke_status" -eq 1
+.venv/bin/python -m eval_ground_truth_lab.cli verify-evidence \
+  --manifest docs/evidence/integrations/trader-risk-audit-synthetic-v1/sha256-*.manifest.json
+```
+
+The seeded candidate is deliberately bad, so exit `1` is the expected successful
+review outcome. The final command must report `verified: true` for eight artifacts.
+
 1. Read [docs/STACK_OVERVIEW.md](docs/STACK_OVERVIEW.md) for the three-project
    system map.
 2. Read [docs/CASE_STUDY.md](docs/CASE_STUDY.md) for the project story.
@@ -225,7 +247,9 @@ turning its privacy declaration or source identifiers into trusted facts.
 The evidentiary replay rejects every injected adapter instance, including
 subclasses, and constructs the exact canonical implementation from the captured
 input bytes. Named component hashes, recursive package identity, and any HEAD
-match are derived from one immutable package snapshot.
+match are derived from one immutable pre-execution package snapshot. Loaded
+decision modules must carry that snapshot's generated execution digest; stale
+imports or newer on-disk code fail before run/evidence output.
 
 ```bash
 eval-ground-truth-lab run-trader-risk-audit-replay \
