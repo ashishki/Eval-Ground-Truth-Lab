@@ -11,25 +11,30 @@ from pathlib import Path
 from typing import Any
 
 from eval_ground_truth_lab import __version__
+from eval_ground_truth_lab import evidence as evidence_module
 from eval_ground_truth_lab.adapters import trader_risk_audit as adapter_module
 from eval_ground_truth_lab.adapters.trader_risk_audit import (
+    SYNTHETIC_PRIVACY_CLASSIFICATION,
     TRADER_RISK_AUDIT_ADAPTER_VERSION,
     TraderRiskAuditEvidenceAdapter,
     read_regular_file_bytes,
 )
 from eval_ground_truth_lab.datasets import Dataset, load_dataset_bytes
+from eval_ground_truth_lab.datasets import registry as dataset_module
 from eval_ground_truth_lab.evidence import (
     atomic_write_bytes,
     atomic_write_json,
     atomic_write_text,
-    sha256_file,
     verify_evidence_manifest,
     write_evidence_manifest,
 )
+from eval_ground_truth_lab.implementation_provenance import build_implementation_provenance
 from eval_ground_truth_lab.runs import CaseResult, RunRecord, RunStore
+from eval_ground_truth_lab.runs import store as run_store_module
 from eval_ground_truth_lab.validators import trader_risk_audit as validator_module
 from eval_ground_truth_lab.validators.trader_risk_audit import (
     TRADER_RISK_AUDIT_VALIDATOR_VERSION,
+    trader_risk_audit_expected_structure_issues,
     validate_trader_risk_audit_case,
 )
 
@@ -37,6 +42,15 @@ TRADER_RISK_AUDIT_REPLAY_SCHEMA_VERSION = "eval-lab-trader-risk-audit-replay-v1"
 _DEFAULT_DATASET_NAME = "synthetic_quickstart_v1.jsonl"
 _DEFAULT_EVIDENCE_NAME = "eval-evidence.json"
 _DEFAULT_PROVENANCE_NAME = "synthetic_quickstart_v1.provenance.json"
+_TRUSTED_CASE_ID = "synthetic-quickstart-v1"
+_TRUSTED_CASE_INPUT = {"evidence_case_id": _TRUSTED_CASE_ID}
+_TRUSTED_CASE_METADATA = {
+    "external_annotations": 0,
+    "fixture_kind": "fully_synthetic",
+    "intended_use": "contract_compatibility_replay",
+    "source_data": "invented",
+}
+_UNTRUSTED_DATASET_PRIVACY = "caller-supplied-dataset-not-privacy-reviewed"
 
 
 class TraderRiskAuditReplayConfigurationError(ValueError):
@@ -49,6 +63,18 @@ class _TraderReplayInputSnapshot:
     dataset_source_name: str
     evidence_bytes: bytes
     provenance_bytes: bytes
+    trusted_dataset_bytes_match: bool
+
+
+@dataclass(frozen=True)
+class _TraderDatasetTrust:
+    fixture: bool
+    privacy_classification: str
+    replay_type: str
+    source: str
+
+    def to_mapping(self) -> dict[str, Any]:
+        return asdict(self)
 
 
 def run_trader_risk_audit_replay(
@@ -82,6 +108,7 @@ def run_trader_risk_audit_replay(
         source_path=snapshot.dataset_source_name,
     )
     _require_v1_dataset_coverage(dataset)
+    dataset_trust = _validate_and_classify_dataset(dataset=dataset, snapshot=snapshot)
     selected_adapter = adapter or TraderRiskAuditEvidenceAdapter.from_bytes(
         evidence_bytes=snapshot.evidence_bytes,
         provenance_bytes=snapshot.provenance_bytes,
@@ -136,12 +163,24 @@ def run_trader_risk_audit_replay(
         store.interrupt_run(run.run_id)
         raise
 
-    completed = store.complete_run(run.run_id)
-    implementation_sha256 = {
-        "adapter": sha256_file(Path(adapter_module.__file__)),
-        "runner": sha256_file(Path(__file__)),
-        "validators": sha256_file(Path(validator_module.__file__)),
-    }
+    terminal_snapshot = store.complete_run_snapshot(run.run_id)
+    completed = terminal_snapshot.record
+    run_binding = _run_binding(
+        completed,
+        record_bytes=terminal_snapshot.record_bytes,
+        seal_bytes=terminal_snapshot.seal_bytes,
+    )
+    implementation = build_implementation_provenance(
+        component_paths={
+            "adapter": Path(adapter_module.__file__),
+            "dataset_parser": Path(dataset_module.__file__),
+            "evidence_manifest": Path(evidence_module.__file__),
+            "run_store": Path(run_store_module.__file__),
+            "runner": Path(__file__),
+            "validators": Path(validator_module.__file__),
+        },
+        package_root=Path(__file__).parent,
+    )
     runtime = {
         "platform": platform.platform(),
         "python": platform.python_version(),
@@ -152,8 +191,15 @@ def run_trader_risk_audit_replay(
         run=completed,
         source_provenance=source_provenance,
         dataset_raw_sha256=_sha256_bytes(snapshot.dataset_bytes),
-        implementation_sha256=implementation_sha256,
+        implementation=implementation,
         runtime=runtime,
+        dataset_trust=dataset_trust,
+        run_binding=run_binding,
+    )
+    _require_terminal_result_binding(
+        completed=completed,
+        terminal_record=terminal_snapshot.record,
+        result=result,
     )
 
     result_path = pack_root / "replay-result.json"
@@ -165,18 +211,16 @@ def run_trader_risk_audit_replay(
     dataset_artifact = input_dir / "dataset.jsonl"
     evidence_artifact = input_dir / "eval-evidence.json"
     provenance_artifact = input_dir / "source-provenance.json"
-    run_source = run_root / f"{completed.run_id}.json"
-    seal_source = run_root / f"{completed.run_id}.sha256"
-    run_artifact = run_artifact_dir / run_source.name
-    seal_artifact = run_artifact_dir / seal_source.name
+    run_artifact = run_artifact_dir / f"{completed.run_id}.json"
+    seal_artifact = run_artifact_dir / f"{completed.run_id}.sha256"
 
     atomic_write_json(result_path, result)
     atomic_write_text(report_path, render_trader_risk_audit_replay_markdown(result))
     atomic_write_bytes(dataset_artifact, snapshot.dataset_bytes)
     atomic_write_bytes(evidence_artifact, snapshot.evidence_bytes)
     atomic_write_bytes(provenance_artifact, snapshot.provenance_bytes)
-    atomic_write_bytes(run_artifact, run_source.read_bytes())
-    atomic_write_bytes(seal_artifact, seal_source.read_bytes())
+    atomic_write_bytes(run_artifact, terminal_snapshot.record_bytes)
+    atomic_write_bytes(seal_artifact, terminal_snapshot.seal_bytes)
     declared = [
         result_path.relative_to(pack_root),
         report_path.relative_to(pack_root),
@@ -196,14 +240,18 @@ def run_trader_risk_audit_replay(
             "dataset_raw_sha256": _sha256_bytes(snapshot.dataset_bytes),
             "evidence_content_hash": selected_adapter.provenance.evidence_content_hash,
             "evidence_sha256": selected_adapter.provenance.evidence_sha256,
-            "fixture": True,
+            "dataset_trust": dataset_trust.to_mapping(),
+            "fixture": dataset_trust.fixture,
             "gate_passed": not has_failure,
             "harness_version": f"eval-ground-truth-lab-{__version__}",
-            "implementation_sha256": implementation_sha256,
-            "privacy_classification": selected_adapter.provenance.privacy_classification,
+            "implementation": implementation,
+            "implementation_sha256": implementation["components_sha256"],
+            "privacy_classification": dataset_trust.privacy_classification,
             "provenance_sha256": selected_adapter.provenance_sha256,
             "run_id": completed.run_id,
             "runtime": runtime,
+            "run": run_binding,
+            "source_privacy_classification": (selected_adapter.provenance.privacy_classification),
             "source_bundle_sha256": selected_adapter.provenance.source_bundle_sha256,
             "source_git_blob_sha1": selected_adapter.provenance.source_git_blob_sha1,
             "source_git_commit": selected_adapter.provenance.source_git_commit,
@@ -213,6 +261,15 @@ def run_trader_risk_audit_replay(
         },
     )
     verification = verify_evidence_manifest(manifest_path)
+    _require_packaged_terminal_binding(
+        manifest_path=manifest_path,
+        result_path=result_path,
+        run_path=run_artifact,
+        seal_path=seal_artifact,
+        run_binding=run_binding,
+        record_bytes=terminal_snapshot.record_bytes,
+        seal_bytes=terminal_snapshot.seal_bytes,
+    )
     print(
         json.dumps(
             {
@@ -231,17 +288,38 @@ def render_trader_risk_audit_replay_markdown(result: Mapping[str, Any]) -> str:
     gate = _mapping(result.get("gate"), "gate")
     dataset = _mapping(result.get("dataset"), "dataset")
     provenance = _mapping(result.get("source_provenance"), "source_provenance")
+    result_provenance = _mapping(result.get("provenance"), "provenance")
+    dataset_trust = _mapping(result_provenance.get("dataset_trust"), "dataset_trust")
     run = _mapping(result.get("run"), "run")
     cases = result.get("cases")
     if not isinstance(cases, list):
         raise ValueError("cases must be a list")
+    if dataset_trust.get("fixture") is True:
+        dataset_statement = (
+            "This is a deterministic compatibility replay of one fully synthetic, sanitized "
+            "expectation dataset."
+        )
+        trust_boundary = (
+            "PASS means the pinned sanitized export matches this self-authored synthetic "
+            "dataset and its exact contract expectations."
+        )
+    else:
+        dataset_statement = (
+            "This replay uses a caller-supplied expectation dataset that passed the v1 schema "
+            "allowlist but was not byte-identical to the packaged privacy-reviewed fixture."
+        )
+        trust_boundary = (
+            "PASS means only that the pinned sanitized export matches this caller-supplied "
+            "schema-valid expectation dataset; Eval Lab makes no fixture or privacy claim for it."
+        )
     lines = [
         "# Trader Risk Audit sanitized evidence replay",
         "",
         f"Gate: **{'PASS' if gate.get('passed') else 'FAIL'}**",
         "",
-        "This is a deterministic compatibility replay of one fully synthetic, sanitized",
-        "Trader Risk Audit export. It is not a financial-performance evaluation, live-data",
+        dataset_statement,
+        "The source evidence is a pinned sanitized Trader Risk Audit export. It is not a "
+        "financial-performance evaluation, live-data",
         "audit, external-user case study, investment recommendation, or production claim.",
         "",
         "## Source pins",
@@ -261,7 +339,10 @@ def render_trader_risk_audit_replay_markdown(result: Mapping[str, Any]) -> str:
         f"- Candidate version: `{run.get('candidate_version')}`",
         f"- Dataset: `{dataset.get('dataset_id')}` / `{dataset.get('dataset_hash')}`",
         f"- Dataset cases: `{dataset.get('case_count')}`",
+        f"- Dataset fixture: `{dataset_trust.get('fixture')}`",
+        f"- Dataset privacy classification: `{dataset_trust.get('privacy_classification')}`",
         f"- Validator: `{run.get('validator_version')}`",
+        f"- Run status: `{run.get('status')}`",
         "",
         "## Case decisions",
         "",
@@ -283,8 +364,7 @@ def render_trader_risk_audit_replay_markdown(result: Mapping[str, Any]) -> str:
             "",
             "## Decision boundary",
             "",
-            "PASS means the pinned sanitized export matches this self-authored synthetic "
-            "dataset and its exact contract expectations. It does not validate suitable "
+            trust_boundary + " It does not validate suitable "
             "risk thresholds, investment outcomes, raw-source correctness, publisher "
             "authenticity, external adoption, or general workflow quality.",
             "",
@@ -299,8 +379,10 @@ def _build_replay_result(
     run: RunRecord,
     source_provenance: Mapping[str, Any],
     dataset_raw_sha256: str,
-    implementation_sha256: Mapping[str, str],
+    implementation: Mapping[str, Any],
     runtime: Mapping[str, str],
+    dataset_trust: _TraderDatasetTrust,
+    run_binding: Mapping[str, str],
 ) -> dict[str, Any]:
     cases = []
     failed_validator_count = 0
@@ -332,17 +414,18 @@ def _build_replay_result(
             "passed": failed_validator_count == 0,
         },
         "provenance": {
-            "fixture": True,
+            "dataset_trust": dataset_trust.to_mapping(),
+            "fixture": dataset_trust.fixture,
             "harness_version": f"eval-ground-truth-lab-{__version__}",
-            "implementation_sha256": dict(implementation_sha256),
+            "implementation": dict(implementation),
+            "implementation_sha256": dict(implementation["components_sha256"]),
+            "privacy_classification": dataset_trust.privacy_classification,
             "runtime": dict(runtime),
         },
         "run": {
-            "candidate_version": run.candidate_version,
+            **dict(run_binding),
             "completed_at": run.completed_at,
-            "run_id": run.run_id,
             "started_at": run.started_at,
-            "validator_version": run.validator_version,
         },
         "schema_version": TRADER_RISK_AUDIT_REPLAY_SCHEMA_VERSION,
         "scope": {
@@ -350,7 +433,7 @@ def _build_replay_result(
             "evaluates_raw_trades": False,
             "external_user_case_study": False,
             "production_evidence": False,
-            "replay_type": "pinned_synthetic_sanitized_export",
+            "replay_type": dataset_trust.replay_type,
         },
         "source_provenance": dict(source_provenance),
     }
@@ -375,11 +458,16 @@ def _load_input_snapshot(
     evidence_path: str | Path | None,
     provenance_path: str | Path | None,
 ) -> _TraderReplayInputSnapshot:
-    dataset_bytes, dataset_source_name = _load_input_bytes(
-        path=dataset_path,
-        resource_name=_DEFAULT_DATASET_NAME,
-        label="Trader Risk Audit replay dataset",
-    )
+    trusted_dataset_bytes = _load_resource_bytes(_DEFAULT_DATASET_NAME)
+    if dataset_path is None:
+        dataset_bytes = trusted_dataset_bytes
+        dataset_source_name = _DEFAULT_DATASET_NAME
+    else:
+        dataset_bytes, dataset_source_name = _load_input_bytes(
+            path=dataset_path,
+            resource_name=_DEFAULT_DATASET_NAME,
+            label="Trader Risk Audit replay dataset",
+        )
     evidence_bytes, _ = _load_input_bytes(
         path=evidence_path,
         resource_name=_DEFAULT_EVIDENCE_NAME,
@@ -395,6 +483,9 @@ def _load_input_snapshot(
         dataset_source_name=dataset_source_name,
         evidence_bytes=evidence_bytes,
         provenance_bytes=provenance_bytes,
+        trusted_dataset_bytes_match=(
+            dataset_source_name == _DEFAULT_DATASET_NAME and dataset_bytes == trusted_dataset_bytes
+        ),
     )
 
 
@@ -407,6 +498,10 @@ def _load_input_bytes(
     if path is not None:
         source = Path(path)
         return read_regular_file_bytes(source, label), source.name
+    return _load_resource_bytes(resource_name), resource_name
+
+
+def _load_resource_bytes(resource_name: str) -> bytes:
     resource = (
         resources.files("eval_ground_truth_lab")
         .joinpath("resources")
@@ -417,7 +512,7 @@ def _load_input_bytes(
         raise TraderRiskAuditReplayConfigurationError(
             f"Packaged Trader Risk Audit replay resource is missing: {resource_name}"
         )
-    return resource.read_bytes(), resource_name
+    return resource.read_bytes()
 
 
 def _require_v1_dataset_coverage(dataset: Dataset) -> None:
@@ -426,6 +521,115 @@ def _require_v1_dataset_coverage(dataset: Dataset) -> None:
             "Trader Risk Audit replay v1 requires exactly one dataset case; "
             f"received {dataset.metadata.case_count}"
         )
+
+
+def _validate_and_classify_dataset(
+    *,
+    dataset: Dataset,
+    snapshot: _TraderReplayInputSnapshot,
+) -> _TraderDatasetTrust:
+    case = dataset.cases[0]
+    if case.id != _TRUSTED_CASE_ID:
+        raise TraderRiskAuditReplayConfigurationError(
+            f"Trader Risk Audit replay v1 accepts only case id {_TRUSTED_CASE_ID!r}"
+        )
+    if not isinstance(case.input, Mapping) or dict(case.input) != _TRUSTED_CASE_INPUT:
+        raise TraderRiskAuditReplayConfigurationError(
+            "Trader Risk Audit replay input must contain only the pinned evidence_case_id"
+        )
+    if case.metadata != _TRUSTED_CASE_METADATA:
+        raise TraderRiskAuditReplayConfigurationError(
+            "Trader Risk Audit replay metadata must exactly match the trusted synthetic schema"
+        )
+    if not isinstance(case.expected, Mapping):
+        raise TraderRiskAuditReplayConfigurationError(
+            "Trader Risk Audit replay expected payload must be an object"
+        )
+    structure_issues = trader_risk_audit_expected_structure_issues(case.expected)
+    if structure_issues:
+        raise TraderRiskAuditReplayConfigurationError(
+            "Trader Risk Audit replay expected payload is not allowlisted: "
+            + "; ".join(structure_issues)
+        )
+
+    if (
+        snapshot.trusted_dataset_bytes_match
+        and dataset.metadata.dataset_id == Path(_DEFAULT_DATASET_NAME).stem
+    ):
+        return _TraderDatasetTrust(
+            fixture=True,
+            privacy_classification=SYNTHETIC_PRIVACY_CLASSIFICATION,
+            replay_type="pinned_synthetic_sanitized_export",
+            source="packaged_byte-identical_fixture",
+        )
+    return _TraderDatasetTrust(
+        fixture=False,
+        privacy_classification=_UNTRUSTED_DATASET_PRIVACY,
+        replay_type="caller_supplied_expectation_replay",
+        source="caller_supplied_schema_validated_dataset",
+    )
+
+
+def _run_identity(run: RunRecord) -> dict[str, str]:
+    return {
+        "candidate_version": run.candidate_version,
+        "dataset_hash": run.dataset_hash,
+        "run_id": run.run_id,
+        "status": run.status,
+        "validator_version": run.validator_version,
+    }
+
+
+def _run_binding(
+    run: RunRecord,
+    *,
+    record_bytes: bytes,
+    seal_bytes: bytes,
+) -> dict[str, str]:
+    return {
+        **_run_identity(run),
+        "record_sha256": _sha256_bytes(record_bytes),
+        "seal_sha256": _sha256_bytes(seal_bytes),
+    }
+
+
+def _require_terminal_result_binding(
+    *,
+    completed: RunRecord,
+    terminal_record: RunRecord,
+    result: Mapping[str, Any],
+) -> None:
+    if completed != terminal_record or completed.status != "completed":
+        raise RuntimeError("Terminal run snapshot does not contain the exact completed run")
+    result_run = _mapping(result.get("run"), "result.run")
+    expected_identity = _run_identity(completed)
+    actual_identity = {field: result_run.get(field) for field in expected_identity}
+    if actual_identity != expected_identity:
+        raise RuntimeError("Replay result is not bound to the packaged terminal run")
+
+
+def _require_packaged_terminal_binding(
+    *,
+    manifest_path: Path,
+    result_path: Path,
+    run_path: Path,
+    seal_path: Path,
+    run_binding: Mapping[str, str],
+    record_bytes: bytes,
+    seal_bytes: bytes,
+) -> None:
+    if run_path.read_bytes() != record_bytes or seal_path.read_bytes() != seal_bytes:
+        raise RuntimeError("Packaged terminal run differs from the locked RunStore snapshot")
+    manifest = json.loads(manifest_path.read_bytes())
+    result = json.loads(result_path.read_bytes())
+    if not isinstance(manifest, Mapping) or not isinstance(result, Mapping):
+        raise RuntimeError("Trader replay pack binding artifacts must be JSON objects")
+    metadata = _mapping(manifest.get("metadata"), "manifest.metadata")
+    result_run = _mapping(result.get("run"), "result.run")
+    if metadata.get("run") != run_binding:
+        raise RuntimeError("Evidence manifest is not bound to the packaged terminal run")
+    if {field: result_run.get(field) for field in run_binding} != dict(run_binding):
+        raise RuntimeError("Replay result is not bound to the packaged terminal bytes")
 
 
 def _require_adapter_snapshot_match(

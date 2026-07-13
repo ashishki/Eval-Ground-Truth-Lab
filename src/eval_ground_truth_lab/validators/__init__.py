@@ -24,6 +24,7 @@ from eval_ground_truth_lab.validators.structured_output import (
 )
 from eval_ground_truth_lab.validators.trader_risk_audit import (
     TRADER_RISK_AUDIT_VALIDATOR_VERSION,
+    trader_risk_audit_expected_structure_issues,
     validate_trader_risk_audit_case,
 )
 
@@ -47,5 +48,6 @@ __all__ = [
     "validate_structured_gdev_output",
     "validate_structured_output",
     "validate_trader_risk_audit_case",
+    "trader_risk_audit_expected_structure_issues",
     "validate_unsafe_auto_approval",
 ]

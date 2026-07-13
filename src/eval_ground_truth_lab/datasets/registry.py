@@ -10,6 +10,38 @@ import yaml
 
 DEFAULT_SCHEMA_VERSION = "1.0"
 REQUIRED_CASE_FIELDS = ("id", "input", "expected")
+ALLOWED_CASE_FIELDS = frozenset({*REQUIRED_CASE_FIELDS, "metadata"})
+ALLOWED_YAML_DATASET_FIELDS = frozenset({"cases", "dataset_id", "schema_version"})
+
+
+class _DuplicateJsonKeyError(ValueError):
+    pass
+
+
+class _UniqueKeySafeLoader(yaml.SafeLoader):
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        self.flatten_mapping(node)
+        mapping: dict[Any, Any] = {}
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            try:
+                duplicate = key in mapping
+            except TypeError as exc:
+                raise yaml.constructor.ConstructorError(
+                    "while constructing a mapping",
+                    node.start_mark,
+                    "found an unhashable mapping key",
+                    key_node.start_mark,
+                ) from exc
+            if duplicate:
+                raise yaml.constructor.ConstructorError(
+                    "while constructing a mapping",
+                    node.start_mark,
+                    f"found duplicate key {key!r}",
+                    key_node.start_mark,
+                )
+            mapping[key] = self.construct_object(value_node, deep=deep)
+        return mapping
 
 
 class DatasetValidationError(ValueError):
@@ -32,6 +64,17 @@ class DatasetCase:
     def from_mapping(cls, raw: dict[str, Any], *, line_number: int | None = None) -> DatasetCase:
         case_id = _string_or_none(raw.get("id"))
         case_ref = case_id or (f"line {line_number}" if line_number is not None else None)
+
+        unknown_fields = sorted(set(raw) - ALLOWED_CASE_FIELDS)
+        if unknown_fields:
+            raise DatasetValidationError(
+                case_id=case_ref,
+                field="case",
+                message=(
+                    f"Dataset case {case_ref or '<unknown>'} contains unknown fields: "
+                    + ", ".join(unknown_fields)
+                ),
+            )
 
         for required_field in REQUIRED_CASE_FIELDS:
             if required_field not in raw:
@@ -142,12 +185,12 @@ def _load_jsonl_text(text: str, path: Path) -> tuple[str, str, list[dict[str, An
         if not stripped:
             continue
         try:
-            raw = json.loads(stripped)
-        except json.JSONDecodeError as exc:
+            raw = json.loads(stripped, object_pairs_hook=_reject_duplicate_json_keys)
+        except (json.JSONDecodeError, _DuplicateJsonKeyError) as exc:
             raise DatasetValidationError(
                 case_id=f"line {line_number}",
                 field="json",
-                message=f"Dataset line {line_number} is not valid JSON: {exc.msg}",
+                message=f"Dataset line {line_number} is not valid JSON: {exc}",
             ) from exc
         if not isinstance(raw, dict):
             raise DatasetValidationError(
@@ -160,7 +203,14 @@ def _load_jsonl_text(text: str, path: Path) -> tuple[str, str, list[dict[str, An
 
 
 def _load_yaml_text(text: str, path: Path) -> tuple[str, str, list[dict[str, Any]]]:
-    raw = yaml.safe_load(text)
+    try:
+        raw = yaml.load(text, Loader=_UniqueKeySafeLoader)
+    except yaml.YAMLError as exc:
+        raise DatasetValidationError(
+            case_id=None,
+            field="yaml",
+            message=f"Dataset {path} is not valid YAML: {exc}",
+        ) from exc
 
     if isinstance(raw, list):
         return path.stem, DEFAULT_SCHEMA_VERSION, _validate_raw_case_list(raw)
@@ -170,6 +220,14 @@ def _load_yaml_text(text: str, path: Path) -> tuple[str, str, list[dict[str, Any
             case_id=None,
             field="dataset",
             message="YAML dataset must be an object with a 'cases' list or a list of cases",
+        )
+
+    unknown_fields = sorted(set(raw) - ALLOWED_YAML_DATASET_FIELDS)
+    if unknown_fields:
+        raise DatasetValidationError(
+            case_id=None,
+            field="dataset",
+            message="YAML dataset contains unknown fields: " + ", ".join(unknown_fields),
         )
 
     raw_cases = raw.get("cases")
@@ -211,3 +269,12 @@ def _string_or_none(value: object) -> str | None:
     if isinstance(value, str) and value:
         return value
     return None
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    mapping: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in mapping:
+            raise _DuplicateJsonKeyError(f"duplicate key {key!r}")
+        mapping[key] = value
+    return mapping

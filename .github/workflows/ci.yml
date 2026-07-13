@@ -6,10 +6,14 @@ on:
   pull_request:
     branches: ["main", "master"]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Tests + Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v5
@@ -34,9 +38,14 @@ jobs:
 
       - name: Build and smoke-test wheel
         run: |
-          python -m pip wheel --no-deps . -w dist
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export PYTHONHASHSEED=0
+          python -m pip wheel --no-deps --no-cache-dir . -w /tmp/eval-lab-wheel-build-a
+          python -m pip wheel --no-deps --no-cache-dir . -w /tmp/eval-lab-wheel-build-b
+          cmp /tmp/eval-lab-wheel-build-a/*.whl /tmp/eval-lab-wheel-build-b/*.whl
+          sha256sum /tmp/eval-lab-wheel-build-a/*.whl
           python -m venv /tmp/eval-lab-wheel
-          /tmp/eval-lab-wheel/bin/pip install dist/*.whl
+          /tmp/eval-lab-wheel/bin/pip install /tmp/eval-lab-wheel-build-a/*.whl
           /tmp/eval-lab-wheel/bin/pip check
           /tmp/eval-lab-wheel/bin/eval-ground-truth-lab --help
           mkdir -p /tmp/eval-lab-wheel-cwd
@@ -49,6 +58,9 @@ jobs:
             --manifest /tmp/eval-lab-wheel-trader-evidence/sha256-*.manifest.json
           cd "$GITHUB_WORKSPACE"
           /tmp/eval-lab-wheel/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+
           from eval_ground_truth_lab.reports.html import render_html_report
 
           output = render_html_report(
@@ -59,6 +71,11 @@ jobs:
               scope_label="packaging",
           )
           assert "installed wheel" in output
+          replay = json.loads(
+              Path("/tmp/eval-lab-wheel-trader-evidence/replay-result.json").read_text()
+          )
+          assert replay["provenance"]["implementation"]["source"]["kind"] == "installed_package"
+          assert replay["provenance"]["fixture"] is True
           PY
 
       - name: Mocked gdev-agent smoke

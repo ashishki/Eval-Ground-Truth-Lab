@@ -139,6 +139,25 @@ class RunRecord:
         )
 
 
+@dataclass(frozen=True)
+class TerminalRunSnapshot:
+    """Exact terminal bytes published by RunStore while holding the run lock."""
+
+    record_bytes: bytes
+    seal_bytes: bytes
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "record_bytes", bytes(self.record_bytes))
+        object.__setattr__(self, "seal_bytes", bytes(self.seal_bytes))
+
+    @property
+    def record(self) -> RunRecord:
+        raw = json.loads(self.record_bytes)
+        if not isinstance(raw, dict):
+            raise RunIntegrityError("Terminal run snapshot must contain a JSON object")
+        return RunRecord.from_mapping(raw)
+
+
 class RunStore:
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root)
@@ -209,6 +228,9 @@ class RunStore:
         return updated
 
     def complete_run(self, run_id: str) -> RunRecord:
+        return self.complete_run_snapshot(run_id).record
+
+    def complete_run_snapshot(self, run_id: str) -> TerminalRunSnapshot:
         self._validate_run_id(run_id)
         with self._lock(run_id):
             record = self._read(run_id)
@@ -216,8 +238,8 @@ class RunStore:
             raw = record.to_mapping()
             raw.update({"status": COMPLETED, "completed_at": _now_iso()})
             updated = RunRecord.from_mapping(raw)
-            self._write_terminal(updated)
-        return updated
+            snapshot = self._write_terminal(updated)
+        return snapshot
 
     def interrupt_run(self, run_id: str) -> RunRecord:
         self._validate_run_id(run_id)
@@ -227,8 +249,8 @@ class RunStore:
             raw = record.to_mapping()
             raw.update({"status": INTERRUPTED, "interrupted_at": _now_iso()})
             updated = RunRecord.from_mapping(raw)
-            self._write_terminal(updated)
-        return updated
+            snapshot = self._write_terminal(updated)
+        return snapshot.record
 
     def _ensure_mutable(self, record: RunRecord) -> None:
         if record.status in {COMPLETED, INTERRUPTED}:
@@ -247,7 +269,7 @@ class RunStore:
             path.unlink(missing_ok=True)
             raise
 
-    def _write_terminal(self, record: RunRecord) -> None:
+    def _write_terminal(self, record: RunRecord) -> TerminalRunSnapshot:
         payload = _record_bytes(record)
         digest = hashlib.sha256(payload).hexdigest()
         seal = f"sha256:{digest}  {record.run_id}.json\n".encode()
@@ -255,6 +277,7 @@ class RunStore:
         # never observe a terminal record without its matching seal.
         self._write_bytes_atomic(self._seal_path_for(record.run_id), seal)
         self._write_bytes_atomic(self._path_for(record.run_id), payload)
+        return TerminalRunSnapshot(record_bytes=payload, seal_bytes=seal)
 
     def _write_atomic(self, record: RunRecord) -> None:
         self._write_bytes_atomic(self._path_for(record.run_id), _record_bytes(record))

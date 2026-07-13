@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Mapping
 from importlib import resources
@@ -10,7 +11,9 @@ import pytest
 
 from eval_ground_truth_lab import cli
 from eval_ground_truth_lab.adapters import AdapterResult, TraderRiskAuditEvidenceAdapter
+from eval_ground_truth_lab.datasets import DatasetValidationError
 from eval_ground_truth_lab.evidence import verify_evidence_manifest
+from eval_ground_truth_lab.runs import RunStore
 from eval_ground_truth_lab.trader_replay import (
     TraderRiskAuditReplayConfigurationError,
     run_trader_risk_audit_replay,
@@ -69,8 +72,40 @@ def test_cli_replays_trader_export_and_writes_verified_evidence_pack(
     assert result["source_provenance"]["source_git_commit"] == (
         "bf755a24450ff7c17328fa6d447f36bea8ea0fe5"
     )
+    implementation = result["provenance"]["implementation"]
+    assert set(implementation["components_sha256"]) == {
+        "adapter",
+        "dataset_parser",
+        "evidence_manifest",
+        "run_store",
+        "runner",
+        "validators",
+    }
+    assert implementation["package_payload"]["file_count"] > 6
+    assert implementation["source"]["kind"] == "git_worktree"
     assert manifest["metadata"]["gate_passed"] is True
+    assert manifest["metadata"]["implementation"] == implementation
     assert manifest["metadata"]["fixture"] is True
+    run_artifact = _json(pack / "run/trader-synthetic-quickstart-v1.json")
+    run_identity = {
+        field: run_artifact[field]
+        for field in ("candidate_version", "dataset_hash", "run_id", "status", "validator_version")
+    }
+    assert run_identity == {field: manifest["metadata"]["run"][field] for field in run_identity}
+    assert run_identity == {field: result["run"][field] for field in run_identity}
+    assert (
+        manifest["metadata"]["run"]["record_sha256"]
+        == hashlib.sha256(
+            (pack / "run/trader-synthetic-quickstart-v1.json").read_bytes()
+        ).hexdigest()
+    )
+    assert (
+        manifest["metadata"]["run"]["seal_sha256"]
+        == hashlib.sha256(
+            (pack / "run/trader-synthetic-quickstart-v1.sha256").read_bytes()
+        ).hexdigest()
+    )
+    assert run_artifact["status"] == "completed"
     assert (pack / "inputs/eval-evidence.json").read_bytes() == EVIDENCE.read_bytes()
     assert "not a financial-performance evaluation" in report
     assert "external-user case study" in report
@@ -96,9 +131,17 @@ def test_changed_ground_truth_returns_failing_gate_with_evidence(
     capsys.readouterr()
 
     result = _json(pack / "replay-result.json")
+    manifest = _json(next(pack.glob("sha256-*.manifest.json")))
+    report = (pack / "replay-report.md").read_text(encoding="utf-8")
     assert exit_code == 1
     assert result["gate"] == {"failed_validator_count": 1, "passed": False}
     assert result["cases"][0]["failed_validators"] == ["trader_risk_audit.synthetic_metrics"]
+    assert result["provenance"]["fixture"] is False
+    assert result["provenance"]["privacy_classification"] == (
+        "caller-supplied-dataset-not-privacy-reviewed"
+    )
+    assert manifest["metadata"]["fixture"] is False
+    assert "makes no fixture or privacy claim" in report
     verify_evidence_manifest(next(pack.glob("sha256-*.manifest.json")))
 
 
@@ -212,6 +255,133 @@ def test_replay_packages_the_exact_validated_snapshots_when_paths_mutate_during_
     assert (pack / "inputs/eval-evidence.json").read_bytes() == originals[evidence]
     assert (pack / "inputs/source-provenance.json").read_bytes() == originals[provenance]
     verify_evidence_manifest(next(pack.glob("sha256-*.manifest.json")))
+
+
+def test_replay_packages_the_locked_terminal_snapshot_when_run_paths_mutate_after_completion(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    captured: dict[str, bytes] = {}
+    original_complete = RunStore.complete_run_snapshot
+
+    def complete_then_mutate(store: RunStore, run_id: str):  # noqa: ANN202
+        snapshot = original_complete(store, run_id)
+        captured["record"] = snapshot.record_bytes
+        captured["seal"] = snapshot.seal_bytes
+        (store.root / f"{run_id}.json").write_text('{"tampered":true}\n', encoding="utf-8")
+        (store.root / f"{run_id}.sha256").write_text("tampered\n", encoding="utf-8")
+        return snapshot
+
+    monkeypatch.setattr(RunStore, "complete_run_snapshot", complete_then_mutate)
+    pack = tmp_path / "pack"
+    exit_code = run_trader_risk_audit_replay(
+        dataset_path=DATASET,
+        evidence_path=EVIDENCE,
+        provenance_path=PROVENANCE,
+        evidence_dir=pack,
+        run_dir=tmp_path / "runs",
+        run_id="terminal-output-mutation",
+    )
+    capsys.readouterr()
+
+    packaged_run = pack / "run/terminal-output-mutation.json"
+    packaged_seal = pack / "run/terminal-output-mutation.sha256"
+    assert exit_code == 0
+    assert packaged_run.read_bytes() == captured["record"]
+    assert packaged_seal.read_bytes() == captured["seal"]
+    run = _json(packaged_run)
+    result = _json(pack / "replay-result.json")
+    manifest = _json(next(pack.glob("sha256-*.manifest.json")))
+    identity_fields = ("candidate_version", "dataset_hash", "run_id", "status", "validator_version")
+    identity = {field: run[field] for field in identity_fields}
+    assert identity == {field: manifest["metadata"]["run"][field] for field in identity_fields}
+    assert identity == {field: result["run"][field] for field in identity_fields}
+    assert (
+        manifest["metadata"]["run"]["record_sha256"]
+        == hashlib.sha256(captured["record"]).hexdigest()
+    )
+    assert (
+        manifest["metadata"]["run"]["seal_sha256"] == hashlib.sha256(captured["seal"]).hexdigest()
+    )
+    verify_evidence_manifest(next(pack.glob("sha256-*.manifest.json")))
+
+
+@pytest.mark.parametrize("payload_kind", ["raw_trades", "secret_metadata", "nested_expected"])
+def test_unallowlisted_dataset_payload_is_rejected_before_output_directories(
+    tmp_path: Path,
+    payload_kind: str,
+) -> None:
+    case = json.loads(DATASET.read_text(encoding="utf-8"))
+    if payload_kind == "raw_trades":
+        case["raw_trades"] = [{"account_id": "secret"}]
+    elif payload_kind == "secret_metadata":
+        case["metadata"]["secret"] = "do-not-package"
+    else:
+        case["expected"]["evidence"]["metrics"]["secret"] = "do-not-package"
+    dataset = tmp_path / "untrusted.jsonl"
+    dataset.write_text(json.dumps(case, sort_keys=True) + "\n", encoding="utf-8")
+    pack = tmp_path / "pack"
+    runs = tmp_path / "runs"
+
+    with pytest.raises((DatasetValidationError, TraderRiskAuditReplayConfigurationError)):
+        run_trader_risk_audit_replay(
+            dataset_path=dataset,
+            evidence_path=EVIDENCE,
+            provenance_path=PROVENANCE,
+            evidence_dir=pack,
+            run_dir=runs,
+            run_id=f"untrusted-{payload_kind}",
+        )
+
+    assert not pack.exists()
+    assert not runs.exists()
+
+
+@pytest.mark.parametrize(
+    ("suffix", "payload"),
+    [
+        (
+            ".jsonl",
+            '{"id":"synthetic-quickstart-v1","input":{"evidence_case_id":"first",'
+            '"evidence_case_id":"second"},"expected":{},"metadata":{}}\n',
+        ),
+        (
+            ".yaml",
+            """
+cases:
+  - id: synthetic-quickstart-v1
+    input:
+      evidence_case_id: first
+      evidence_case_id: second
+    expected: {}
+    metadata: {}
+""",
+        ),
+    ],
+)
+def test_duplicate_dataset_keys_fail_before_output_directories(
+    tmp_path: Path,
+    suffix: str,
+    payload: str,
+) -> None:
+    dataset = tmp_path / f"duplicate{suffix}"
+    dataset.write_text(payload, encoding="utf-8")
+    pack = tmp_path / "pack"
+    runs = tmp_path / "runs"
+
+    with pytest.raises(DatasetValidationError, match="duplicate key"):
+        run_trader_risk_audit_replay(
+            dataset_path=dataset,
+            evidence_path=EVIDENCE,
+            provenance_path=PROVENANCE,
+            evidence_dir=pack,
+            run_dir=runs,
+            run_id=f"duplicate-{suffix[1:]}",
+        )
+
+    assert not pack.exists()
+    assert not runs.exists()
 
 
 def test_safe_but_false_provenance_source_path_cannot_pass(
