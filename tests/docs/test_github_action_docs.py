@@ -30,6 +30,13 @@ def test_action_documentation_states_security_and_claim_boundaries() -> None:
         "case-id sets must match",
         "finite",
         "status `completed`",
+        "failure-only or",
+        "cannot produce an action pass",
+        "threshold `version` must equal",
+        "runstore-safe",
+        "raw-html injection",
+        "conclusion=error` is never publishable",
+        "writable workspace",
         "report",
         "conclusion",
     ):

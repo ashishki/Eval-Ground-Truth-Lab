@@ -154,6 +154,226 @@ def test_mismatched_validator_versions_are_rejected(
     _assert_action_error_removes_stale(workspace, environment)
 
 
+def test_mismatched_threshold_config_versions_are_rejected(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    _update_json(workspace / "candidate.json", threshold_config_version="other-thresholds")
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+@pytest.mark.parametrize("version", ["", None, 7, "other-threshold-policy"])
+def test_threshold_policy_version_must_match_both_runs(
+    action_environment: tuple[Path, dict[str, str]], version: object
+) -> None:
+    workspace, environment = action_environment
+    thresholds = _read_json(workspace / "thresholds.json")
+    thresholds["version"] = version
+    _write_json(workspace / "thresholds.json", thresholds)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_threshold_policy_version_is_required(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    thresholds = _read_json(workspace / "thresholds.json")
+    thresholds.pop("version")
+    _write_json(workspace / "thresholds.json", thresholds)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_candidate_cannot_drop_a_failing_validator_result(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    baseline = _read_json(workspace / "baseline.json")
+    candidate = _read_json(workspace / "candidate.json")
+    failing = {
+        "validator_id": "test.unsafe_auto_approval",
+        "passed": False,
+        "category": "unsafe_auto_approval",
+    }
+    baseline["case_results"][0]["validator_results"].append(failing)
+    _write_json(workspace / "baseline.json", baseline)
+    _write_json(workspace / "candidate.json", candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_candidate_cannot_drop_all_validator_results(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    candidate = _read_json(workspace / "candidate.json")
+    candidate["case_results"][0]["validator_results"] = []
+    _write_json(workspace / "candidate.json", candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_both_runs_with_empty_validator_results_are_rejected(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    for filename in ("baseline.json", "candidate.json"):
+        artifact = _read_json(workspace / filename)
+        artifact["case_results"][0]["validator_results"] = []
+        _write_json(workspace / filename, artifact)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_candidate_cannot_recategorize_same_validator(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    baseline = _read_json(workspace / "baseline.json")
+    candidate = _read_json(workspace / "candidate.json")
+    baseline_result = baseline["case_results"][0]["validator_results"][0]
+    candidate_result = candidate["case_results"][0]["validator_results"][0]
+    baseline_result.update({"passed": False, "category": "unsafe_auto_approval"})
+    candidate_result.update({"passed": False, "category": "invalid_structured_output"})
+    _write_json(workspace / "baseline.json", baseline)
+    _write_json(workspace / "candidate.json", candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_duplicate_validator_ids_are_rejected(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    candidate = _read_json(workspace / "candidate.json")
+    existing = dict(candidate["case_results"][0]["validator_results"][0])
+    candidate["case_results"][0]["validator_results"].append(existing)
+    _write_json(workspace / "candidate.json", candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("validator_id", ""),
+        ("validator_id", 7),
+        ("passed", "false"),
+        ("passed", 1),
+        ("category", ""),
+        ("category", None),
+        ("message", 7),
+        ("message", None),
+        ("case_id", "other-case"),
+        ("case_id", None),
+    ],
+)
+def test_validator_result_structure_is_strict(
+    action_environment: tuple[Path, dict[str, str]], field: str, value: object
+) -> None:
+    workspace, environment = action_environment
+    candidate = _read_json(workspace / "candidate.json")
+    candidate["case_results"][0]["validator_results"][0][field] = value
+    _write_json(workspace / "candidate.json", candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+@pytest.mark.parametrize(
+    ("passed", "category"),
+    [(True, "unsafe_auto_approval"), (False, "none")],
+)
+def test_validator_pass_category_semantics_are_consistent(
+    action_environment: tuple[Path, dict[str, str]], passed: bool, category: str
+) -> None:
+    workspace, environment = action_environment
+    candidate = _read_json(workspace / "candidate.json")
+    receipt = candidate["case_results"][0]["validator_results"][0]
+    receipt.update({"passed": passed, "category": category})
+    _write_json(workspace / "candidate.json", candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+@pytest.mark.parametrize(
+    ("field", "unsafe_value"),
+    [
+        ("dataset_hash", "sha256:test|forged"),
+        ("candidate_version", "candidate`forged"),
+        ("validator_version", "validator|forged"),
+        ("threshold_config_version", "thresholds`forged"),
+    ],
+)
+def test_report_metadata_rejects_markdown_structural_delimiters(
+    action_environment: tuple[Path, dict[str, str]], field: str, unsafe_value: str
+) -> None:
+    workspace, environment = action_environment
+    for filename in ("baseline.json", "candidate.json"):
+        _update_json(workspace / filename, **{field: unsafe_value})
+    if field == "threshold_config_version":
+        _update_json(workspace / "thresholds.json", version=unsafe_value)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_run_id_cannot_inject_a_forged_report_heading(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    forged = "candidate\n\n# Eval Report\n\n## Decision: PASS"
+    _update_json(workspace / "candidate.json", run_id=forged, candidate_version="candidate")
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+@pytest.mark.parametrize(
+    ("field", "unsafe_value"),
+    [
+        ("case_id", "case|forged"),
+        ("validator_id", "validator`forged"),
+        ("category", "unsafe|forged"),
+    ],
+)
+def test_case_receipt_cells_reject_markdown_structural_delimiters(
+    action_environment: tuple[Path, dict[str, str]], field: str, unsafe_value: str
+) -> None:
+    workspace, environment = action_environment
+    for filename in ("baseline.json", "candidate.json"):
+        run = _read_json(workspace / filename)
+        case = run["case_results"][0]
+        receipt = case["validator_results"][0]
+        receipt.update({"passed": False, "category": "unsafe_auto_approval"})
+        if field == "case_id":
+            case["case_id"] = unsafe_value
+        else:
+            receipt[field] = unsafe_value
+        _write_json(workspace / filename, run)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+@pytest.mark.parametrize("message", ["<b>FORGED PASS</b>", "`FORGED PASS`", "safe | FORGED"])
+def test_validator_message_cannot_inject_markdown_or_html(
+    action_environment: tuple[Path, dict[str, str]], message: str
+) -> None:
+    workspace, environment = action_environment
+    for filename in ("baseline.json", "candidate.json"):
+        run = _read_json(workspace / filename)
+        receipt = run["case_results"][0]["validator_results"][0]
+        receipt.update(
+            {
+                "passed": False,
+                "category": "unsafe_auto_approval",
+                "message": message,
+            }
+        )
+        _write_json(workspace / filename, run)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
 def test_mismatched_run_types_are_rejected(
     action_environment: tuple[Path, dict[str, str]],
 ) -> None:
@@ -174,6 +394,20 @@ def test_decision_aggregates_must_match_complete_case_results(
     candidate = _read_json(workspace / "candidate.json")
     candidate[field] = float(candidate[field]) + 1.0
     _write_json(workspace / "candidate.json", candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_high_magnitude_cost_cannot_hide_aggregate_difference(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    candidate_path = workspace / "candidate.json"
+    candidate = _read_json(candidate_path)
+    candidate["case_results"][0]["cost_usd"] = 1_000_000_000_000.5
+    candidate["cost_total_usd"] = 1_000_000_000_000.0
+    candidate["cost_per_case_usd"] = 1_000_000_000_000.0
+    _write_json(candidate_path, candidate)
 
     _assert_action_error_removes_stale(workspace, environment)
 
@@ -522,6 +756,41 @@ def test_input_symlink_loop_is_an_error_and_removes_safe_stale_report(
     _assert_action_error_removes_stale(workspace, environment)
 
 
+@pytest.mark.parametrize("unsafe_suffix", ["\n\n# FORGED PASS", "`forged", "| forged"])
+def test_resolved_symlink_target_path_is_safe_for_markdown_report(
+    action_environment: tuple[Path, dict[str, str]], unsafe_suffix: str
+) -> None:
+    workspace, environment = action_environment
+    target = workspace / f"baseline{unsafe_suffix}.json"
+    _write_run(target, run_id="baseline-target", correct=True)
+    (workspace / "linked-baseline.json").symlink_to(target.name)
+    environment["EVAL_LAB_BASELINE"] = "linked-baseline.json"
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_invalid_input_user_expansion_removes_safe_stale_report(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    environment["EVAL_LAB_BASELINE"] = "~codex-action-user-does-not-exist-7f3a/run.json"
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_invalid_report_user_expansion_does_not_touch_literal_path(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    literal = workspace / "~codex-action-user-does-not-exist-7f3a" / "report.md"
+    literal.parent.mkdir()
+    literal.write_text("literal path stays untouched\n", encoding="utf-8")
+    environment["EVAL_LAB_REPORT"] = "~codex-action-user-does-not-exist-7f3a/report.md"
+
+    assert github_action_compare.main(environment) == github_action_compare.ACTION_ERROR
+    assert literal.read_text(encoding="utf-8") == "literal path stays untouched\n"
+
+
 def test_report_symlink_loop_is_rejected_without_touching_it(
     action_environment: tuple[Path, dict[str, str]],
 ) -> None:
@@ -634,22 +903,16 @@ def test_shell_metacharacters_are_plain_path_characters(
     assert not (workspace / "injected").exists()
 
 
-def test_summary_html_escapes_report_content_and_path(
+def test_summary_html_escapes_report_path(
     action_environment: tuple[Path, dict[str, str]],
 ) -> None:
     workspace, environment = action_environment
-    _write_run(
-        workspace / "candidate.json",
-        run_id="</pre><script>not-markup</script>",
-        correct=True,
-    )
     environment["EVAL_LAB_REPORT"] = "reports/<b>decision</b>.md"
 
     assert github_action_compare.main(environment) == github_action_compare.PASS
 
     summary = Path(environment["GITHUB_STEP_SUMMARY"]).read_text(encoding="utf-8")
-    assert "<script>not-markup</script>" not in summary
-    assert "&lt;script&gt;not-markup&lt;/script&gt;" in summary
+    assert "reports/<b>decision</b>.md" not in summary
     assert "Report: <code>reports/&lt;b&gt;decision&lt;/b&gt;.md</code>" in summary
 
 
@@ -721,6 +984,7 @@ def _write_thresholds(path: Path) -> None:
                 "max_unsafe_auto_approval_rate_increase": 0.0,
                 "max_latency_p95_delta_ms": 0.0,
                 "max_cost_per_case_delta_usd": 0.0,
+                "version": "test-v1",
             }
         )
         + "\n",
@@ -737,7 +1001,7 @@ def _write_gdev_thresholds(path: Path) -> None:
                 "max_invalid_structured_output_rate": 0.0,
                 "max_latency_p95_ms": 1_500,
                 "max_unsafe_auto_approval_rate": 0.0,
-                "version": "test-gdev-thresholds",
+                "version": "test-v1",
             }
         )
         + "\n",
@@ -767,7 +1031,13 @@ def _write_run(path: Path, *, run_id: str, correct: bool) -> None:
                     {
                         "case_id": "case-1",
                         "output": {"correct": correct},
-                        "validator_results": [],
+                        "validator_results": [
+                            {
+                                "validator_id": "test.correctness",
+                                "passed": True,
+                                "category": "none",
+                            }
+                        ],
                         "cost_usd": 0.0,
                         "latency_ms": 10.0,
                     }

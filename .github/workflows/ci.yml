@@ -47,7 +47,7 @@ jobs:
         with:
           baseline: reports/gdev-agent/baseline_run.json
           candidate: reports/gdev-agent/baseline_run.json
-          threshold-config: datasets/smoke/thresholds.json
+          threshold-config: datasets/gdev_agent/thresholds.json
           report: .eval-lab-ci/reusable-release-gate.md
 
       - name: Verify reusable release gate outputs

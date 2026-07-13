@@ -6,6 +6,7 @@ import html
 import json
 import math
 import os
+import re
 import sys
 import tempfile
 from collections.abc import Mapping
@@ -57,6 +58,10 @@ _RATE_THRESHOLD_FIELDS = frozenset(
         "max_unsafe_auto_approval_rate",
         *_GDEV_OPTIONAL_THRESHOLD_FIELDS,
     }
+)
+_RUN_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
+_MARKDOWN_STRUCTURAL_CHARACTERS = frozenset(
+    {"\x00", "\r", "\n", "\v", "\f", "\x85", "\u2028", "\u2029", "`", "|"}
 )
 
 
@@ -230,17 +235,24 @@ def _input_path(
     reject_leaf_symlink: bool = False,
 ) -> Path:
     raw = _required_value(env, name)
-    candidate = Path(raw).expanduser()
-    if not candidate.is_absolute():
-        candidate = workspace / candidate
-    if reject_leaf_symlink and candidate.is_symlink():
-        raise ActionConfigurationError(f"{name} must not be a symbolic link")
     try:
+        candidate = Path(raw).expanduser()
+        if not candidate.is_absolute():
+            candidate = workspace / candidate
+        if reject_leaf_symlink and candidate.is_symlink():
+            raise ActionConfigurationError(f"{name} must not be a symbolic link")
         resolved = candidate.resolve(strict=must_exist)
+    except ActionConfigurationError:
+        raise
     except (OSError, RuntimeError) as exc:
         raise ActionConfigurationError(f"{name} cannot be safely resolved") from exc
     if not resolved.is_relative_to(workspace):
         raise ActionConfigurationError(f"{name} must stay inside GITHUB_WORKSPACE")
+    normalized = resolved.relative_to(workspace).as_posix()
+    if any(character in normalized for character in _MARKDOWN_STRUCTURAL_CHARACTERS):
+        raise ActionConfigurationError(
+            f"{name} normalized path contains characters unsafe for report publication"
+        )
     return resolved
 
 
@@ -262,7 +274,18 @@ def _run_compare(paths: ActionPaths, temporary_report: Path) -> int:
     baseline = _read_run(paths.baseline)
     candidate = _read_run(paths.candidate)
     _validate_comparison_runs(baseline, candidate)
-    thresholds = _read_thresholds(paths.thresholds)
+    thresholds, threshold_version = _read_thresholds(paths.thresholds)
+    if (
+        threshold_version
+        not in {
+            baseline.threshold_config_version,
+            candidate.threshold_config_version,
+        }
+        or baseline.threshold_config_version != candidate.threshold_config_version
+    ):
+        raise ValueError(
+            "threshold config version must match both run artifacts' threshold config version"
+        )
     comparison = compare_runs(
         baseline=baseline,
         candidate=candidate,
@@ -305,17 +328,20 @@ def _read_run(path: Path) -> RunRecord:
         },
         label="run artifact",
     )
+    _require_canonical_run_id(raw["run_id"])
     for field in (
-        "run_id",
         "run_type",
-        "dataset_hash",
-        "candidate_version",
-        "validator_version",
-        "threshold_config_version",
         "started_at",
         "completed_at",
     ):
         _require_nonempty_string(raw[field], field=field)
+    for field in (
+        "dataset_hash",
+        "candidate_version",
+        "validator_version",
+        "threshold_config_version",
+    ):
+        _require_report_safe_string(raw[field], field=field)
     if raw["status"] != "completed":
         raise ValueError("run artifact status must be exactly 'completed'")
     case_results = raw["case_results"]
@@ -343,10 +369,53 @@ def _read_run(path: Path) -> RunRecord:
             {"case_id", "output", "validator_results", "cost_usd", "latency_ms"},
             label=f"case_results[{index}]",
         )
-        if not isinstance(case_result["case_id"], str) or not case_result["case_id"].strip():
-            raise ValueError(f"case_results[{index}].case_id must be a non-empty string")
-        if not isinstance(case_result["validator_results"], list):
+        _require_report_safe_string(
+            case_result["case_id"],
+            field=f"case_results[{index}].case_id",
+        )
+        validator_results = case_result["validator_results"]
+        if not isinstance(validator_results, list) or not validator_results:
             raise ValueError(f"case_results[{index}].validator_results must be a JSON array")
+        validator_ids: set[str] = set()
+        for validator_index, validator_result in enumerate(validator_results):
+            result_label = f"case_results[{index}].validator_results[{validator_index}]"
+            if not isinstance(validator_result, dict):
+                raise ValueError(f"{result_label} must be a JSON object")
+            _require_fields(
+                validator_result,
+                {"validator_id", "passed", "category"},
+                label=result_label,
+            )
+            validator_id = _require_report_safe_string(
+                validator_result["validator_id"],
+                field=f"{result_label}.validator_id",
+            )
+            _require_report_safe_string(
+                validator_result["category"],
+                field=f"{result_label}.category",
+            )
+            if not isinstance(validator_result["passed"], bool):
+                raise ValueError(f"{result_label}.passed must be a boolean")
+            category = str(validator_result["category"])
+            passed = validator_result["passed"]
+            if (passed and category != "none") or (not passed and category == "none"):
+                raise ValueError(
+                    f"{result_label}.category must be 'none' exactly when passed is true"
+                )
+            message = validator_result.get("message")
+            if "message" in validator_result:
+                _require_report_safe_string(
+                    message,
+                    field=f"{result_label}.message",
+                    allow_empty=True,
+                    reject_html=True,
+                )
+            nested_case_id = validator_result.get("case_id")
+            if "case_id" in validator_result and nested_case_id != case_result["case_id"]:
+                raise ValueError(f"{result_label}.case_id must match its outer case")
+            if validator_id in validator_ids:
+                raise ValueError(f"case_results[{index}] contains duplicate validator IDs")
+            validator_ids.add(validator_id)
         _finite_nonnegative(case_result["cost_usd"], field=f"case_results[{index}].cost_usd")
         _finite_nonnegative(
             case_result["latency_ms"],
@@ -357,47 +426,55 @@ def _read_run(path: Path) -> RunRecord:
     return run
 
 
-def _read_thresholds(path: Path) -> ThresholdConfig:
+def _read_thresholds(path: Path) -> tuple[ThresholdConfig, str]:
     raw = _read_json_object(path, label="threshold config")
     keys = set(raw)
     if keys & _STANDARD_THRESHOLD_FIELDS:
-        _require_fields(raw, _STANDARD_THRESHOLD_FIELDS, label="threshold config")
+        _require_fields(raw, _STANDARD_THRESHOLD_FIELDS | {"version"}, label="threshold config")
         _reject_unknown_fields(
             raw,
             _STANDARD_THRESHOLD_FIELDS | {"version"},
             label="threshold config",
         )
-        return ThresholdConfig(
-            max_accuracy_drop=_threshold_number(raw, "max_accuracy_drop"),
-            max_invalid_output_rate_increase=_threshold_number(
-                raw, "max_invalid_output_rate_increase"
+        version = _require_report_safe_string(raw["version"], field="threshold config.version")
+        return (
+            ThresholdConfig(
+                max_accuracy_drop=_threshold_number(raw, "max_accuracy_drop"),
+                max_invalid_output_rate_increase=_threshold_number(
+                    raw, "max_invalid_output_rate_increase"
+                ),
+                max_unsafe_auto_approval_rate_increase=_threshold_number(
+                    raw, "max_unsafe_auto_approval_rate_increase"
+                ),
+                max_latency_p95_delta_ms=_threshold_number(raw, "max_latency_p95_delta_ms"),
+                max_cost_per_case_delta_usd=_threshold_number(raw, "max_cost_per_case_delta_usd"),
             ),
-            max_unsafe_auto_approval_rate_increase=_threshold_number(
-                raw, "max_unsafe_auto_approval_rate_increase"
-            ),
-            max_latency_p95_delta_ms=_threshold_number(raw, "max_latency_p95_delta_ms"),
-            max_cost_per_case_delta_usd=_threshold_number(raw, "max_cost_per_case_delta_usd"),
+            version,
         )
     if keys & _GDEV_THRESHOLD_FIELDS:
-        _require_fields(raw, _GDEV_THRESHOLD_FIELDS, label="threshold config")
+        _require_fields(raw, _GDEV_THRESHOLD_FIELDS | {"version"}, label="threshold config")
         _reject_unknown_fields(
             raw,
             _GDEV_THRESHOLD_FIELDS | _GDEV_OPTIONAL_THRESHOLD_FIELDS | {"version"},
             label="threshold config",
         )
+        version = _require_report_safe_string(raw["version"], field="threshold config.version")
         for optional_field in _GDEV_OPTIONAL_THRESHOLD_FIELDS & keys:
             _threshold_number(raw, optional_field)
         accuracy_min = _threshold_number(raw, "classification_accuracy_min")
-        return ThresholdConfig(
-            max_accuracy_drop=1.0 - accuracy_min,
-            max_invalid_output_rate_increase=_threshold_number(
-                raw, "max_invalid_structured_output_rate"
+        return (
+            ThresholdConfig(
+                max_accuracy_drop=1.0 - accuracy_min,
+                max_invalid_output_rate_increase=_threshold_number(
+                    raw, "max_invalid_structured_output_rate"
+                ),
+                max_unsafe_auto_approval_rate_increase=_threshold_number(
+                    raw, "max_unsafe_auto_approval_rate"
+                ),
+                max_latency_p95_delta_ms=_threshold_number(raw, "max_latency_p95_ms"),
+                max_cost_per_case_delta_usd=_threshold_number(raw, "max_cost_per_case_usd"),
             ),
-            max_unsafe_auto_approval_rate_increase=_threshold_number(
-                raw, "max_unsafe_auto_approval_rate"
-            ),
-            max_latency_p95_delta_ms=_threshold_number(raw, "max_latency_p95_ms"),
-            max_cost_per_case_delta_usd=_threshold_number(raw, "max_cost_per_case_usd"),
+            version,
         )
     raise ValueError("threshold config does not match a supported comparison schema")
 
@@ -413,8 +490,35 @@ def _validate_comparison_runs(baseline: RunRecord, candidate: RunRecord) -> None
         raise ValueError("baseline and candidate run artifacts must contain the same case IDs")
     if baseline.validator_version != candidate.validator_version:
         raise ValueError("baseline and candidate must use the same validator version")
+    if baseline.threshold_config_version != candidate.threshold_config_version:
+        raise ValueError("baseline and candidate must use the same threshold config version")
     if baseline.run_type != candidate.run_type:
         raise ValueError("baseline and candidate must use the same run type")
+    baseline_validators = _validator_contracts_by_case(baseline)
+    candidate_validators = _validator_contracts_by_case(candidate)
+    for case_id in baseline_ids:
+        baseline_contract = baseline_validators[case_id]
+        candidate_contract = candidate_validators[case_id]
+        if baseline_contract.keys() != candidate_contract.keys():
+            raise ValueError(
+                f"baseline and candidate validator-ID sets differ for case {case_id!r}"
+            )
+        for validator_id, category in baseline_contract.items():
+            if candidate_contract[validator_id] != category:
+                raise ValueError(
+                    "baseline and candidate validator categories differ for "
+                    f"case {case_id!r}, validator {validator_id!r}"
+                )
+
+
+def _validator_contracts_by_case(run: RunRecord) -> dict[str, dict[str, str]]:
+    return {
+        case.case_id: {
+            str(result["validator_id"]): str(result["category"])
+            for result in case.validator_results
+        }
+        for case in run.case_results
+    }
 
 
 def _read_json_object(path: Path, *, label: str) -> dict[str, Any]:
@@ -489,6 +593,33 @@ def _require_nonempty_string(value: Any, *, field: str) -> str:
     return value
 
 
+def _require_report_safe_string(
+    value: Any,
+    *,
+    field: str,
+    allow_empty: bool = False,
+    reject_html: bool = False,
+) -> str:
+    if not isinstance(value, str) or (not allow_empty and not value.strip()):
+        qualifier = "a string" if allow_empty else "a non-empty string"
+        raise ValueError(f"{field} must be {qualifier}")
+    if any(character in value for character in _MARKDOWN_STRUCTURAL_CHARACTERS):
+        raise ValueError(f"{field} contains characters unsafe for Markdown report publication")
+    if reject_html and ("<" in value or ">" in value):
+        raise ValueError(f"{field} contains HTML delimiters unsafe for report publication")
+    return value
+
+
+def _require_canonical_run_id(value: Any) -> str:
+    run_id = _require_report_safe_string(value, field="run_id")
+    if not _RUN_ID_PATTERN.fullmatch(run_id) or run_id in {".", ".."}:
+        raise ValueError(
+            "run_id must be RunStore-safe: 1-128 characters, start with an alphanumeric "
+            "character, and contain only alphanumerics, '.', '_' or '-'"
+        )
+    return run_id
+
+
 def _validate_aggregate_metrics(run: RunRecord) -> None:
     costs = [result.cost_usd for result in run.case_results]
     latencies = sorted(result.latency_ms for result in run.case_results)
@@ -496,13 +627,13 @@ def _validate_aggregate_metrics(run: RunRecord) -> None:
     expected_per_case = expected_total / len(costs)
     expected_p50 = _percentile(latencies, 0.50)
     expected_p95 = _percentile(latencies, 0.95)
-    for field, actual, expected, tolerance in (
-        ("cost_total_usd", run.cost_total_usd, expected_total, 1e-12),
-        ("cost_per_case_usd", run.cost_per_case_usd, expected_per_case, 1e-12),
-        ("latency_ms_p50", run.latency_ms_p50, expected_p50, 1e-9),
-        ("latency_ms_p95", run.latency_ms_p95, expected_p95, 1e-9),
+    for field, actual, expected in (
+        ("cost_total_usd", run.cost_total_usd, expected_total),
+        ("cost_per_case_usd", run.cost_per_case_usd, expected_per_case),
+        ("latency_ms_p50", run.latency_ms_p50, expected_p50),
+        ("latency_ms_p95", run.latency_ms_p95, expected_p95),
     ):
-        if not math.isclose(actual, expected, rel_tol=1e-12, abs_tol=tolerance):
+        if actual != expected:
             raise ValueError(f"{field} does not match the complete case-result aggregate")
 
 
