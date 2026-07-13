@@ -16,8 +16,9 @@ dataset records 55 synthetic triage cases and hash
 Eval Lab also includes `datasets/gdev_agent/challenge_v1.jsonl`, a 100-case
 diagnostic challenge set for ambiguous, policy-stress, guard-stress,
 tenant-boundary, malformed-input, and expected-failure cases. This challenge set
-is not a passing baseline; it is the hard-case surface for future candidate
-diagnostics.
+is not a passing baseline; it is a public development diagnostic with a
+published canonical failing run. Its dataset card records self-authorship, zero
+independent annotators, and leakage limitations.
 
 ## Baseline Candidate Comparison
 
@@ -50,11 +51,14 @@ not replace gdev-agent's broader 180-case internal smoke eval, which remains a
 separate gap-discovery surface for demo-policy routing and classification
 quality.
 
-The committed challenge report
-`reports/gdev-agent/challenge_report.md` documents the harder diagnostic set and
-the intended metrics: `pass_rate_by_slice`, `expected_failure_matched`,
-`unexpected_pass_count`, `unexpected_fail_count`, and
-`human_review_required_count`.
+The static `reports/gdev-agent/challenge_report.md` documents the harder
+diagnostic set. The executed
+`docs/evidence/releases/v0.2.0/README.md` package fixes the candidate revision,
+image, dataset/threshold hashes, namespace, and environment. Its gate is FAIL:
+`0.32` reconciled pass rate, `0.244444` classification accuracy, 68 unexpected
+failures, 58 blocking failures, `0.46` human-escalation recall, and `10/10`
+matched deterministic provider faults. Publishing that failure without changing
+thresholds is the evidence outcome; it is not release approval for gdev-agent.
 
 ## Stack Integration
 
@@ -78,7 +82,9 @@ against local demo-mode gdev-agent on 2026-06-15.
 
 Committed datasets and reports are synthetic/local deterministic evidence. The
 integration boundary is real for the live local baseline, but committed
-artifacts do not claim production quality or production traffic coverage.
+artifacts do not claim production quality or production traffic coverage. The
+public challenge is not blind or independently labeled; the benchmark protocol
+requires a new frozen version for any future generalization claim.
 
 ## Cost and Latency
 

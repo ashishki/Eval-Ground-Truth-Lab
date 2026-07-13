@@ -1,7 +1,8 @@
 # gdev-agent Challenge Set
 
-Status: committed diagnostic dataset, not a passing baseline.
-Last updated: 2026-06-14
+Status: public development diagnostic with a canonical failing local run.
+It is not a passing baseline and not a blind holdout.
+Last updated: 2026-07-13
 
 ## Purpose
 
@@ -15,6 +16,10 @@ instead of turning every run into a clean demo.
 
 The challenge set is not a production benchmark and is not claimed as a
 quality score. It is synthetic/local diagnostic evidence for eval maturity.
+Its [dataset card](../datasets/gdev_agent/challenge_v1_CARD.md) records
+self-authorship, zero independent annotators, and leakage limitations. The
+[benchmark protocol](GDEV_AGENT_BENCHMARK_PROTOCOL.md) defines how public
+development evidence differs from a future blind holdout.
 
 ## Scope Split
 
@@ -82,6 +87,7 @@ Live diagnostic run (requires a fixed external gdev-agent service):
 python -m eval_ground_truth_lab.cli run-gdev-agent-challenge \
   --base-url http://localhost:8000 \
   --run-id gdev-challenge-v1 \
+  --run-dir /tmp/eval-lab-gdev-challenge-runs \
   --candidate-version gdev-agent-demo \
   --component-revision <full-gdev-git-sha> \
   --component-worktree-state clean \
@@ -125,11 +131,24 @@ counted by `unexpected_fail_count`. Candidate accuracy, unsafe, invalid, cost,
 and latency metrics cover the 90 non-injected cases; injected cases are governed
 by the expected-failure thresholds instead.
 
+## Canonical local result
+
+The [v0.2.0 evidence package](evidence/releases/v0.2.0/README.md) fixes
+`gdev-agent` revision `0e4c5f0fd50382bbf12ffd35cfca4632384fb0cc`, its
+local image digest, dataset/threshold hashes, environment, and run namespace.
+It verifies under content address
+`sha256:656face21f27b496d4d3e8bb0b588824f5737d122c1275c710f3e5b15ff94b4b`.
+
+The gate is **FAIL**: reconciled pass rate `0.32`, classification accuracy
+`0.244444`, 68 unexpected failures, 58 blocking failures, human-escalation
+recall `0.46`, and `10/10` matched declared provider faults. The five failed
+thresholds and all case outcomes remain in the generated report. Dataset and
+threshold bytes were not changed after observing the result.
+
 ## Known Limits
 
-- The committed report is a scope and expected-results report, not a live run
-  artifact. No canonical result is committed until the external fixed service
-  is available and its exact revision is recorded.
+- `reports/gdev-agent/challenge_report.md` remains a static dataset/scope report;
+  the executed canonical result lives in the versioned evidence package above.
 - The ten provider-error results are deterministic harness injections, not
   claims that the external candidate experienced real outages.
 - `input.tenant_slug` is descriptive dataset context. The configured signed
@@ -137,6 +156,9 @@ by the expected-failure thresholds instead.
   prove database tenant isolation.
 - The data is synthetic and local; it does not represent real users or
   external adoption.
+- All cases and labels are public. Candidate tuning against them contaminates
+  this set for generalization claims; a new frozen version is required for a
+  future blind evaluation.
 
 ## License and scope
 

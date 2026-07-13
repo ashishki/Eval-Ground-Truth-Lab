@@ -53,6 +53,8 @@ live HTTP `request_id` and `message_id` values.
 ```bash
 eval-ground-truth-lab run-gdev-agent-challenge \
   --base-url http://localhost:8000 \
+  --run-id <new-unique-run-id> \
+  --run-dir /tmp/eval-lab-gdev-challenge-runs \
   --candidate-version gdev-agent-demo \
   --component-revision <full-gdev-git-sha> \
   --component-worktree-state clean \
@@ -68,6 +70,8 @@ gate; failed gates exit `1` without deleting the evidence.
 Challenge JSON and manifest metadata both record the request namespace,
 namespace inputs, and whether a real gdev HTTP adapter or a custom passthrough
 adapter handled the cases.
+Keep `--run-dir` outside `--evidence-dir`: the command copies the sealed terminal
+run into the evidence directory's own `run/` subdirectory during finalization.
 
 ## Verify Evidence
 

@@ -1,12 +1,13 @@
 # gdev-agent Challenge Report
 
-Status: committed diagnostic report, not a passing baseline.
+Status: static dataset/scope report, not a passing baseline. Executed evidence:
+`docs/evidence/releases/v0.2.0/README.md` (canonical gate FAIL).
 Generated from: `datasets/gdev_agent/challenge_v1.jsonl`
 Manifest: `datasets/gdev_agent/challenge_manifest.json`
 Dataset hash:
 `151e5eec83373b92cf263aa1f32edb26ed780c260ce32a9d084ba8f3f38e53b0`
 Threshold policy: `datasets/gdev_agent/challenge_thresholds.json`
-Last updated: 2026-06-14
+Last updated: 2026-07-13
 
 ## Summary
 
@@ -16,8 +17,8 @@ policy-stress, guard-stress, tenant-boundary, malformed-input, and
 expected-failure cases.
 
 This report is intentionally not a 100 percent pass claim. Its purpose is to
-make hard cases reviewable before a live challenge run is promoted as canonical
-evidence.
+describe the fixed dataset and threshold surface. The separate v0.2.0 executed
+package preserves the fixed candidate's failures and is the canonical result.
 
 ## Dataset Shape
 
@@ -71,6 +72,7 @@ Diagnostic live run:
 python -m eval_ground_truth_lab.cli run-gdev-agent-challenge \
   --base-url http://localhost:8000 \
   --run-id gdev-challenge-v1 \
+  --run-dir /tmp/eval-lab-gdev-challenge-runs \
   --candidate-version gdev-agent-demo \
   --component-revision <full-gdev-git-sha> \
   --component-worktree-state clean \
@@ -78,14 +80,22 @@ python -m eval_ground_truth_lab.cli run-gdev-agent-challenge \
   --evidence-dir /tmp/gdev-challenge-evidence
 ```
 
+## Published execution
+
+The canonical local run against clean `gdev-agent` revision `0e4c5f0` returned
+gate **FAIL** with a `0.32` reconciled pass rate, `0.244444` classification
+accuracy, 68 unexpected failures, 58 blocking failures, `0.46` human-escalation
+recall, and `10/10` expected fault matches. Its verified content address is
+`sha256:656face21f27b496d4d3e8bb0b588824f5737d122c1275c710f3e5b15ff94b4b`.
+See `docs/evidence/releases/v0.2.0/README.md` for provenance and verification.
+
 ## Known Limits
 
-- This committed report is a dataset and threshold-policy evidence snapshot,
-  not a completed live challenge run.
-- The executable engine does not turn this static scope report into a live
-  result. A fixed external gdev-agent service and exact revision are still
-  required before publishing canonical challenge evidence.
+- This file remains a dataset and threshold-policy snapshot. It does not replace
+  the generated JSON/report/manifest in the executed evidence package.
 - Provider-error cases are deterministic harness injections and are labeled as
   such; they are not observed candidate outage claims.
 - The challenge set is synthetic/local evidence and does not claim production
   quality, real user adoption, or hosted operations.
+- The set is public development data with zero independent annotators; it is not
+  a blind or expert-labeled benchmark.

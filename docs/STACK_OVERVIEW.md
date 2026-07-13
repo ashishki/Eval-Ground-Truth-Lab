@@ -7,9 +7,9 @@ local evidence stack for reliable AI/agent systems.
 
 | Layer | Repository | Role | Current evidence |
 | --- | --- | --- | --- |
-| Governed workflow | `gdev-agent` | Multi-tenant support-triage workflow with webhook intake, guardrails, approval, audit, cost, and observability controls. | Local Compose demo, 285-test repository baseline, 180-case internal smoke eval. |
-| Quality layer | `Eval-Ground-Truth-Lab` | Deterministic evaluation framework for structured output, routing, unsafe auto-approval, cost, latency, and adapter behavior. | 55-case live local gdev-agent integration baseline, executable 100-case diagnostic challenge, seeded regression smoke, checksum-sealed runs and content-addressed evidence manifests. |
-| Runtime layer | `Agent-Runtime-Grid` | Queue-backed runtime for running many AI/agent jobs with retries, timeouts, idempotent finalization, artifacts, metrics, and cost controls. | 100-job smoke, 500-job reliability proof, failure-injection reports, cross-project artifact proof, and 20-job operator-run live-local HTTP proof snapshot. |
+| Governed workflow | `gdev-agent` | Local support-triage workload with webhook intake, guardrails, approval, audit, cost, and database-enforced tenant controls. | Green P0 repository/Compose proof, 180-case internal smoke with weak quality metrics, and an external 100-case Eval Lab gate that fails. |
+| Quality layer | `Eval-Ground-Truth-Lab` | Deterministic release-decision tool for structured output, routing, unsafe auto-approval, cost, latency, and adapter behavior. | 55-case local conformance pass, canonical 100-case hard-challenge FAIL, seeded regression smoke, sealed runs, and content-addressed evidence. |
+| Runtime layer | `Agent-Runtime-Grid` | Queue-backed runtime for running many AI/agent jobs with retries, timeouts, idempotent finalization, artifacts, metrics, and cost controls. | Tagged `v0.1.0` with a verified 20-job local stub run plus separate larger/local failure-injection paths. |
 
 ## Current End-To-End Evidence
 
@@ -28,10 +28,11 @@ That path validates 55 synthetic triage cases against a live local gdev-agent in
 `LLM_MODE=demo`. It is a conformance/integration baseline, not a production
 quality score and not a hard challenge benchmark.
 
-Eval Lab also commits a harder 100-case gdev-agent challenge set. That dataset
-is diagnostic evidence for ambiguous, policy-stress, guard-stress,
-tenant-boundary, malformed-input, and expected-failure cases; it is not a
-replacement for the canonical passing baseline.
+Eval Lab also publishes a harder 100-case gdev-agent challenge run. That public
+development dataset covers ambiguous, policy-stress, guard-stress,
+tenant-boundary, malformed-input, and expected-failure cases. The exact
+candidate records a canonical gate FAIL; the passing 55-case conformance scope
+does not override it.
 
 The case counts are separate scopes, not a combined score: gdev-agent's 180
 internal smoke cases exercise that repository; Eval Lab's 55 external cases are

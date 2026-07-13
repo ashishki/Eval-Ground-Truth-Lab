@@ -42,10 +42,16 @@ Security tests explicitly cover path traversal, concurrent duplicate creation,
 interrupted atomic replace, terminal record modification/deleted seal, and
 evidence artifact modification/deletion/undeclared addition.
 
-## Honest boundary / blocker
+## Honest boundary at this verification stage
 
-No canonical gdev-agent challenge result was generated or committed. The
+At the time this P0 engine verification was recorded, no canonical gdev-agent
+challenge result had been generated or committed. The
 deterministic passing/failing adapters exist only in tests and are labeled
 `fixture:not-external-gdev` with worktree state `fixture`. Publishing canonical
 challenge evidence remains blocked on running the fixed external gdev-agent
 service while recording its exact git SHA, clean/dirty state, and environment.
+
+That execution blocker was subsequently resolved without changing this
+historical test record. The verified v0.2.0 package at
+`docs/evidence/releases/v0.2.0/README.md` records exact gdev revision/image and
+publishes the fixed candidate's gate as FAIL.
