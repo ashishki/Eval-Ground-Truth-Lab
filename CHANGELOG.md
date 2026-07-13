@@ -35,6 +35,12 @@ once stable releases begin.
 - Replace whole-worktree cleanliness claims with an exact measured-package proof
   over the recursive HEAD path set, every file byte, and executable mode, including
   adversarial `assume-unchanged`, `skip-worktree`, and hidden-deletion coverage.
+- Reject all injected adapters on the evidentiary Trader replay path and always
+  construct the exact canonical adapter from its captured input bytes; keep input
+  mutation testing behind a private non-CLI snapshot hook.
+- Derive named component hashes, recursive package identity, and HEAD comparison
+  from one immutable bytes/modes/paths snapshot; reject components outside the
+  package root and fail closed on mutation during recursive capture.
 
 ## 0.2.0 - 2026-07-13
 

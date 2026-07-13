@@ -79,6 +79,14 @@ snapshots. Adapter invocations return fresh nested containers. Mutating an input
 path or a prior result cannot change a later result or the bytes written to the
 pack.
 
+The evidentiary replay does not accept caller-created adapter instances. It
+rejects exact-class injections and subclass overrides before reading inputs or
+creating output directories, then constructs the exact canonical
+`TraderRiskAuditEvidenceAdapter` from the captured bytes. The input-mutation
+regression uses a private callback that receives neither the snapshot nor adapter
+authority and is unavailable from the CLI; it cannot select executable adapter
+code for an evidence pack.
+
 Dataset fixture/privacy claims are not inferred from metadata alone. Only bytes
 that are identical to the packaged dataset under its canonical name are marked
 as the reviewed synthetic fixture. A schema-valid caller override may produce a
@@ -115,7 +123,12 @@ replay result, and content-addressed manifest.
 Implementation provenance covers the adapter, dataset parser, RunStore,
 manifest writer, replay runner, and validators individually, plus a digest of
 the complete installed package payload, including normalized executable modes.
-Source executions record an Eval commit/tree with
+One immutable recursive capture records every included root-relative path,
+executable mode, and file byte. Named component hashes, package digest, Git blob
+ids, and HEAD comparison all derive from that same snapshot; named components
+must resolve inside the package root. Namespace or metadata mutation during the
+capture fails closed, while mutation after capture cannot mix identities from two
+filesystem states. Source executions record an Eval commit/tree with
 `measured_package_matches_head=true` only when the exact recursive package path
 set, every byte, and every executable mode match that commit. This is deliberately
 not a whole-worktree cleanliness claim. Index hints such as `assume-unchanged`
@@ -168,4 +181,4 @@ milestones that cannot be satisfied by this repository-authored fixture.
 
 The committed 2026-07-13 replay is indexed at
 `docs/evidence/integrations/README.md` and verifies at content address
-`sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb`.
+`sha256:ae5f4152cebd3c819f62b5facc09ff4c82f2dd9e9c3d1256b8b1c7b83d1eecd2`.

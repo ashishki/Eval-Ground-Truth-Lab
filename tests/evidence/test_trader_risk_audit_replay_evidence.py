@@ -16,7 +16,7 @@ from eval_ground_truth_lab.validators import trader_risk_audit as validator_modu
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "docs/evidence/integrations/trader-risk-audit-synthetic-v1"
 MANIFEST = PACK / (
-    "sha256-e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb.manifest.json"
+    "sha256-ae5f4152cebd3c819f62b5facc09ff4c82f2dd9e9c3d1256b8b1c7b83d1eecd2.manifest.json"
 )
 
 
@@ -27,7 +27,7 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
 
     assert verification.artifact_count == 8
     assert verification.content_address == (
-        "sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb"
+        "sha256:ae5f4152cebd3c819f62b5facc09ff4c82f2dd9e9c3d1256b8b1c7b83d1eecd2"
     )
     assert result["gate"] == {"failed_validator_count": 0, "passed": True}
     assert result["dataset"]["dataset_hash"] == (
@@ -48,10 +48,10 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
     assert implementation["components_sha256"] == measured["components_sha256"]
     assert implementation["package_payload"] == measured["package_payload"]
     assert implementation["source"] == {
-        "commit": "0860ae64d282c3697c16f59d43b376e8557be108",
+        "commit": "c85d512cae53a2c20b994f2909c763695b8a5155",
         "kind": "git_worktree",
         "measured_package_matches_head": True,
-        "tree": "d79cff41a04acecc1d638d311f195fd5df9af248",
+        "tree": "52b64e4541d4f9d6e67fd4711f31c6293fc65358",
     }
     assert manifest["metadata"]["implementation"] == implementation
     assert result["provenance"]["implementation_sha256"] == implementation["components_sha256"]

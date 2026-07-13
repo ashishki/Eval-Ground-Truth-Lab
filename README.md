@@ -222,6 +222,10 @@ fail-closed, unassessed effective trust. Replay replaces only `effective_trust`
 from byte identity and the packaged proof before sealing the run. Consequently,
 a matching caller-supplied expectation may produce a diagnostic PASS without
 turning its privacy declaration or source identifiers into trusted facts.
+The evidentiary replay rejects every injected adapter instance, including
+subclasses, and constructs the exact canonical implementation from the captured
+input bytes. Named component hashes, recursive package identity, and any HEAD
+match are derived from one immutable package snapshot.
 
 ```bash
 eval-ground-truth-lab run-trader-risk-audit-replay \
@@ -239,7 +243,7 @@ production claim. See
 [docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
 [dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
 [committed replay pack](docs/evidence/integrations/README.md) verifies at content
-address `sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb`.
+address `sha256:ae5f4152cebd3c819f62b5facc09ff4c82f2dd9e9c3d1256b8b1c7b83d1eecd2`.
 
 ## Architecture
 

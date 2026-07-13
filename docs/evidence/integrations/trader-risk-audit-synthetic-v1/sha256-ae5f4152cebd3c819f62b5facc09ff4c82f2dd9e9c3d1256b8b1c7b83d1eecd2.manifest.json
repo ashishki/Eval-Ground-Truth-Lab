@@ -27,21 +27,21 @@
     },
     {
       "path": "replay-result.json",
-      "sha256": "b764a7fe6aec51ebba792187d4c58b21dd05bce710cdc69c691a32dfc4adc19e",
+      "sha256": "3fe76e632d5988fe4c08167434fa39b2663386c9f9a53b4bf772892b3eeb4ea8",
       "size_bytes": 5635
     },
     {
       "path": "run/trader-synthetic-quickstart-v1-20260713.json",
-      "sha256": "ef46254b2f8011cd2fc504294901595ebd62090c2cf149afb3b0f8caf02b4eb1",
+      "sha256": "b4c4ca2a5eef5dfd45cd9cdbd776a40469ddafa23c79032a70f1b369763f0422",
       "size_bytes": 19909
     },
     {
       "path": "run/trader-synthetic-quickstart-v1-20260713.sha256",
-      "sha256": "b55d29eca4fe902fa8b5869cf3d054adcad83c593cf709530c32af4f53e3d86f",
+      "sha256": "26eaa0ba582b4bb9b61731e7f762a1c8cc72455013b0903c2a1b55139f43d5e4",
       "size_bytes": 118
     }
   ],
-  "content_address": "sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb",
+  "content_address": "sha256:ae5f4152cebd3c819f62b5facc09ff4c82f2dd9e9c3d1256b8b1c7b83d1eecd2",
   "metadata": {
     "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
     "contract_version": "trader-risk-audit-evidence-v1",
@@ -64,19 +64,19 @@
         "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
         "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
         "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
-        "runner": "cf8658181fd4364239b2435d2a282a3a4e213f048c15c31970a4c316d201f3da",
+        "runner": "5486c981e64883c7e4c74063dc24862ed084ded4eb75b2cf06f3c11f89dcc062",
         "validators": "355466bb62e0d1882b6380e38488b5e50f2238e01dcf8370a214c333c6e721ca"
       },
       "package_payload": {
         "file_count": 55,
-        "sha256": "68bcc4940f14650e3a7d091aa9feb1c4fdc30db074e4c6e0e336bdf6dd012183"
+        "sha256": "5b612f5adfc63d2dcea19886bab347853646a62bd5b51e6b017877722c585bf9"
       },
       "schema_version": "eval-lab-implementation-provenance-v1",
       "source": {
-        "commit": "0860ae64d282c3697c16f59d43b376e8557be108",
+        "commit": "c85d512cae53a2c20b994f2909c763695b8a5155",
         "kind": "git_worktree",
         "measured_package_matches_head": true,
-        "tree": "d79cff41a04acecc1d638d311f195fd5df9af248"
+        "tree": "52b64e4541d4f9d6e67fd4711f31c6293fc65358"
       }
     },
     "implementation_sha256": {
@@ -84,7 +84,7 @@
       "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
       "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
       "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
-      "runner": "cf8658181fd4364239b2435d2a282a3a4e213f048c15c31970a4c316d201f3da",
+      "runner": "5486c981e64883c7e4c74063dc24862ed084ded4eb75b2cf06f3c11f89dcc062",
       "validators": "355466bb62e0d1882b6380e38488b5e50f2238e01dcf8370a214c333c6e721ca"
     },
     "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
@@ -92,9 +92,9 @@
     "run": {
       "candidate_version": "trader-risk-audit-0.2.0@bf755a24450f",
       "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
-      "record_sha256": "ef46254b2f8011cd2fc504294901595ebd62090c2cf149afb3b0f8caf02b4eb1",
+      "record_sha256": "b4c4ca2a5eef5dfd45cd9cdbd776a40469ddafa23c79032a70f1b369763f0422",
       "run_id": "trader-synthetic-quickstart-v1-20260713",
-      "seal_sha256": "b55d29eca4fe902fa8b5869cf3d054adcad83c593cf709530c32af4f53e3d86f",
+      "seal_sha256": "26eaa0ba582b4bb9b61731e7f762a1c8cc72455013b0903c2a1b55139f43d5e4",
       "status": "completed",
       "validator_version": "trader-risk-audit-exact-replay-validators-v1"
     },

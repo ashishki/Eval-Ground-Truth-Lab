@@ -43,6 +43,9 @@ production eval platform.
 - Trader replay v1 accepts exactly one case. Installed defaults are packaged
   resources; explicit input paths are read once, and the validated byte snapshots
   are the bytes sealed into the evidence pack.
+- The evidentiary Trader path rejects injected adapters, including subclasses,
+  and always reconstructs the canonical adapter from its input snapshot. Custom
+  adapter experimentation is intentionally outside this evidence writer.
 - Only the canonical-name, byte-identical packaged Trader dataset receives the
   synthetic fixture/privacy classification. Schema-valid caller overrides are
   diagnostic inputs marked non-fixture and not privacy-reviewed; unknown fields,
@@ -64,7 +67,10 @@ production eval platform.
 - Eval implementation provenance proves only the measured package payload, not
   whole-worktree cleanliness. A `git_worktree` identity requires the exact
   recursive HEAD path set plus byte-for-byte and executable-mode equality;
-  hidden index flags or deletions downgrade it to `installed_package`.
+  hidden index flags or deletions downgrade it to `installed_package`. Named
+  components and package/HEAD identity come from one snapshot-time recursive
+  capture; this does not claim filesystem immutability after capture or prove
+  that those bytes executed before they were measured.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

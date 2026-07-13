@@ -4,12 +4,17 @@ Date: 2026-07-13
 
 Scope: draft Trader Risk Audit adapter PR review blockers
 
-Implementation commit: `0860ae64d282c3697c16f59d43b376e8557be108`
+Implementation commit: `c85d512cae53a2c20b994f2909c763695b8a5155`
 
 ## Implemented controls
 
 - Adapter results are rebuilt from an immutable evidence-byte snapshot on every
   invocation; nested evidence containers are not shared between results.
+- The evidentiary writer rejects every injected adapter, including exact-class
+  instances and subclass overrides, before reading inputs or creating outputs.
+  It constructs the canonical adapter only from the locked input snapshot; the
+  input-mutation regression uses a private non-CLI callback with no snapshot or
+  adapter authority.
 - Direct adapter output preserves caller privacy/source values only as
   `declared_privacy_classification` and `declared_source`; its separate
   `effective_trust` block is fail-closed and unassessed.
@@ -55,6 +60,11 @@ Implementation commit: `0860ae64d282c3697c16f59d43b376e8557be108`
   It makes no whole-worktree cleanliness claim. `assume-unchanged`,
   `skip-worktree`, and hidden deletion probes all downgrade to
   `installed_package`; executable mode participates in the payload digest.
+- Named component hashes, recursive package digest, Git blob ids, and HEAD
+  comparison derive from one immutable root-relative bytes/modes/paths snapshot.
+  Components outside the package root are rejected. A deterministic post-capture
+  mutation regression proves no pre/post state can be mixed; capture itself
+  rejects namespace or stat drift.
 - CI has read-only repository contents permission, a 20-minute timeout, and two
   cache-disabled builds using commit-derived `SOURCE_DATE_EPOCH`; unequal wheel
   bytes fail the job.
@@ -63,11 +73,14 @@ Implementation commit: `0860ae64d282c3697c16f59d43b376e8557be108`
 
 | Check | Result |
 |---|---|
-| Focused Trader/source/implementation suite | `44 passed` |
-| Full test suite | `221 passed` |
+| Focused Trader/source/implementation suite | `55 passed` |
+| Full test suite | `224 passed` |
 | Ruff format check | `99 files already formatted` |
 | Ruff lint | `All checks passed` |
 | Mutation between validation and packaging | PASS; packaged inputs equal the original snapshots |
+| Injected adapter/subclass override | rejected before input reads, invocation, run directory, or evidence pack |
+| Mutation between implementation provenance phases | PASS; component, package, and HEAD identities equal the single pre-mutation snapshot |
+| Named component outside package root | rejected with `ImplementationProvenanceError` |
 | Mutation after RunStore completion | PASS; packaged run/seal equal the locked snapshot, not mutated paths |
 | Repeated invocation identity/mutation isolation | PASS |
 | Unknown nested-field matrix | PASS for evidence, candidate, checks, boundary, metrics, artifact, and trace fields |
@@ -87,11 +100,11 @@ Implementation commit: `0860ae64d282c3697c16f59d43b376e8557be108`
 
 The wheel built twice from a clean archive of the implementation commit is
 `eval_ground_truth_lab-0.2.0-py3-none-any.whl`, SHA-256
-`727ec4cf45c83e8ea6106327e93dde86b62c1df97e8117ac5c3a92bf8193763a`.
+`6bdfbf6932af43db1e6da63c7c70c4f61939c26421608c60c0414dc80c8db2ff`.
 Archive inspection found the HTML report template and the four Trader replay
 resource files. The installed console replay used no explicit input paths.
 The second clean build produced the same SHA-256. Its installed package payload
-digest is `68bcc4940f14650e3a7d091aa9feb1c4fdc30db074e4c6e0e336bdf6dd012183`.
+digest is `5b612f5adfc63d2dcea19886bab347853646a62bd5b51e6b017877722c585bf9`.
 
 ## Canonical evidence
 
@@ -102,18 +115,18 @@ The regenerated pack is
 - Validators: 11/11 pass.
 - Artifacts: 8/8 verify, including the exact source-identity proof.
 - Content address:
-  `sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb`.
+  `sha256:ae5f4152cebd3c819f62b5facc09ff4c82f2dd9e9c3d1256b8b1c7b83d1eecd2`.
 - Manifest file SHA-256:
-  `17bf64fb9c51707810e7d9a6f99f562e7fa779eda16ca1a50c990fd3c1d17f68`.
+  `8050a14192abb41a06c137dbda8b895c53d6aed9abb26313f9434ddfc03ced4a`.
 - Replay result SHA-256:
-  `b764a7fe6aec51ebba792187d4c58b21dd05bce710cdc69c691a32dfc4adc19e`.
+  `3fe76e632d5988fe4c08167434fa39b2663386c9f9a53b4bf772892b3eeb4ea8`.
 - Sealed run JSON SHA-256:
-  `ef46254b2f8011cd2fc504294901595ebd62090c2cf149afb3b0f8caf02b4eb1`.
+  `b4c4ca2a5eef5dfd45cd9cdbd776a40469ddafa23c79032a70f1b369763f0422`.
 - Seal file SHA-256:
-  `b55d29eca4fe902fa8b5869cf3d054adcad83c593cf709530c32af4f53e3d86f`.
+  `26eaa0ba582b4bb9b61731e7f762a1c8cc72455013b0903c2a1b55139f43d5e4`.
 - Eval implementation commit/tree/measured-package proof:
-  `0860ae64d282c3697c16f59d43b376e8557be108` /
-  `d79cff41a04acecc1d638d311f195fd5df9af248` /
+  `c85d512cae53a2c20b994f2909c763695b8a5155` /
+  `52b64e4541d4f9d6e67fd4711f31c6293fc65358` /
   `measured_package_matches_head=true`.
 
 This evidence remains a self-authored synthetic contract replay. It is not a
