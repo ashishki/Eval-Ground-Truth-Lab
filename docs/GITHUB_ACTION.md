@@ -83,9 +83,11 @@ case must contain a non-empty set of results with unique, non-empty
 validator-ID set for each corresponding case must match exactly across the two
 runs. Optional receipt `message` must be a string and an optional nested
 `case_id` must match its outer case. `category` is `none` exactly for passing
-receipts, and the category for each corresponding validator ID must match
-across the pair. Missing, truncated, malformed, or recategorized validator
-receipts are configuration errors rather than comparison PASS/FAIL reports.
+receipts. A corresponding validator may change from a passing `none` receipt to
+a supported failure category; that regression is evaluated as a comparison
+FAIL rather than an Action configuration error. Missing, truncated, or
+malformed validator receipts remain configuration errors.
+
 Run IDs must use the canonical RunStore-safe 1-128 character syntax. All
 metadata and receipt strings that can appear in the Markdown report reject line
 breaks, NUL, backticks, and table delimiters; receipt messages also reject raw
@@ -171,7 +173,10 @@ download.
 This Action automates an existing baseline/candidate threshold decision. It
 does not generate runs, authenticate their origin, replace content-addressed
 evidence verification, or establish that the dataset and thresholds represent
-real users. The repository CI smoke compares the committed synthetic/local
-baseline run with itself only to prove the wiring and PASS status propagation.
-That smoke is not a production evaluation, production safety claim, external
-validation, user metric, or proof that an unevaluated system is safe to release.
+real users. Receipt categories are artifact inputs: structural validation does
+not prove that a producer assigned an authentic category. Artifact and category
+origin authenticity remain outside this Action's boundary. The repository CI
+smoke compares the committed synthetic/local baseline run with itself only to
+prove the wiring and PASS status propagation. That smoke is not a production
+evaluation, production safety claim, external validation, user metric, or proof
+that an unevaluated system is safe to release.

@@ -35,6 +35,7 @@ def test_action_documentation_states_security_and_claim_boundaries() -> None:
         "threshold `version` must equal",
         "runstore-safe",
         "raw-html injection",
+        "origin authenticity remain outside",
         "conclusion=error` is never publishable",
         "writable workspace",
         "report",

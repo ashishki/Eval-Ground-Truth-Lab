@@ -494,29 +494,18 @@ def _validate_comparison_runs(baseline: RunRecord, candidate: RunRecord) -> None
         raise ValueError("baseline and candidate must use the same threshold config version")
     if baseline.run_type != candidate.run_type:
         raise ValueError("baseline and candidate must use the same run type")
-    baseline_validators = _validator_contracts_by_case(baseline)
-    candidate_validators = _validator_contracts_by_case(candidate)
+    baseline_validators = _validator_ids_by_case(baseline)
+    candidate_validators = _validator_ids_by_case(candidate)
     for case_id in baseline_ids:
-        baseline_contract = baseline_validators[case_id]
-        candidate_contract = candidate_validators[case_id]
-        if baseline_contract.keys() != candidate_contract.keys():
+        if baseline_validators[case_id] != candidate_validators[case_id]:
             raise ValueError(
                 f"baseline and candidate validator-ID sets differ for case {case_id!r}"
             )
-        for validator_id, category in baseline_contract.items():
-            if candidate_contract[validator_id] != category:
-                raise ValueError(
-                    "baseline and candidate validator categories differ for "
-                    f"case {case_id!r}, validator {validator_id!r}"
-                )
 
 
-def _validator_contracts_by_case(run: RunRecord) -> dict[str, dict[str, str]]:
+def _validator_ids_by_case(run: RunRecord) -> dict[str, set[str]]:
     return {
-        case.case_id: {
-            str(result["validator_id"]): str(result["category"])
-            for result in case.validator_results
-        }
+        case.case_id: {str(result["validator_id"]) for result in case.validator_results}
         for case in run.case_results
     }
 

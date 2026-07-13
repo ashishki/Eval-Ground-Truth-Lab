@@ -227,20 +227,31 @@ def test_both_runs_with_empty_validator_results_are_rejected(
     _assert_action_error_removes_stale(workspace, environment)
 
 
-def test_candidate_cannot_recategorize_same_validator(
-    action_environment: tuple[Path, dict[str, str]],
+@pytest.mark.parametrize("category", ["unsafe_auto_approval", "invalid_structured_output"])
+def test_same_validator_failure_regression_returns_fresh_blocking_report(
+    action_environment: tuple[Path, dict[str, str]], category: str
 ) -> None:
     workspace, environment = action_environment
-    baseline = _read_json(workspace / "baseline.json")
     candidate = _read_json(workspace / "candidate.json")
-    baseline_result = baseline["case_results"][0]["validator_results"][0]
     candidate_result = candidate["case_results"][0]["validator_results"][0]
-    baseline_result.update({"passed": False, "category": "unsafe_auto_approval"})
-    candidate_result.update({"passed": False, "category": "invalid_structured_output"})
-    _write_json(workspace / "baseline.json", baseline)
+    candidate_result.update({"passed": False, "category": category})
     _write_json(workspace / "candidate.json", candidate)
+    report = workspace / environment["EVAL_LAB_REPORT"]
+    report.parent.mkdir()
+    report.write_text("STALE PASS\n", encoding="utf-8")
 
-    _assert_action_error_removes_stale(workspace, environment)
+    assert github_action_compare.main(environment) == github_action_compare.BLOCKED
+    assert _read_outputs(Path(environment["GITHUB_OUTPUT"])) == {
+        "report": "reports/release-gate.md",
+        "conclusion": "fail",
+    }
+    report_text = report.read_text(encoding="utf-8")
+    assert "STALE PASS" not in report_text
+    assert f"`{category}`" in report_text
+    assert "`test.correctness`" in report_text
+    assert "Conclusion: **FAIL**" in Path(environment["GITHUB_STEP_SUMMARY"]).read_text(
+        encoding="utf-8"
+    )
 
 
 def test_duplicate_validator_ids_are_rejected(
