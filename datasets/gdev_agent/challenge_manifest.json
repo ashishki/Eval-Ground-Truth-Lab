@@ -3,7 +3,11 @@
   "cases_path": "datasets/gdev_agent/challenge_v1.jsonl",
   "dataset_hash": "151e5eec83373b92cf263aa1f32edb26ed780c260ce32a9d084ba8f3f38e53b0",
   "dataset_id": "challenge_v1",
+  "dataset_raw_sha256": "86d5ec4478afe29111256c954cf8840b9ee6857fa6af6e76de8e10de98062ee8",
+  "license": "Apache-2.0",
+  "manifest_version": "gdev-agent-dataset-manifest-v2",
   "schema_version": "1.0",
+  "scope": "100-case synthetic hard diagnostic set; separate from the 55-case external conformance set and gdev-agent's 180-case internal smoke",
   "slices": [
     "ambiguous_multi_intent",
     "refund_pressure",
@@ -16,5 +20,6 @@
     "malformed_user_input",
     "provider_error_simulation"
   ],
-  "threshold_config": "datasets/gdev_agent/challenge_thresholds.json"
+  "threshold_config": "datasets/gdev_agent/challenge_thresholds.json",
+  "threshold_config_raw_sha256": "5b8e311a86a87c5df116515eee06bff8c1cfb3b0ded3b499ed7c20ecd7f0c1bb"
 }

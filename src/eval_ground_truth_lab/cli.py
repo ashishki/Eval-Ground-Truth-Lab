@@ -1,19 +1,40 @@
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import json
+import platform
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from eval_ground_truth_lab import __version__
+from eval_ground_truth_lab import challenge as challenge_module
 from eval_ground_truth_lab.adapters import GdevAgentConfig, GdevAgentHttpAdapter
+from eval_ground_truth_lab.adapters import gdev_agent as gdev_adapter_module
+from eval_ground_truth_lab.challenge import (
+    ChallengeThresholds,
+    FaultInjectingAdapter,
+    build_challenge_result,
+    render_challenge_markdown,
+)
 from eval_ground_truth_lab.compare import ComparisonReport, ThresholdConfig, compare_runs
 from eval_ground_truth_lab.cost import check_budget, load_budget_policy, rollup_telemetry
 from eval_ground_truth_lab.datasets import Dataset, load_dataset
+from eval_ground_truth_lab.evidence import (
+    atomic_write_bytes,
+    atomic_write_json,
+    atomic_write_text,
+    sha256_file,
+    verify_evidence_manifest,
+    write_evidence_manifest,
+)
 from eval_ground_truth_lab.reports import render_markdown_report
 from eval_ground_truth_lab.runs import CaseResult, RunRecord, RunStore
 from eval_ground_truth_lab.validators import GdevValidatorThresholds, validate_gdev_case
+from eval_ground_truth_lab.validators import gdev_agent as gdev_validator_module
 
 
 def comparison_exit_code(report: ComparisonReport) -> int:
@@ -46,6 +67,32 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--threshold-config",
         default="datasets/gdev_agent/thresholds.json",
     )
+
+    challenge_parser = subparsers.add_parser("run-gdev-agent-challenge")
+    challenge_parser.add_argument(
+        "--dataset",
+        default="datasets/gdev_agent/challenge_v1.jsonl",
+    )
+    challenge_parser.add_argument("--base-url", required=True)
+    challenge_parser.add_argument("--run-id")
+    challenge_parser.add_argument("--run-dir", default="runs")
+    challenge_parser.add_argument("--candidate-version", required=True)
+    challenge_parser.add_argument("--component-revision", required=True)
+    challenge_parser.add_argument(
+        "--component-worktree-state",
+        choices=("clean", "dirty", "fixture"),
+        required=True,
+    )
+    challenge_parser.add_argument("--component-image-digest")
+    challenge_parser.add_argument("--environment-label", required=True)
+    challenge_parser.add_argument("--evidence-dir", required=True)
+    challenge_parser.add_argument(
+        "--threshold-config",
+        default="datasets/gdev_agent/challenge_thresholds.json",
+    )
+
+    verify_parser = subparsers.add_parser("verify-evidence")
+    verify_parser.add_argument("--manifest", required=True)
 
     compare_parser = subparsers.add_parser("compare")
     compare_parser.add_argument("--baseline", required=True)
@@ -81,6 +128,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             candidate_version=args.candidate_version,
             threshold_config_path=args.threshold_config,
         )
+    if args.command == "run-gdev-agent-challenge":
+        return run_gdev_agent_challenge(
+            dataset_path=args.dataset,
+            base_url=args.base_url,
+            evidence_dir=args.evidence_dir,
+            component_revision=args.component_revision,
+            component_worktree_state=args.component_worktree_state,
+            environment_label=args.environment_label,
+            candidate_version=args.candidate_version,
+            component_image_digest=args.component_image_digest,
+            run_id=args.run_id,
+            run_dir=args.run_dir,
+            threshold_config_path=args.threshold_config,
+        )
+    if args.command == "verify-evidence":
+        result = verify_evidence_manifest(args.manifest)
+        print(json.dumps(result.to_mapping(), sort_keys=True))
+        return 0
     if args.command == "compare":
         return run_compare_command(
             baseline_path=args.baseline,
@@ -201,6 +266,163 @@ def run_gdev_agent_eval(
         run_artifact_path=Path(run_dir) / f"{completed.run_id}.json",
     )
     return 1 if has_failure else 0
+
+
+def run_gdev_agent_challenge(
+    *,
+    dataset_path: str | Path,
+    base_url: str,
+    evidence_dir: str | Path,
+    component_revision: str,
+    component_worktree_state: str,
+    environment_label: str,
+    candidate_version: str,
+    component_image_digest: str | None = None,
+    run_id: str | None = None,
+    run_dir: str | Path = "runs",
+    threshold_config_path: str | Path = "datasets/gdev_agent/challenge_thresholds.json",
+    adapter: GdevAgentHttpAdapter | None = None,
+) -> int:
+    is_fixture = _validate_challenge_provenance(
+        component_revision=component_revision,
+        component_worktree_state=component_worktree_state,
+        component_image_digest=component_image_digest,
+        environment_label=environment_label,
+        candidate_version=candidate_version,
+    )
+    pack_root = Path(evidence_dir)
+    if pack_root.exists() and any(pack_root.iterdir()):
+        raise ValueError(f"Evidence directory must be empty: {pack_root}")
+    pack_root.mkdir(parents=True, exist_ok=True)
+
+    dataset_source = Path(dataset_path)
+    threshold_source = Path(threshold_config_path)
+    dataset = load_dataset(dataset_source)
+    thresholds = _load_challenge_thresholds(threshold_source)
+    validator_thresholds = _load_gdev_validator_thresholds(threshold_source)
+    delegate = adapter or _build_gdev_adapter(base_url)
+    selected_adapter = FaultInjectingAdapter(
+        delegate,
+        fault_cost_usd=thresholds.max_cost_per_case_usd + 1.0,
+        fault_latency_ms=thresholds.max_latency_p95_ms + 1_000.0,
+    )
+    store = RunStore(run_dir)
+    run = store.create_run(
+        run_id=run_id,
+        run_type="gdev_agent_challenge",
+        dataset_hash=dataset.metadata.dataset_hash,
+        candidate_version=candidate_version,
+        validator_version="gdev-challenge-validators-v1",
+        threshold_config_version=thresholds.version,
+    )
+
+    try:
+        for case in dataset.cases:
+            adapter_result = selected_adapter.invoke(case.to_canonical_mapping())
+            actual = _mapping_or_empty(adapter_result.output)
+            expected = _mapping_or_empty(case.expected)
+            validator_results = validate_gdev_case(
+                case_id=case.id,
+                expected=expected,
+                actual=actual,
+                thresholds=validator_thresholds,
+            )
+            output = dict(actual)
+            output["correct"] = _derived_gdev_correctness(validator_results)
+            store.add_case_result(
+                run.run_id,
+                CaseResult(
+                    case_id=case.id,
+                    output=output,
+                    validator_results=tuple(asdict(result) for result in validator_results),
+                    cost_usd=float(actual.get("cost_usd") or 0.0),
+                    latency_ms=float(actual.get("latency_ms") or adapter_result.latency_ms),
+                ),
+            )
+    except BaseException:
+        store.interrupt_run(run.run_id)
+        raise
+
+    completed = store.complete_run(run.run_id)
+    implementation_sha256 = {
+        "challenge": sha256_file(Path(challenge_module.__file__)),
+        "gdev_adapter": sha256_file(Path(gdev_adapter_module.__file__)),
+        "gdev_validators": sha256_file(Path(gdev_validator_module.__file__)),
+    }
+    runtime_environment = {
+        "platform": platform.platform(),
+        "python": platform.python_version(),
+        "pyyaml": importlib.metadata.version("PyYAML"),
+    }
+    result = build_challenge_result(
+        dataset=dataset,
+        run=completed,
+        thresholds=thresholds,
+        provenance={
+            "component_image_digest": component_image_digest,
+            "component_revision": component_revision,
+            "component_worktree_state": component_worktree_state,
+            "environment_label": environment_label,
+            "execution_mode": "candidate_http_plus_deterministic_provider_faults",
+            "fixture": is_fixture,
+            "harness_version": f"eval-ground-truth-lab-{__version__}",
+            "implementation_sha256": implementation_sha256,
+            "runtime": runtime_environment,
+        },
+        dataset_raw_sha256=sha256_file(dataset_source),
+        threshold_config_sha256=sha256_file(threshold_source),
+    )
+
+    result_path = pack_root / "challenge-run.json"
+    report_path = pack_root / "challenge-report.md"
+    run_artifact_dir = pack_root / "run"
+    run_artifact_dir.mkdir()
+    run_source = Path(run_dir) / f"{completed.run_id}.json"
+    seal_source = Path(run_dir) / f"{completed.run_id}.sha256"
+    run_artifact_path = run_artifact_dir / run_source.name
+    seal_artifact_path = run_artifact_dir / seal_source.name
+    atomic_write_json(result_path, result)
+    atomic_write_text(report_path, render_challenge_markdown(result))
+    atomic_write_bytes(run_artifact_path, run_source.read_bytes())
+    atomic_write_bytes(seal_artifact_path, seal_source.read_bytes())
+    declared = [
+        result_path.relative_to(pack_root),
+        report_path.relative_to(pack_root),
+        run_artifact_path.relative_to(pack_root),
+        seal_artifact_path.relative_to(pack_root),
+    ]
+    manifest_path = write_evidence_manifest(
+        pack_root,
+        declared,
+        metadata={
+            "candidate_version": candidate_version,
+            "component_image_digest": component_image_digest,
+            "component_revision": component_revision,
+            "component_worktree_state": component_worktree_state,
+            "dataset_hash": dataset.metadata.dataset_hash,
+            "dataset_raw_sha256": sha256_file(dataset_source),
+            "environment_label": environment_label,
+            "fixture": is_fixture,
+            "gate_passed": result["gate"]["passed"],
+            "implementation_sha256": implementation_sha256,
+            "run_id": completed.run_id,
+            "runtime": runtime_environment,
+            "threshold_config_sha256": sha256_file(threshold_source),
+        },
+    )
+    verification = verify_evidence_manifest(manifest_path)
+    print(
+        json.dumps(
+            {
+                "content_address": verification.content_address,
+                "gate_passed": result["gate"]["passed"],
+                "manifest": str(manifest_path),
+                "run_id": completed.run_id,
+            },
+            sort_keys=True,
+        )
+    )
+    return 0 if result["gate"]["passed"] else 1
 
 
 def run_compare_command(
@@ -404,6 +626,14 @@ def _load_gdev_validator_thresholds(path: Path) -> GdevValidatorThresholds:
     )
 
 
+def _load_challenge_thresholds(path: Path) -> ChallengeThresholds:
+    with path.open(encoding="utf-8") as config_file:
+        raw = json.load(config_file)
+    if not isinstance(raw, Mapping):
+        raise ValueError("Challenge threshold config must be a JSON object")
+    return ChallengeThresholds.from_mapping(raw)
+
+
 def _write_run_artifact(path: Path, record: RunRecord) -> None:
     path.write_text(
         json.dumps(record.to_mapping(), indent=2, sort_keys=True) + "\n",
@@ -489,6 +719,41 @@ def _optional_float(value: Any) -> float | None:
     if isinstance(value, bool) or value is None:
         return None
     return float(value)
+
+
+def _validate_challenge_provenance(
+    *,
+    component_revision: str,
+    component_worktree_state: str,
+    component_image_digest: str | None,
+    environment_label: str,
+    candidate_version: str,
+) -> bool:
+    for field, value in (
+        ("candidate_version", candidate_version),
+        ("component_revision", component_revision),
+        ("environment_label", environment_label),
+    ):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{field} must be a non-empty string")
+    is_fixture = component_revision.startswith("fixture:")
+    if is_fixture:
+        if "fixture" not in environment_label.lower():
+            raise ValueError("Fixture revisions require an environment label containing 'fixture'")
+        if component_worktree_state != "fixture":
+            raise ValueError("Fixture revisions require component_worktree_state='fixture'")
+    elif not re.fullmatch(r"(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})", component_revision):
+        raise ValueError(
+            "component_revision must be a full 40- or 64-character git commit SHA "
+            "or start with 'fixture:'"
+        )
+    elif component_worktree_state not in {"clean", "dirty"}:
+        raise ValueError("Git revisions require component_worktree_state 'clean' or 'dirty'")
+    if component_image_digest is not None and not re.fullmatch(
+        r"sha256:[0-9a-fA-F]{64}", component_image_digest
+    ):
+        raise ValueError("component_image_digest must use sha256:<64 hex characters>")
+    return is_fixture
 
 
 if __name__ == "__main__":

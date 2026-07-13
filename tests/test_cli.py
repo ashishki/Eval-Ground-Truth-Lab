@@ -20,6 +20,8 @@ def test_cli_help_includes_real_eval_commands(capsys: pytest.CaptureFixture[str]
         "seeded-smoke",
         "dataset-inspect",
         "run-gdev-agent",
+        "run-gdev-agent-challenge",
+        "verify-evidence",
         "compare",
         "cost-rollup",
         "budget-check",

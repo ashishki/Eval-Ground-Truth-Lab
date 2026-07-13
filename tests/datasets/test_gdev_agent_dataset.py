@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -12,6 +13,7 @@ CHALLENGE_DATASET_PATH = ROOT / "datasets/gdev_agent/challenge_v1.jsonl"
 CHALLENGE_MANIFEST_PATH = ROOT / "datasets/gdev_agent/challenge_manifest.json"
 CHALLENGE_THRESHOLDS_PATH = ROOT / "datasets/gdev_agent/challenge_thresholds.json"
 MANIFEST_PATH = ROOT / "datasets/gdev_agent/manifest.json"
+THRESHOLDS_PATH = ROOT / "datasets/gdev_agent/thresholds.json"
 REQUIRED_SLICES = {
     "billing_refund",
     "account_access",
@@ -90,6 +92,9 @@ def test_gdev_agent_manifest_hash_matches_dataset(capsys) -> None:
     assert manifest["case_count"] == dataset.metadata.case_count
     assert manifest["dataset_hash"] == dataset.metadata.dataset_hash
     assert manifest["cases_path"] == "datasets/gdev_agent/triage_v1.jsonl"
+    assert manifest["dataset_raw_sha256"] == _sha256(DATASET_PATH)
+    assert manifest["threshold_config_raw_sha256"] == _sha256(THRESHOLDS_PATH)
+    assert manifest["license"] == "Apache-2.0"
 
     exit_code = main(["dataset-inspect", "--dataset", str(DATASET_PATH)])
     output = json.loads(capsys.readouterr().out)
@@ -157,6 +162,12 @@ def test_gdev_agent_challenge_manifest_hash_matches_dataset() -> None:
     assert manifest["dataset_hash"] == dataset.metadata.dataset_hash
     assert manifest["cases_path"] == "datasets/gdev_agent/challenge_v1.jsonl"
     assert manifest["threshold_config"] == "datasets/gdev_agent/challenge_thresholds.json"
+    assert manifest["dataset_raw_sha256"] == _sha256(CHALLENGE_DATASET_PATH)
+    assert manifest["threshold_config_raw_sha256"] == _sha256(CHALLENGE_THRESHOLDS_PATH)
+    assert manifest["license"] == "Apache-2.0"
+    assert "100-case" in manifest["scope"]
+    assert "55-case" in manifest["scope"]
+    assert "180-case" in manifest["scope"]
     assert set(manifest["slices"]) == REQUIRED_CHALLENGE_SLICES
 
 
@@ -213,3 +224,7 @@ def test_gdev_agent_challenge_dataset_contains_no_real_data() -> None:
 def _load_manifest() -> dict[str, object]:
     with MANIFEST_PATH.open(encoding="utf-8") as manifest_file:
         return json.load(manifest_file)
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
