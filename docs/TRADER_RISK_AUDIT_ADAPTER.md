@@ -154,4 +154,4 @@ milestones that cannot be satisfied by this repository-authored fixture.
 
 The committed 2026-07-13 replay is indexed at
 `docs/evidence/integrations/README.md` and verifies at content address
-`sha256:094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44`.
+`sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627`.

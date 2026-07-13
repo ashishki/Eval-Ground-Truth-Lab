@@ -234,7 +234,7 @@ production claim. See
 [docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
 [dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
 [committed replay pack](docs/evidence/integrations/README.md) verifies at content
-address `sha256:094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44`.
+address `sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627`.
 
 ## Architecture
 

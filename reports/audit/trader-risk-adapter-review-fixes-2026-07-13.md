@@ -4,7 +4,7 @@ Date: 2026-07-13
 
 Scope: draft Trader Risk Audit adapter PR review blockers
 
-Implementation commit: `64f57f3e037589741df236cf51e9742871a68a91`
+Implementation commit: `56de400bd4e157f70cf1538fbc464b9dbc00257b`
 
 ## Implemented controls
 
@@ -27,11 +27,21 @@ Implementation commit: `64f57f3e037589741df236cf51e9742871a68a91`
 - Fixture/privacy classification requires canonical-name byte identity with the
   packaged dataset. Caller-supplied schema-valid overrides are marked
   non-fixture and not privacy-reviewed.
-- The wheel contains all three default Trader replay resources. CLI defaults use
+- Evidence/provenance privacy, pin, and source-review claims require byte
+  identity with both packaged resources. A fully re-self-hashed caller payload
+  retaining canonical case/commit/tree/path ids remains unreviewed, is not an
+  overall fixture, and receives a caller-evidence candidate identity.
+- A packaged offline Git-object proof independently recomputes and binds the
+  source commit, root tree, repository path, and evidence blob. The proof also
+  binds the protected source bundle SHA-256 already recorded in provenance.
+- The wheel contains all four default Trader replay resources. CLI defaults use
   package resources instead of checkout-relative paths.
 - Manifest provenance covers the parser, RunStore, manifest writer, adapter,
   runner, validators, and complete package payload. Canonical evidence records a
   clean exact Eval commit/tree; an installed wheel records its artifact digest.
+- `git_worktree` implementation provenance now requires every measured package
+  file to be a blob at repository HEAD. Ignored/untracked installed packages
+  inside unrelated repositories report `installed_package` and payload digest.
 - CI has read-only repository contents permission, a 20-minute timeout, and two
   cache-disabled builds using commit-derived `SOURCE_DATE_EPOCH`; unequal wheel
   bytes fail the job.
@@ -40,9 +50,9 @@ Implementation commit: `64f57f3e037589741df236cf51e9742871a68a91`
 
 | Check | Result |
 |---|---|
-| Focused security/runtime suite | `56 passed` |
-| Full test suite | `206 passed` |
-| Ruff format check | `97 files already formatted` |
+| Focused Trader/source/implementation suite | `30 passed` |
+| Full test suite | `213 passed` |
+| Ruff format check | `99 files already formatted` |
 | Ruff lint | `All checks passed` |
 | Mutation between validation and packaging | PASS; packaged inputs equal the original snapshots |
 | Mutation after RunStore completion | PASS; packaged run/seal equal the locked snapshot, not mutated paths |
@@ -51,18 +61,21 @@ Implementation commit: `64f57f3e037589741df236cf51e9742871a68a91`
 | Empty/two-case no-pack guard | PASS |
 | Raw-trades/secret-metadata/nested payload probes | rejected; no run/evidence directories |
 | Recursive duplicate JSON/YAML probes | rejected with `DatasetValidationError`; no output directories |
-| Installed-wheel console replay from unrelated cwd | PASS; 7-artifact manifest verified |
+| Re-self-hashed caller evidence with canonical source ids | FAIL gate; unreviewed/untrusted report; no pinned/sanitized/verified claim |
+| Ignored installed package inside unrelated Git repo | `installed_package`; payload digest present |
+| Source identity commit/tree/path/blob mutation matrix | all rejected |
+| Installed-wheel console replay from unrelated cwd | PASS; 8-artifact manifest verified |
 | Two clean commit-epoch wheel builds | byte-identical |
 | Canonical input byte comparison | PASS |
 | Canonical symlink, workstation-path, and secret-marker scan | clean |
 
 The locally built wheel is
 `eval_ground_truth_lab-0.2.0-py3-none-any.whl`, SHA-256
-`ef6c2df5ff84d24bc15072b0d8a0b3667d32b8abac1038361848eabde74ff5d0`.
-Archive inspection found the HTML report template and the three Trader replay
+`690d0abc2d326b8f6456dd0700da9f1af3e339e423afa0f6b5e78531f3feaf8e`.
+Archive inspection found the HTML report template and the four Trader replay
 resource files. The installed console replay used no explicit input paths.
 The second clean build produced the same SHA-256. Its installed package payload
-digest is `e70f0b82b295d501e1eb83b195ab6e0d267f69ab3b046d4455d34413c1a8263d`.
+digest is `158a342742b0522f53c802cf8286508844e5fcfabbf8c84af5e87e5f3437ff9b`.
 
 ## Canonical evidence
 
@@ -71,20 +84,20 @@ The regenerated pack is
 
 - Gate: PASS for the single authored synthetic compatibility case.
 - Validators: 11/11 pass.
-- Artifacts: 7/7 verify.
+- Artifacts: 8/8 verify, including the exact source-identity proof.
 - Content address:
-  `sha256:094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44`.
+  `sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627`.
 - Manifest file SHA-256:
-  `93777b0358c55cde85d265ced80d91a0a51a7c15286e4b7f95b50e5c75b421de`.
+  `91e998ba605d608ed96a5781154d8768296e6e7389494e2625fafcaddce2cbe5`.
 - Replay result SHA-256:
-  `6b5814c1987359dce82f7cdc90b0d85b97c1a1abe882ceab9f33d4ac948f7f68`.
+  `81d5580c35d1269b446264c0cbbb2ce637ea96fd7e2a2960a3f069e9af36c1aa`.
 - Sealed run JSON SHA-256:
-  `4bf8f6d8fcc9320f596cf0ab0465986124290d78e044efd1018032eb2c4b1477`.
+  `1d2d0f1ee92a2c9f1260bd453c01a6c846cd30b0f821312dbaf235942e70af4d`.
 - Seal file SHA-256:
-  `80e35f5d02e8faeff3416935947e92a235f608c3645d471f6d04e2179e39fbff`.
+  `021ce91b0766add695568dd621678924f2d32fcd322a1664601f9b42d5f90d61`.
 - Eval implementation commit/tree/worktree:
-  `64f57f3e037589741df236cf51e9742871a68a91` /
-  `e743f3d52438eec55c9c4b043cde7fddce081dd7` / clean.
+  `56de400bd4e157f70cf1538fbc464b9dbc00257b` /
+  `1b265941e195f053915caa27089f1dd484b3a2c7` / clean.
 
 This evidence remains a self-authored synthetic contract replay. It is not a
 financial-performance result, external-user case study, production run, or

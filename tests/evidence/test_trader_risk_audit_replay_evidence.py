@@ -16,7 +16,7 @@ from eval_ground_truth_lab.validators import trader_risk_audit as validator_modu
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "docs/evidence/integrations/trader-risk-audit-synthetic-v1"
 MANIFEST = PACK / (
-    "sha256-094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44.manifest.json"
+    "sha256-05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627.manifest.json"
 )
 
 
@@ -25,9 +25,9 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
     manifest = _json(MANIFEST)
     result = _json(PACK / "replay-result.json")
 
-    assert verification.artifact_count == 7
+    assert verification.artifact_count == 8
     assert verification.content_address == (
-        "sha256:094e482f281ca67ec3c47998e7101121e594732182d0b00bc165b9d158ed9b44"
+        "sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627"
     )
     assert result["gate"] == {"failed_validator_count": 0, "passed": True}
     assert result["dataset"]["dataset_hash"] == (
@@ -48,22 +48,34 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
     assert implementation["components_sha256"] == measured["components_sha256"]
     assert implementation["package_payload"] == measured["package_payload"]
     assert implementation["source"] == {
-        "commit": "64f57f3e037589741df236cf51e9742871a68a91",
+        "commit": "56de400bd4e157f70cf1538fbc464b9dbc00257b",
         "kind": "git_worktree",
-        "tree": "e743f3d52438eec55c9c4b043cde7fddce081dd7",
+        "tree": "1b265941e195f053915caa27089f1dd484b3a2c7",
         "worktree_clean": True,
     }
     assert manifest["metadata"]["implementation"] == implementation
     assert result["provenance"]["implementation_sha256"] == implementation["components_sha256"]
     assert manifest["metadata"]["implementation_sha256"] == implementation["components_sha256"]
-    assert manifest["metadata"]["source_git_commit"] == ("bf755a24450ff7c17328fa6d447f36bea8ea0fe5")
-    assert manifest["metadata"]["source_git_tree"] == ("1a2c4ff91a7504642a1bae05a9487fa2e898e0b6")
-    assert manifest["metadata"]["source_git_blob_sha1"] == (
+    source = manifest["metadata"]["source_provenance"]
+    assert source["source_identity"]["git_commit"] == ("bf755a24450ff7c17328fa6d447f36bea8ea0fe5")
+    assert source["source_identity"]["git_tree"] == ("1a2c4ff91a7504642a1bae05a9487fa2e898e0b6")
+    assert source["source_identity"]["git_blob_sha1"] == (
         "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9"
     )
-    assert manifest["metadata"]["source_path"] == (
+    assert source["source_identity"]["path"] == (
         "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
     )
+    assert manifest["metadata"]["source_trust"]["reviewed"] is True
+    assert manifest["metadata"]["source_trust"]["source_identity_verified"] is True
+    assert (
+        manifest["metadata"]["source_trust"]["source_identity_proof_sha256"]
+        == "0eee8d88dbc8b1ece4b4992aa3103718583b9c46124c5fbb4cdce84aced0ec21"
+    )
+    assert (PACK / "inputs/source-identity-proof.json").read_bytes() == (
+        ROOT
+        / "src/eval_ground_truth_lab/resources/trader_risk_audit"
+        / "synthetic_quickstart_v1.git-proof.json"
+    ).read_bytes()
     assert manifest["metadata"]["provenance_sha256"] == (
         "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402"
     )

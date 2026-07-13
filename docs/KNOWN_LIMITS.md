@@ -47,14 +47,17 @@ production eval platform.
   synthetic fixture/privacy classification. Schema-valid caller overrides are
   diagnostic inputs marked non-fixture and not privacy-reviewed; unknown fields,
   noncanonical metadata, and duplicate mapping keys fail before output creation.
+- Reviewed Trader source/privacy claims independently require byte identity with
+  both packaged evidence and provenance. Re-self-hashed caller overrides remain
+  unreviewed, even when they repeat canonical source ids.
 - The terminal run record and seal are immutable completion snapshots and their
   identities are cross-bound in result/manifest. This remains tamper-evidence,
   not filesystem immutability against an actor that can replace the entire pack
   and its published content address.
-- Trader source commit/tree/blob and protected bundle digest are pinned. The
-  adapter verifies the fixture SHA-256, Git blob, and evidence content hash, but
-  local hashes do not authenticate the publisher and the protected bundle is not
-  distributed by Eval Lab.
+- Trader source commit/tree/path/blob are cryptographically linked by a packaged
+  offline Git-object proof derived from the protected bundle. The bundle digest
+  is bound, but the full bundle is not distributed and Eval Lab's reviewed trust
+  anchor does not authenticate an external publisher identity.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

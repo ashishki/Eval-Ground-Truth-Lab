@@ -24,6 +24,11 @@ once stable releases begin.
 - Bind the full replay decision path and package payload to source commit/tree or
   installed-artifact identity, and require two commit-epoch wheel builds to be
   byte-identical in least-privilege, time-bounded CI.
+- Require byte-identical packaged Trader evidence/provenance before granting
+  reviewed source or privacy claims, and bind commit/tree/path/blob with a
+  packaged offline Git-object proof.
+- Classify ignored or untracked package installations inside unrelated Git
+  repositories as installed artifacts with payload digests, not worktrees.
 
 ## 0.2.0 - 2026-07-13
 

@@ -1,0 +1,150 @@
+{
+  "artifacts": [
+    {
+      "path": "inputs/dataset.jsonl",
+      "sha256": "be3a2718ad3c38c44be76165198a555156e2663fdde2843c6836e87b96db115f",
+      "size_bytes": 3499
+    },
+    {
+      "path": "inputs/eval-evidence.json",
+      "sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
+      "size_bytes": 3044
+    },
+    {
+      "path": "inputs/source-identity-proof.json",
+      "sha256": "0eee8d88dbc8b1ece4b4992aa3103718583b9c46124c5fbb4cdce84aced0ec21",
+      "size_bytes": 3248
+    },
+    {
+      "path": "inputs/source-provenance.json",
+      "sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
+      "size_bytes": 958
+    },
+    {
+      "path": "replay-report.md",
+      "sha256": "15ae6209e1598fc1a2800c55b70fe8551c5b91e8424cf81320d92303583de490",
+      "size_bytes": 2035
+    },
+    {
+      "path": "replay-result.json",
+      "sha256": "81d5580c35d1269b446264c0cbbb2ce637ea96fd7e2a2960a3f069e9af36c1aa",
+      "size_bytes": 5620
+    },
+    {
+      "path": "run/trader-synthetic-quickstart-v1-20260713.json",
+      "sha256": "1d2d0f1ee92a2c9f1260bd453c01a6c846cd30b0f821312dbaf235942e70af4d",
+      "size_bytes": 19397
+    },
+    {
+      "path": "run/trader-synthetic-quickstart-v1-20260713.sha256",
+      "sha256": "021ce91b0766add695568dd621678924f2d32fcd322a1664601f9b42d5f90d61",
+      "size_bytes": 118
+    }
+  ],
+  "content_address": "sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627",
+  "metadata": {
+    "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
+    "contract_version": "trader-risk-audit-evidence-v1",
+    "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
+    "dataset_raw_sha256": "be3a2718ad3c38c44be76165198a555156e2663fdde2843c6836e87b96db115f",
+    "dataset_trust": {
+      "fixture": true,
+      "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
+      "replay_type": "pinned_synthetic_sanitized_export",
+      "source": "packaged_byte-identical_fixture"
+    },
+    "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
+    "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
+    "fixture": true,
+    "gate_passed": true,
+    "harness_version": "eval-ground-truth-lab-0.2.0",
+    "implementation": {
+      "components_sha256": {
+        "adapter": "f583ace2af8f76ae41c5fe023d21f6e3c8c85fd4f26f78f0a90cdbbc55cfd08f",
+        "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
+        "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
+        "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
+        "runner": "c965d85e4ece6c77c4a3f8bc6c153355f05f154baf2959f7bba05ed4a08d7bae",
+        "validators": "cdf1ee41104d569fb2531c45d000b5faf493c453e2f7a72533c10f8e2aa20b63"
+      },
+      "package_payload": {
+        "file_count": 55,
+        "sha256": "158a342742b0522f53c802cf8286508844e5fcfabbf8c84af5e87e5f3437ff9b"
+      },
+      "schema_version": "eval-lab-implementation-provenance-v1",
+      "source": {
+        "commit": "56de400bd4e157f70cf1538fbc464b9dbc00257b",
+        "kind": "git_worktree",
+        "tree": "1b265941e195f053915caa27089f1dd484b3a2c7",
+        "worktree_clean": true
+      }
+    },
+    "implementation_sha256": {
+      "adapter": "f583ace2af8f76ae41c5fe023d21f6e3c8c85fd4f26f78f0a90cdbbc55cfd08f",
+      "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
+      "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
+      "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
+      "runner": "c965d85e4ece6c77c4a3f8bc6c153355f05f154baf2959f7bba05ed4a08d7bae",
+      "validators": "cdf1ee41104d569fb2531c45d000b5faf493c453e2f7a72533c10f8e2aa20b63"
+    },
+    "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
+    "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
+    "run": {
+      "candidate_version": "trader-risk-audit-0.2.0@bf755a24450f",
+      "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
+      "record_sha256": "1d2d0f1ee92a2c9f1260bd453c01a6c846cd30b0f821312dbaf235942e70af4d",
+      "run_id": "trader-synthetic-quickstart-v1-20260713",
+      "seal_sha256": "021ce91b0766add695568dd621678924f2d32fcd322a1664601f9b42d5f90d61",
+      "status": "completed",
+      "validator_version": "trader-risk-audit-exact-replay-validators-v1"
+    },
+    "run_id": "trader-synthetic-quickstart-v1-20260713",
+    "runtime": {
+      "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+      "python": "3.12.3",
+      "pyyaml": "6.0.3"
+    },
+    "source_provenance": {
+      "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
+      "contract_version": "trader-risk-audit-evidence-v1",
+      "declared_privacy_classification": "fully-synthetic-sanitized-export",
+      "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
+      "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
+      "package": "trader-risk-audit",
+      "package_version": "0.2.0",
+      "privacy_classification": "fully-synthetic-sanitized-export",
+      "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
+      "source_identity": {
+        "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
+        "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
+        "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
+        "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
+        "path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json",
+        "repository_state": "path-purged-publication-candidate",
+        "status": "packaged_git_object_chain_verified"
+      },
+      "trust": {
+        "evidence_source": "packaged_byte_identical_evidence",
+        "privacy_classification": "fully-synthetic-sanitized-export",
+        "privacy_reviewed": true,
+        "provenance_source": "packaged_byte_identical_provenance",
+        "reviewed": true,
+        "source_identity_proof_sha256": "0eee8d88dbc8b1ece4b4992aa3103718583b9c46124c5fbb4cdce84aced0ec21",
+        "source_identity_verified": true,
+        "status": "packaged_reviewed_source"
+      }
+    },
+    "source_trust": {
+      "evidence_source": "packaged_byte_identical_evidence",
+      "privacy_classification": "fully-synthetic-sanitized-export",
+      "privacy_reviewed": true,
+      "provenance_source": "packaged_byte_identical_provenance",
+      "reviewed": true,
+      "source_identity_proof_sha256": "0eee8d88dbc8b1ece4b4992aa3103718583b9c46124c5fbb4cdce84aced0ec21",
+      "source_identity_verified": true,
+      "status": "packaged_reviewed_source"
+    },
+    "validator_version": "trader-risk-audit-exact-replay-validators-v1"
+  },
+  "schema_version": "eval-lab-evidence-v1"
+}

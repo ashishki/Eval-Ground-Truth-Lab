@@ -20,7 +20,7 @@
   "provenance": {
     "dataset_trust": {
       "fixture": true,
-      "privacy_classification": "fully-synthetic-sanitized-export",
+      "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
       "replay_type": "pinned_synthetic_sanitized_export",
       "source": "packaged_byte-identical_fixture"
     },
@@ -28,48 +28,58 @@
     "harness_version": "eval-ground-truth-lab-0.2.0",
     "implementation": {
       "components_sha256": {
-        "adapter": "9914078715a23ea64c68ef6a8f4ec783cd659fdb7543e7dee50cfb003bd077c8",
+        "adapter": "f583ace2af8f76ae41c5fe023d21f6e3c8c85fd4f26f78f0a90cdbbc55cfd08f",
         "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
         "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
         "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
-        "runner": "99e090776375a20f2146ae3176b8aab5deabecee9ec05038d7390a11abcc7751",
-        "validators": "ee39588238f5f3dbd4efa9e19b820acb8efe6331d4d31c3aaa499484cd8927e3"
+        "runner": "c965d85e4ece6c77c4a3f8bc6c153355f05f154baf2959f7bba05ed4a08d7bae",
+        "validators": "cdf1ee41104d569fb2531c45d000b5faf493c453e2f7a72533c10f8e2aa20b63"
       },
       "package_payload": {
-        "file_count": 53,
-        "sha256": "e70f0b82b295d501e1eb83b195ab6e0d267f69ab3b046d4455d34413c1a8263d"
+        "file_count": 55,
+        "sha256": "158a342742b0522f53c802cf8286508844e5fcfabbf8c84af5e87e5f3437ff9b"
       },
       "schema_version": "eval-lab-implementation-provenance-v1",
       "source": {
-        "commit": "64f57f3e037589741df236cf51e9742871a68a91",
+        "commit": "56de400bd4e157f70cf1538fbc464b9dbc00257b",
         "kind": "git_worktree",
-        "tree": "e743f3d52438eec55c9c4b043cde7fddce081dd7",
+        "tree": "1b265941e195f053915caa27089f1dd484b3a2c7",
         "worktree_clean": true
       }
     },
     "implementation_sha256": {
-      "adapter": "9914078715a23ea64c68ef6a8f4ec783cd659fdb7543e7dee50cfb003bd077c8",
+      "adapter": "f583ace2af8f76ae41c5fe023d21f6e3c8c85fd4f26f78f0a90cdbbc55cfd08f",
       "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
       "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
       "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
-      "runner": "99e090776375a20f2146ae3176b8aab5deabecee9ec05038d7390a11abcc7751",
-      "validators": "ee39588238f5f3dbd4efa9e19b820acb8efe6331d4d31c3aaa499484cd8927e3"
+      "runner": "c965d85e4ece6c77c4a3f8bc6c153355f05f154baf2959f7bba05ed4a08d7bae",
+      "validators": "cdf1ee41104d569fb2531c45d000b5faf493c453e2f7a72533c10f8e2aa20b63"
     },
-    "privacy_classification": "fully-synthetic-sanitized-export",
+    "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
     "runtime": {
       "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
       "python": "3.12.3",
       "pyyaml": "6.0.3"
+    },
+    "source_trust": {
+      "evidence_source": "packaged_byte_identical_evidence",
+      "privacy_classification": "fully-synthetic-sanitized-export",
+      "privacy_reviewed": true,
+      "provenance_source": "packaged_byte_identical_provenance",
+      "reviewed": true,
+      "source_identity_proof_sha256": "0eee8d88dbc8b1ece4b4992aa3103718583b9c46124c5fbb4cdce84aced0ec21",
+      "source_identity_verified": true,
+      "status": "packaged_reviewed_source"
     }
   },
   "run": {
     "candidate_version": "trader-risk-audit-0.2.0@bf755a24450f",
-    "completed_at": "2026-07-13T15:41:00.645768+00:00",
+    "completed_at": "2026-07-13T16:32:38.476930+00:00",
     "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
-    "record_sha256": "4bf8f6d8fcc9320f596cf0ab0465986124290d78e044efd1018032eb2c4b1477",
+    "record_sha256": "1d2d0f1ee92a2c9f1260bd453c01a6c846cd30b0f821312dbaf235942e70af4d",
     "run_id": "trader-synthetic-quickstart-v1-20260713",
-    "seal_sha256": "80e35f5d02e8faeff3416935947e92a235f608c3645d471f6d04e2179e39fbff",
-    "started_at": "2026-07-13T15:41:00.614405+00:00",
+    "seal_sha256": "021ce91b0766add695568dd621678924f2d32fcd322a1664601f9b42d5f90d61",
+    "started_at": "2026-07-13T16:32:38.419020+00:00",
     "status": "completed",
     "validator_version": "trader-risk-audit-exact-replay-validators-v1"
   },
@@ -84,17 +94,31 @@
   "source_provenance": {
     "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
     "contract_version": "trader-risk-audit-evidence-v1",
+    "declared_privacy_classification": "fully-synthetic-sanitized-export",
     "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
     "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
     "package": "trader-risk-audit",
     "package_version": "0.2.0",
     "privacy_classification": "fully-synthetic-sanitized-export",
     "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
-    "source_bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
-    "source_git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
-    "source_git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
-    "source_git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
-    "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json",
-    "source_repository_state": "path-purged-publication-candidate"
+    "source_identity": {
+      "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
+      "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
+      "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
+      "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
+      "path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json",
+      "repository_state": "path-purged-publication-candidate",
+      "status": "packaged_git_object_chain_verified"
+    },
+    "trust": {
+      "evidence_source": "packaged_byte_identical_evidence",
+      "privacy_classification": "fully-synthetic-sanitized-export",
+      "privacy_reviewed": true,
+      "provenance_source": "packaged_byte_identical_provenance",
+      "reviewed": true,
+      "source_identity_proof_sha256": "0eee8d88dbc8b1ece4b4992aa3103718583b9c46124c5fbb4cdce84aced0ec21",
+      "source_identity_verified": true,
+      "status": "packaged_reviewed_source"
+    }
   }
 }

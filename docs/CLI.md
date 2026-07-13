@@ -83,18 +83,24 @@ eval-ground-truth-lab run-trader-risk-audit-replay \
   --evidence-dir /tmp/eval-lab-trader-evidence
 ```
 
-The default dataset, evidence export, and provenance are package resources for
-the fully synthetic quickstart fixture, so an installed wheel works outside a
-repository checkout. The command reads every input once and uses those exact
-bytes for validation, hashing, replay, and packaging. It requires exactly one
-v1 case, verifies the complete sealed result without unknown nested fields, and
-writes a seven-artifact content-addressed evidence pack. Exact case/input and
-synthetic metadata allowlists, recursive duplicate-key rejection, and strict
+The default dataset, evidence export, provenance, and offline Git-object proof
+are package resources for the fully synthetic quickstart fixture, so an
+installed wheel works outside a repository checkout. The command reads every
+input once and uses those exact bytes for validation, hashing, replay, and
+packaging. It requires exactly one v1 case, checks the complete sealed result
+without unknown nested fields, and writes an eight-artifact content-addressed
+evidence pack. Exact case/input and synthetic metadata allowlists, recursive
+duplicate-key rejection, and strict
 expected-payload shapes run before any output directory is created. Only the
 byte-identical packaged dataset receives fixture/privacy claims; schema-valid
 overrides are marked caller-supplied and not privacy-reviewed. A validator
 mismatch exits `1` and retains the pack; malformed, tampered, empty, or
 multi-case input fails closed without a PASS pack.
+
+Evidence/provenance overrides receive no packaged source or privacy claims,
+even if the caller recomputes every internal hash and retains canonical ids.
+Packaged source trust additionally requires the proof to bind the exact commit,
+root tree, repository path, and evidence blob.
 
 The packaged terminal JSON and seal come directly from the immutable RunStore
 completion snapshot. Result and manifest bind their hashes plus run id,

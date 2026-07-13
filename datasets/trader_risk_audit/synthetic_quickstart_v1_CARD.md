@@ -31,7 +31,8 @@ The exact publication-candidate commit, tree, Git blob, protected bundle digest,
 package version, contract version, evidence file SHA-256, and evidence content
 hash are pinned in `synthetic_quickstart_v1.provenance.json`. The adapter verifies
 the evidence SHA-256, Git blob identity, and both contract content hashes. The
-bundle digest is a provenance pin; the bundle itself is not distributed here.
+packaged offline proof independently links commit, tree, source path, and blob
+and binds the bundle digest; the full bundle itself is not distributed here.
 
 ## Expected decision
 
@@ -47,6 +48,11 @@ Fixture/privacy classification also requires byte identity with the packaged
 dataset under its canonical name. A caller-supplied schema-valid override is
 marked non-fixture and not privacy-reviewed even when its metadata repeats the
 trusted synthetic labels.
+
+Evidence/provenance trust is classified separately. Only byte-identical
+packaged resources that match the Git-object proof receive reviewed source and
+privacy claims. A caller-recomputed pair remains unreviewed even when it retains
+the canonical case, commit, tree, and path ids.
 
 PASS means compatibility with this single synthetic contract fixture. It is not
 external validation, investment advice, a production claim, or a general quality
