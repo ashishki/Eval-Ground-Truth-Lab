@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from eval_ground_truth_lab.adapters import (
+    UNASSESSED_PRIVACY_CLASSIFICATION,
     TraderRiskAuditEvidenceAdapter,
     TraderRiskAuditEvidenceError,
     UnsafeAdapterInputError,
@@ -23,7 +24,7 @@ CASE = {
 }
 
 
-def test_adapter_verifies_pinned_sanitized_export_deterministically() -> None:
+def test_adapter_separates_caller_declarations_from_unassessed_effective_trust() -> None:
     adapter = _adapter()
 
     first = adapter.invoke(CASE)
@@ -46,7 +47,8 @@ def test_adapter_verifies_pinned_sanitized_export_deterministically() -> None:
     assert first.output["provenance_sha256"] == (
         "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402"
     )
-    assert first.output["source"] == {
+    assert first.output["declared_privacy_classification"] == ("fully-synthetic-sanitized-export")
+    assert first.output["declared_source"] == {
         "bundle_sha256": ("2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca"),
         "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
         "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
@@ -56,6 +58,15 @@ def test_adapter_verifies_pinned_sanitized_export_deterministically() -> None:
         "repository_state": "path-purged-publication-candidate",
         "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json",
     }
+    assert first.output["effective_trust"] == {
+        "privacy_classification": UNASSESSED_PRIVACY_CLASSIFICATION,
+        "privacy_reviewed": False,
+        "source_identity_status": "not_assessed_by_structural_adapter",
+        "source_reviewed": False,
+        "status": "not_assessed_by_structural_adapter",
+    }
+    assert "privacy_classification" not in first.output
+    assert "source" not in first.output
 
     first.output["evidence"]["metrics"]["violation_count"] = 999
     first.output["evidence"]["artifact_digests"][0]["name"] = "mutated"

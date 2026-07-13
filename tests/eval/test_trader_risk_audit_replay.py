@@ -10,7 +10,11 @@ from typing import Any
 import pytest
 
 from eval_ground_truth_lab import cli
-from eval_ground_truth_lab.adapters import AdapterResult, TraderRiskAuditEvidenceAdapter
+from eval_ground_truth_lab.adapters import (
+    UNASSESSED_PRIVACY_CLASSIFICATION,
+    AdapterResult,
+    TraderRiskAuditEvidenceAdapter,
+)
 from eval_ground_truth_lab.datasets import DatasetValidationError
 from eval_ground_truth_lab.evidence import verify_evidence_manifest
 from eval_ground_truth_lab.runs import RunStore
@@ -435,26 +439,7 @@ def test_self_hashed_caller_evidence_with_canonical_source_ids_is_unreviewed(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    evidence = json.loads(EVIDENCE.read_text(encoding="utf-8"))
-    evidence["metrics"]["violation_count"] = 8
-    content_payload = dict(evidence)
-    content_payload.pop("evidence_content_hash")
-    evidence["evidence_content_hash"] = hashlib.sha256(
-        json.dumps(content_payload, separators=(",", ":"), sort_keys=True).encode()
-    ).hexdigest()
-    evidence_bytes = (json.dumps(evidence, indent=2, sort_keys=True) + "\n").encode()
-    evidence_path = tmp_path / "eval-evidence.json"
-    evidence_path.write_bytes(evidence_bytes)
-
-    provenance = json.loads(PROVENANCE.read_text(encoding="utf-8"))
-    provenance["evidence"]["content_hash"] = evidence["evidence_content_hash"]
-    provenance["evidence"]["sha256"] = hashlib.sha256(evidence_bytes).hexdigest()
-    provenance["source"]["git_blob_sha1"] = _git_blob_sha1(evidence_bytes)
-    provenance_path = tmp_path / "source-provenance.json"
-    provenance_path.write_text(
-        json.dumps(provenance, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    _, _, evidence_path, _, _, provenance_path = _write_self_hashed_override(tmp_path)
 
     pack = tmp_path / "pack"
     exit_code = run_trader_risk_audit_replay(
@@ -498,6 +483,129 @@ def test_self_hashed_caller_evidence_with_canonical_source_ids_is_unreviewed(
     verify_evidence_manifest(next(pack.glob("sha256-*.manifest.json")))
 
 
+def test_matching_caller_expectation_can_pass_without_becoming_trusted(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (
+        evidence,
+        evidence_bytes,
+        evidence_path,
+        provenance,
+        provenance_bytes,
+        provenance_path,
+    ) = _write_self_hashed_override(tmp_path)
+    case = json.loads(DATASET.read_text(encoding="utf-8"))
+    case["expected"]["evidence"] = evidence
+    case["expected"]["evidence_sha256"] = hashlib.sha256(evidence_bytes).hexdigest()
+    case["expected"]["provenance_sha256"] = hashlib.sha256(provenance_bytes).hexdigest()
+    case["expected"]["source"]["git_blob_sha1"] = provenance["source"]["git_blob_sha1"]
+    dataset = tmp_path / "matching-caller-expectation.jsonl"
+    dataset.write_text(json.dumps(case, sort_keys=True) + "\n", encoding="utf-8")
+
+    adapter = TraderRiskAuditEvidenceAdapter(
+        evidence_path=evidence_path,
+        provenance_path=provenance_path,
+    )
+    direct = adapter.invoke(
+        {
+            "id": "synthetic-quickstart-v1",
+            "input": {"evidence_case_id": "synthetic-quickstart-v1"},
+        }
+    ).output
+    assert direct["declared_privacy_classification"] == ("fully-synthetic-sanitized-export")
+    assert direct["declared_source"]["git_commit"] == ("bf755a24450ff7c17328fa6d447f36bea8ea0fe5")
+    assert direct["effective_trust"] == {
+        "privacy_classification": UNASSESSED_PRIVACY_CLASSIFICATION,
+        "privacy_reviewed": False,
+        "source_identity_status": "not_assessed_by_structural_adapter",
+        "source_reviewed": False,
+        "status": "not_assessed_by_structural_adapter",
+    }
+    assert "privacy_classification" not in direct
+    assert "source" not in direct
+
+    pack = tmp_path / "pack"
+    exit_code = run_trader_risk_audit_replay(
+        dataset_path=dataset,
+        evidence_path=evidence_path,
+        provenance_path=provenance_path,
+        evidence_dir=pack,
+        run_dir=tmp_path / "runs",
+        run_id="passing-but-untrusted-caller-evidence",
+        adapter=adapter,
+    )
+    capsys.readouterr()
+
+    result = _json(pack / "replay-result.json")
+    manifest_path = next(pack.glob("sha256-*.manifest.json"))
+    manifest = _json(manifest_path)
+    run = _json(pack / "run/passing-but-untrusted-caller-evidence.json")
+    report = (pack / "replay-report.md").read_text(encoding="utf-8").lower()
+    sealed_case = run["case_results"][0]
+    sealed_output = sealed_case["output"]
+    validator_results = sealed_case["validator_results"]
+
+    assert exit_code == 0
+    assert result["gate"] == {"failed_validator_count": 0, "passed": True}
+    assert result["cases"] == [
+        {
+            "case_id": "synthetic-quickstart-v1",
+            "failed_validators": [],
+            "passed": True,
+        }
+    ]
+    assert result["scope"]["replay_type"] == "caller_supplied_unreviewed_evidence_replay"
+    assert result["provenance"]["fixture"] is False
+    assert result["provenance"]["privacy_classification"] == (
+        "caller-supplied-evidence-not-privacy-reviewed"
+    )
+    assert result["provenance"]["source_trust"]["reviewed"] is False
+    assert result["run"]["candidate_version"].startswith("trader-risk-audit-caller-evidence@")
+    assert sealed_case["output"]["correct"] is True
+    assert sealed_output["declared_privacy_classification"] == ("fully-synthetic-sanitized-export")
+    assert sealed_output["declared_source"]["git_commit"] == (
+        "bf755a24450ff7c17328fa6d447f36bea8ea0fe5"
+    )
+    assert sealed_output["effective_trust"] == {
+        "privacy_classification": "caller-supplied-evidence-not-privacy-reviewed",
+        "privacy_reviewed": False,
+        "source_identity_status": "caller_declared_not_authenticated",
+        "source_reviewed": False,
+        "status": "caller_source_unreviewed",
+    }
+    assert "privacy_classification" not in sealed_output
+    assert "source" not in sealed_output
+    assert all(item["passed"] is True for item in validator_results)
+    assert all("selected expectation" in item["message"] for item in validator_results)
+    assert all("pinned expectation" not in item["message"] for item in validator_results)
+    adapter_contract = next(
+        item
+        for item in validator_results
+        if item["validator_id"] == "trader_risk_audit.adapter_contract"
+    )
+    assert set(adapter_contract["evidence"]["actual"]) == {
+        "adapter_version",
+        "contract_version",
+        "declared_privacy_classification",
+    }
+    source_result = next(
+        item
+        for item in validator_results
+        if item["validator_id"] == "trader_risk_audit.source_provenance"
+    )
+    assert set(source_result["evidence"]["actual"]) == {"declared_source"}
+    assert manifest["metadata"]["gate_passed"] is True
+    assert manifest["metadata"]["fixture"] is False
+    assert manifest["metadata"]["privacy_classification"] == (
+        "caller-supplied-evidence-not-privacy-reviewed"
+    )
+    assert manifest["metadata"]["source_trust"]["reviewed"] is False
+    for forbidden_claim in ("pinned", "sanitized", "verified"):
+        assert forbidden_claim not in report
+    verify_evidence_manifest(manifest_path)
+
+
 def test_run_directory_cannot_be_nested_in_evidence_pack(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="run_dir"):
         run_trader_risk_audit_replay(
@@ -517,3 +625,34 @@ def _json(path: Path) -> dict[str, object]:
 
 def _git_blob_sha1(value: bytes) -> str:
     return hashlib.sha1(f"blob {len(value)}\0".encode() + value, usedforsecurity=False).hexdigest()
+
+
+def _write_self_hashed_override(
+    tmp_path: Path,
+) -> tuple[dict[str, Any], bytes, Path, dict[str, Any], bytes, Path]:
+    evidence = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    evidence["metrics"]["violation_count"] = 8
+    content_payload = dict(evidence)
+    content_payload.pop("evidence_content_hash")
+    evidence["evidence_content_hash"] = hashlib.sha256(
+        json.dumps(content_payload, separators=(",", ":"), sort_keys=True).encode()
+    ).hexdigest()
+    evidence_bytes = (json.dumps(evidence, indent=2, sort_keys=True) + "\n").encode()
+    evidence_path = tmp_path / "eval-evidence.json"
+    evidence_path.write_bytes(evidence_bytes)
+
+    provenance = json.loads(PROVENANCE.read_text(encoding="utf-8"))
+    provenance["evidence"]["content_hash"] = evidence["evidence_content_hash"]
+    provenance["evidence"]["sha256"] = hashlib.sha256(evidence_bytes).hexdigest()
+    provenance["source"]["git_blob_sha1"] = _git_blob_sha1(evidence_bytes)
+    provenance_bytes = (json.dumps(provenance, indent=2, sort_keys=True) + "\n").encode()
+    provenance_path = tmp_path / "source-provenance.json"
+    provenance_path.write_bytes(provenance_bytes)
+    return (
+        evidence,
+        evidence_bytes,
+        evidence_path,
+        provenance,
+        provenance_bytes,
+        provenance_path,
+    )

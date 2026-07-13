@@ -10,11 +10,12 @@ TRADER_RISK_AUDIT_VALIDATOR_VERSION = "trader-risk-audit-exact-replay-validators
 _TOP_LEVEL_FIELDS = {
     "adapter_version",
     "contract_version",
+    "declared_privacy_classification",
+    "declared_source",
     "evidence",
     "evidence_sha256",
-    "privacy_classification",
+    "effective_trust",
     "provenance_sha256",
-    "source",
 }
 _SOURCE_FIELDS = {
     "bundle_sha256",
@@ -47,6 +48,13 @@ _EXPECTED_EVIDENCE_FIELDS = {
     "metrics",
     "status",
     "trace_preview",
+}
+_EFFECTIVE_TRUST_FIELDS = {
+    "privacy_classification",
+    "privacy_reviewed",
+    "source_identity_status",
+    "source_reviewed",
+    "status",
 }
 _CANDIDATE_FIELDS = {"package", "version"}
 _CHECK_FIELDS = {
@@ -93,7 +101,7 @@ def validate_trader_risk_audit_case(
         )
 
     expected_source = _mapping(expected["source"])
-    actual_source = _mapping(actual["source"])
+    actual_source = _mapping(actual["declared_source"])
     expected_evidence = _mapping(expected["evidence"])
     actual_evidence = _mapping(actual["evidence"])
     expected_candidate = _mapping(expected_evidence["candidate"])
@@ -110,21 +118,21 @@ def validate_trader_risk_audit_case(
             expected_value={
                 "adapter_version": expected["adapter_version"],
                 "contract_version": expected["contract_version"],
-                "privacy_classification": expected["privacy_classification"],
+                "declared_privacy_classification": expected["privacy_classification"],
             },
             actual_value={
                 "adapter_version": actual["adapter_version"],
                 "contract_version": actual["contract_version"],
-                "privacy_classification": actual["privacy_classification"],
+                "declared_privacy_classification": actual["declared_privacy_classification"],
             },
         ),
         _exact_result(
             case_id=case_id,
             validator_id="trader_risk_audit.source_provenance",
             category="provenance_mismatch",
-            label="Trader Risk Audit source provenance",
-            expected_value=dict(expected_source),
-            actual_value=dict(actual_source),
+            label="caller-declared Trader Risk Audit source provenance",
+            expected_value={"declared_source": dict(expected_source)},
+            actual_value={"declared_source": dict(actual_source)},
         ),
         _exact_result(
             case_id=case_id,
@@ -242,24 +250,48 @@ def _check_envelope(
     issues: list[str],
 ) -> None:
     _check_fields(value, fields, label, issues)
+    privacy_field = (
+        "privacy_classification" if label == "expected" else "declared_privacy_classification"
+    )
     _check_string_fields(
         value,
         (
             "adapter_version",
             "contract_version",
             "evidence_sha256",
-            "privacy_classification",
+            privacy_field,
             "provenance_sha256",
         ),
         label,
         issues,
     )
-    source = value.get("source")
+    source_field = "source" if label == "expected" else "declared_source"
+    source = value.get(source_field)
     if isinstance(source, Mapping):
-        _check_fields(source, _SOURCE_FIELDS, f"{label}.source", issues)
-        _check_string_fields(source, tuple(sorted(_SOURCE_FIELDS)), f"{label}.source", issues)
+        _check_fields(source, _SOURCE_FIELDS, f"{label}.{source_field}", issues)
+        _check_string_fields(
+            source,
+            tuple(sorted(_SOURCE_FIELDS)),
+            f"{label}.{source_field}",
+            issues,
+        )
     else:
-        issues.append(f"{label}.source is not an object")
+        issues.append(f"{label}.{source_field} is not an object")
+    if label == "actual":
+        trust = value.get("effective_trust")
+        if isinstance(trust, Mapping):
+            _check_fields(trust, _EFFECTIVE_TRUST_FIELDS, "actual.effective_trust", issues)
+            _check_string_fields(
+                trust,
+                ("privacy_classification", "source_identity_status", "status"),
+                "actual.effective_trust",
+                issues,
+            )
+            for field in ("privacy_reviewed", "source_reviewed"):
+                if field in trust and not isinstance(trust[field], bool):
+                    issues.append(f"actual.effective_trust.{field} is not a boolean")
+        else:
+            issues.append("actual.effective_trust is not an object")
     evidence = value.get("evidence")
     if isinstance(evidence, Mapping):
         _check_fields(evidence, _EXPECTED_EVIDENCE_FIELDS, f"{label}.evidence", issues)
@@ -412,7 +444,7 @@ def _exact_result(
         validator_id=validator_id,
         passed=passed,
         category="none" if passed else category,
-        message=f"{label} {'matches' if passed else 'does not match'} the pinned expectation",
+        message=f"{label} {'matches' if passed else 'does not match'} the selected expectation",
         evidence={
             "actual": actual_value,
             "expected": expected_value,

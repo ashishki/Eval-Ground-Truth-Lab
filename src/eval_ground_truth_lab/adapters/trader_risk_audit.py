@@ -19,6 +19,7 @@ TRADER_RISK_AUDIT_CONTRACT_VERSION = "trader-risk-audit-evidence-v1"
 TRADER_RISK_AUDIT_PROVENANCE_SCHEMA_VERSION = "eval-lab-trader-risk-audit-source-provenance-v1"
 TRADER_RISK_AUDIT_PACKAGE = "trader-risk-audit"
 SYNTHETIC_PRIVACY_CLASSIFICATION = "fully-synthetic-sanitized-export"
+UNASSESSED_PRIVACY_CLASSIFICATION = "adapter-input-not-privacy-reviewed"
 
 _DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
 _GIT_OBJECT_PATTERN = re.compile(r"[0-9a-f]{40}\Z")
@@ -194,23 +195,31 @@ class TraderRiskAuditEvidenceAdapter:
             provenance=self.provenance,
         )
 
+        declared_source = {
+            "bundle_sha256": self.provenance.source_bundle_sha256,
+            "git_blob_sha1": self.provenance.source_git_blob_sha1,
+            "git_commit": self.provenance.source_git_commit,
+            "git_tree": self.provenance.source_git_tree,
+            "package": TRADER_RISK_AUDIT_PACKAGE,
+            "package_version": self.provenance.package_version,
+            "repository_state": self.provenance.source_repository_state,
+            "source_path": self.provenance.source_path,
+        }
         output = {
             "adapter_version": self.provenance.adapter_version,
             "contract_version": self.provenance.contract_version,
+            "declared_privacy_classification": self.provenance.privacy_classification,
+            "declared_source": declared_source,
             "evidence": evidence,
             "evidence_sha256": self.provenance.evidence_sha256,
-            "privacy_classification": self.provenance.privacy_classification,
-            "provenance_sha256": self.provenance_sha256,
-            "source": {
-                "bundle_sha256": self.provenance.source_bundle_sha256,
-                "git_blob_sha1": self.provenance.source_git_blob_sha1,
-                "git_commit": self.provenance.source_git_commit,
-                "git_tree": self.provenance.source_git_tree,
-                "package": TRADER_RISK_AUDIT_PACKAGE,
-                "package_version": self.provenance.package_version,
-                "repository_state": self.provenance.source_repository_state,
-                "source_path": self.provenance.source_path,
+            "effective_trust": {
+                "privacy_classification": UNASSESSED_PRIVACY_CLASSIFICATION,
+                "privacy_reviewed": False,
+                "source_identity_status": "not_assessed_by_structural_adapter",
+                "source_reviewed": False,
+                "status": "not_assessed_by_structural_adapter",
             },
+            "provenance_sha256": self.provenance_sha256,
         }
         return AdapterResult(
             output=output,

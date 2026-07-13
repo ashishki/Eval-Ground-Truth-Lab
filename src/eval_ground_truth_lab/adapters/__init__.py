@@ -18,6 +18,7 @@ from eval_ground_truth_lab.adapters.trader_risk_audit import (
     TRADER_RISK_AUDIT_ADAPTER_VERSION,
     TRADER_RISK_AUDIT_CONTRACT_VERSION,
     TRADER_RISK_AUDIT_PROVENANCE_SCHEMA_VERSION,
+    UNASSESSED_PRIVACY_CLASSIFICATION,
     TraderRiskAuditEvidenceAdapter,
     TraderRiskAuditEvidenceError,
     TraderRiskAuditProvenance,
@@ -42,6 +43,7 @@ __all__ = [
     "TraderRiskAuditEvidenceAdapter",
     "TraderRiskAuditEvidenceError",
     "TraderRiskAuditProvenance",
+    "UNASSESSED_PRIVACY_CLASSIFICATION",
     "UnsafeAdapterInputError",
     "normalize_gdev_response",
 ]

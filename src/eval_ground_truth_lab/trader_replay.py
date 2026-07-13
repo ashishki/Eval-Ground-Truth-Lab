@@ -166,7 +166,10 @@ def run_trader_risk_audit_replay(
                 raise TypeError("Trader Risk Audit adapter output must be an object")
             if not isinstance(case.expected, Mapping):
                 raise TypeError("Trader Risk Audit expected value must be an object")
-            actual = dict(adapter_result.output)
+            actual = _apply_effective_source_trust(
+                output=adapter_result.output,
+                source_trust=source_trust,
+            )
             validator_results = validate_trader_risk_audit_case(
                 case_id=case.id,
                 expected=case.expected,
@@ -754,6 +757,35 @@ def _source_provenance_mapping(
         },
         "trust": source_trust.to_mapping(),
     }
+
+
+def _apply_effective_source_trust(
+    *,
+    output: Mapping[str, Any],
+    source_trust: _TraderSourceTrust,
+) -> dict[str, Any]:
+    """Replace the adapter's fail-closed placeholder with replay-level trust.
+
+    The structural adapter can validate caller declarations but cannot know
+    whether its bytes are the packaged, privacy-reviewed resources. Only the
+    replay layer has the byte-identity and Git-object proof needed to make that
+    decision. RunStore therefore seals declarations and effective trust as
+    separate fields; it never stores an unqualified caller privacy/source claim.
+    """
+
+    actual = dict(output)
+    actual["effective_trust"] = {
+        "privacy_classification": source_trust.privacy_classification,
+        "privacy_reviewed": source_trust.privacy_reviewed,
+        "source_identity_status": (
+            "packaged_git_object_chain_verified"
+            if source_trust.source_identity_verified
+            else "caller_declared_not_authenticated"
+        ),
+        "source_reviewed": source_trust.reviewed,
+        "status": source_trust.status,
+    }
+    return actual
 
 
 def _candidate_version(

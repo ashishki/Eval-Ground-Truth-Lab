@@ -25,12 +25,14 @@ def test_exact_synthetic_expectations_pass_all_validators() -> None:
     assert len(results) == 11
     assert all(result.passed for result in results)
     assert {result.category for result in results} == {"none"}
+    assert all("selected expectation" in result.message for result in results)
+    assert all("pinned expectation" not in result.message for result in results)
 
 
 def test_source_revision_mismatch_is_a_blocking_provenance_failure() -> None:
     case, output = _case_and_output()
     changed = deepcopy(output)
-    changed["source"]["git_commit"] = "0" * 40
+    changed["declared_source"]["git_commit"] = "0" * 40
 
     results = validate_trader_risk_audit_case(
         case_id=case.id,
@@ -46,7 +48,7 @@ def test_source_revision_mismatch_is_a_blocking_provenance_failure() -> None:
 def test_safe_but_false_source_path_is_a_blocking_provenance_failure() -> None:
     case, output = _case_and_output()
     changed = deepcopy(output)
-    changed["source"]["source_path"] = "examples/synthetic_quickstart/other.json"
+    changed["declared_source"]["source_path"] = "examples/synthetic_quickstart/other.json"
 
     results = validate_trader_risk_audit_case(
         case_id=case.id,
@@ -84,6 +86,7 @@ def test_unknown_adapter_output_field_fails_structured_output() -> None:
         "metrics",
         "artifact_digest",
         "trace_preview",
+        "effective_trust",
     ],
 )
 def test_unknown_nested_evidence_field_fails_structured_output(
@@ -92,7 +95,9 @@ def test_unknown_nested_evidence_field_fails_structured_output(
     case, output = _case_and_output()
     changed = deepcopy(output)
     evidence = changed["evidence"]
-    if nested_location in {
+    if nested_location == "effective_trust":
+        changed["effective_trust"]["unverified"] = True
+    elif nested_location in {
         "candidate",
         "checks",
         "evaluation_boundary",
