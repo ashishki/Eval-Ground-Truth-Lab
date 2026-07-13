@@ -71,17 +71,20 @@ def test_blocking_gate_publishes_report_and_returns_underlying_status(
 
 @pytest.mark.parametrize("correct", [True, False])
 def test_action_decision_and_report_match_compare_cli(
-    action_environment: tuple[Path, dict[str, str]], correct: bool
+    action_environment: tuple[Path, dict[str, str]],
+    correct: bool,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     workspace, environment = action_environment
     _write_run(workspace / "candidate.json", run_id="candidate", correct=correct)
 
     action_status = github_action_compare.main(environment)
     cli_report = workspace / "reports/cli-report.md"
+    monkeypatch.chdir(workspace)
     cli_status = run_compare_command(
-        baseline_path=workspace / "baseline.json",
-        candidate_path=workspace / "candidate.json",
-        threshold_config_path=workspace / "thresholds.json",
+        baseline_path="baseline.json",
+        candidate_path="candidate.json",
+        threshold_config_path="thresholds.json",
         report_path=cli_report,
     )
 

@@ -69,6 +69,10 @@ The Action emits:
 - `conclusion`: `pass` or `fail` for a completed comparison, and `error` for
   invalid configuration or execution errors.
 
+Input links recorded in the report are normalized to workspace-relative paths,
+so an otherwise identical decision does not embed an ephemeral runner checkout
+directory.
+
 `pass` returns status `0`. A threshold-blocked `fail` still publishes the fresh
 report and summary, then returns status `1`. Configuration or execution errors
 return status `2`, emit no report path, and never copy a pre-existing target

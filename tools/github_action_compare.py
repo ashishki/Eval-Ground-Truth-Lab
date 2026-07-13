@@ -189,9 +189,9 @@ def _run_compare(paths: ActionPaths, temporary_report: Path) -> int:
         candidate=candidate,
         comparison=comparison,
         raw_artifact_links={
-            "baseline run": str(paths.baseline),
-            "candidate run": str(paths.candidate),
-            "threshold config": str(paths.thresholds),
+            "baseline run": paths.baseline.relative_to(paths.workspace).as_posix(),
+            "candidate run": paths.candidate.relative_to(paths.workspace).as_posix(),
+            "threshold config": paths.thresholds.relative_to(paths.workspace).as_posix(),
         },
     )
     temporary_report.write_text(report_text, encoding="utf-8")
