@@ -1,13 +1,15 @@
 # Eval Ground Truth Lab
 
-Eval Ground Truth Lab is a local-first regression evaluation framework for
-LLM/agent workflows. It catches regressions in structured output, unsafe
-auto-approval, routing, cost, latency, and accuracy before changes are promoted.
+Eval Ground Truth Lab is a local-first regression gate for engineers deciding
+whether a model, prompt, tool, policy, or harness change is safe to release. It
+runs versioned cases against baseline and candidate workflows, applies
+deterministic quality, safety, cost, and latency rules, and emits a reviewable CI
+decision with tamper-evident evidence.
 
 ## What This Is
 
-The project is a CLI-first eval framework for comparing a baseline workflow
-against a candidate workflow with versioned datasets, atomically written and
+The project is a narrow CLI-first release-decision tool for comparing a baseline
+workflow against a candidate workflow with versioned datasets, atomically written and
 checksum-sealed terminal run records, deterministic validators, threshold
 comparisons, reports, and CI gates.
 
@@ -26,6 +28,37 @@ The current proof target is a real local AI workflow system, `gdev-agent`. Eval
 Lab evaluates it as the system under test rather than relying only on synthetic
 fixtures.
 
+## Current Maturity
+
+Version `0.2.0` is a tested local open-source tool with an Apache-2.0 boundary,
+packaged CLI, deterministic fixtures, one passing local conformance run, and one
+published canonical hard-challenge failure. Evidence is synthetic or local. The
+project has no claimed external user, production deployment, hosted service, or
+production SLO.
+
+## Relationship to the Portfolio
+
+- Eval Lab owns versioned datasets, deterministic workflow-quality gates, and
+  release-decision evidence.
+- [Agent Runtime Grid](https://github.com/ashishki/Agent-Runtime-Grid) is an
+  optional queue-backed execution layer; it does not own quality decisions and
+  is not required by Eval Lab.
+- [gdev-agent](https://github.com/ashishki/gdev-agent) is a reference workload.
+  Its repository owns application behavior, tenant isolation, and candidate
+  fixes.
+- [AI Workflow Playbook](https://github.com/ashishki/AI_workflow_playbook) is an
+  independent governance companion, not a runtime dependency.
+- The thin umbrella pins compatible revisions and runs integration proofs; it
+  does not absorb component code or Git history.
+
+## Product Boundary and Non-Goals
+
+Eval Lab owns local dataset loading, adapter invocation, deterministic scoring,
+baseline/candidate comparison, evidence packaging, and bounded optional judging.
+It does not provide a hosted scheduler, generic agent runtime, production
+monitoring plane, customer-data labeling service, or universal safety proof.
+Candidate code remains in the system-under-test repository.
+
 ## What Works Today
 
 - Dataset registry for JSONL/YAML eval cases with stable dataset hashes.
@@ -41,6 +74,9 @@ fixtures.
   artifact.
 - Executable gdev-agent 100-case challenge with expected-failure reconciliation,
   per-slice metrics, deterministic provider-fault injection, and honest gates.
+- Verified content-addressed canonical challenge evidence against exact
+  `gdev-agent` revision `0e4c5f0`; the published gate is FAIL with all failures
+  retained rather than tuned away.
 - CI-safe mocked gdev-agent smoke that does not require Docker Compose or a live
   gdev-agent service.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
@@ -67,8 +103,7 @@ fixtures.
    [reports/gdev-agent/baseline_report.html](reports/gdev-agent/baseline_report.html).
 5. Review the harder diagnostic challenge set:
    [docs/GDEV_AGENT_CHALLENGE_SET.md](docs/GDEV_AGENT_CHALLENGE_SET.md)
-   and
-   [reports/gdev-agent/challenge_report.md](reports/gdev-agent/challenge_report.md).
+   and its [v0.2.0 executed evidence](docs/evidence/releases/v0.2.0/README.md).
 6. Check the evidence map in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
 7. Check known limits in [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md).
 
@@ -107,6 +142,7 @@ python -m eval_ground_truth_lab.cli run-gdev-agent \
   --base-url http://localhost:8000 \
   --run-id gdev-baseline-v1 \
   --candidate-version gdev-agent-demo-live-local-v2 \
+  --component-revision <full-gdev-git-sha> \
   --report reports/gdev-agent/baseline_report.md
 ```
 
@@ -129,10 +165,17 @@ The challenge command requires explicit component provenance and writes JSON,
 Markdown, a terminal run record, and a content-addressed manifest. Its ten
 provider-error cases are deterministic harness injections; the remaining 90
 cases call the configured candidate. A failed threshold returns exit code `1`.
+Live HTTP request and message IDs are scoped by a deterministic digest of the
+run ID, candidate version, component revision, and dataset hash so an earlier
+gdev Redis dedup entry cannot be reused by a different eval run. The namespace
+identifier and whether it was applied are recorded in challenge provenance and
+manifest metadata.
 
 ```bash
 eval-ground-truth-lab run-gdev-agent-challenge \
   --base-url http://localhost:8000 \
+  --run-id <new-unique-run-id> \
+  --run-dir /tmp/eval-lab-gdev-challenge-runs \
   --candidate-version gdev-agent-demo \
   --component-revision <full-gdev-git-sha> \
   --component-worktree-state clean \
@@ -143,8 +186,13 @@ eval-ground-truth-lab verify-evidence \
   --manifest /tmp/gdev-challenge-evidence/sha256-*.manifest.json
 ```
 
-No canonical challenge result is committed until the fixed external gdev-agent
-service can be run and its exact revision captured.
+The committed [v0.2.0 challenge package](docs/evidence/releases/v0.2.0/README.md)
+records 90 real local HTTP candidate cases plus ten deterministic fault cases
+against clean `gdev-agent` revision `0e4c5f0`. The gate correctly exits `1`:
+reconciled pass rate `0.32`, classification accuracy `0.244444`, 68 unexpected
+failures, 58 blocking failures, and `10/10` expected faults matched. Five
+thresholds fail. This is canonical evidence of a failing fixed candidate, not a
+passing workload or production-quality claim.
 
 ## Architecture
 
@@ -164,6 +212,8 @@ The gdev-agent diagnostic challenge set is documented in
 [docs/GDEV_AGENT_CHALLENGE_SET.md](docs/GDEV_AGENT_CHALLENGE_SET.md), with the
 committed scope report in
 [reports/gdev-agent/challenge_report.md](reports/gdev-agent/challenge_report.md).
+The executed challenge artifacts and verifier manifest are in
+[docs/evidence/releases/v0.2.0/](docs/evidence/releases/v0.2.0/).
 Known gaps are tracked in [Known Gaps](#known-gaps).
 
 Core shape:
@@ -181,23 +231,24 @@ Core shape:
 - The gdev-agent baseline report is a synthetic/local deterministic artifact
   from a full 55-case live local run, not a production quality score.
 - The 55-case baseline is intentionally clean conformance evidence. The harder
-  100-case command is executable, but it is not yet a canonical live result
-  because the external fixed gdev-agent service must be run separately.
+  100-case canonical local run is published and fails five thresholds; it must
+  not be reinterpreted as a passing workload.
 - Accuracy for synthetic smoke proof still uses fixture behavior; the current
   gdev-agent live local baseline is checked by deterministic validators.
 - Cost telemetry rollup and fixture-safe budget check commands exist; live judge
   cost gates require telemetry rollup artifacts and an approved policy.
 - Optional OpenAI judge provider contract exists, but no live provider call is
   enabled by default.
-- Human review has append-only file-backed entries and decisions; richer
-  operator workflow is still future work.
+- Human review has an append-only protocol, but `challenge_v1` has zero
+  independent annotators and zero external workflow owners. Its public labels
+  are self-authored development hypotheses, not a blind holdout.
 - No dashboard, hosted service, continuous eval, or production platform claim is
   made.
 
 ## Roadmap
 
-The current roadmap is complete through the first passing live local
-`gdev-agent` baseline:
+The current roadmap is complete through the first published hard challenge and
+benchmark-method package:
 
 1. README and evidence packaging: complete.
 2. gdev-agent triage dataset: complete.
@@ -209,8 +260,13 @@ The current roadmap is complete through the first passing live local
 8. mocked CI smoke for the gdev adapter: complete.
 9. cost rollup and budget check: complete.
 10. final evidence pack with passing 55-case live local baseline: complete.
-11. gdev-agent diagnostic challenge engine: complete; canonical external-system
-    execution and release promotion remain operator work.
+11. gdev-agent diagnostic challenge engine and canonical local execution:
+    complete; the fixed candidate gate is published as FAIL.
+12. Dataset card, provenance, hypotheses, leakage boundary, labeling/review
+    protocol, and reproducible content-addressed report: complete for the public
+    development set.
+13. Independently owned adapter, independent labels, a blind successor holdout,
+    and real-user feedback: not claimed; these require external participants.
 
 ## License
 

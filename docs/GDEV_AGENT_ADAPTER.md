@@ -13,6 +13,7 @@ Implemented:
 - HTTP error normalization into eval failures
 - cost and latency preservation when the response provides them
 - configured gdev-agent HTTP adapter for `POST /webhook`
+- deterministic run/candidate/component/dataset request namespacing
 - HMAC webhook signing with `X-Webhook-Signature`
 - mocked-transport unit tests that do not require a live gdev-agent process
 - `run-gdev-agent` CLI orchestration for local gdev-agent eval runs
@@ -84,8 +85,16 @@ Failure labels are documented in `docs/FAILURE_TAXONOMY.md`.
 
 The live adapter calls only the configured gdev-agent base URL plus `/webhook`.
 Eval cases must not control the base URL, host, endpoint, tenant ID, webhook
-secret, auth token, or command. That preserves the same safety boundary used by
-the generic HTTP and CLI adapters.
+secret, auth token, command, or request namespace. That preserves the same
+safety boundary used by the generic HTTP and CLI adapters.
+
+Before a live invocation, CLI orchestration derives a namespace from canonical
+JSON containing the run ID, candidate version, component revision, dataset
+hash, and namespace schema version. The adapter hashes that context and scopes
+both `request_id` and `message_id`. Repeating the same case in the same run
+therefore produces stable IDs, while changing the run or candidate produces a
+different Redis dedup key. The adapter fails before transport if no namespace
+is bound.
 
 The adapter signs the exact request body bytes with HMAC-SHA256 and sends:
 
@@ -97,19 +106,26 @@ The body uses configured tenant identity:
 
 ```json
 {
-  "request_id": "gdev-billing-refund-001",
+  "request_id": "gdev-eval-v1-<namespace-sha>-request_id-<case-sha>",
   "tenant_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-  "message_id": "eval-billing-refund-001",
+  "message_id": "gdev-eval-v1-<namespace-sha>-message_id-<case-sha>",
   "user_id": "eval-user-001",
   "text": "I was charged twice for gems and want a refund.",
   "metadata": {
-    "eval_case_id": "gdev-billing-refund-001"
+    "eval_case_id": "gdev-billing-refund-001",
+    "eval_request_namespace": "gdev-eval-v1-<namespace-sha>"
   }
 }
 ```
 
 `input.tenant_slug` in a dataset case is descriptive context only. The adapter
 does not use it for the signed request.
+
+Custom or mocked adapters are not silently rewritten. They receive the original
+canonical case mapping and challenge evidence labels them
+`custom_adapter_passthrough` with `applied=false`. A custom adapter that performs
+stateful external I/O is responsible for an equivalent dedup boundary; using the
+built-in HTTP adapter is the supported live path.
 
 ## CI Mocked Smoke
 
@@ -148,6 +164,7 @@ python -m eval_ground_truth_lab.cli run-gdev-agent \
   --base-url http://localhost:8000 \
   --run-id gdev-baseline-v1 \
   --candidate-version gdev-agent-demo-live-local-v2 \
+  --component-revision <full-gdev-git-sha> \
   --report reports/gdev-agent/baseline_report.md
 ```
 

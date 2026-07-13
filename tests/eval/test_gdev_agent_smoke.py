@@ -27,6 +27,8 @@ def test_mocked_gdev_eval_smoke_passes_in_ci(
             "http://mocked-gdev-agent.invalid",
             "--run-id",
             "ci-mocked-gdev-pass",
+            "--component-revision",
+            "fixture:mocked-ci",
             "--run-dir",
             str(run_dir),
             "--threshold-config",
@@ -45,6 +47,7 @@ def test_mocked_gdev_eval_smoke_passes_in_ci(
     assert all(result["output"]["correct"] is True for result in run["case_results"])
     assert "ci-mocked-gdev-pass" in report_text
     assert "Top Failure Categories" in report_text
+    assert "custom_adapter_passthrough" in report_text
 
 
 def test_mocked_unsafe_regression_exits_one(
@@ -68,6 +71,8 @@ def test_mocked_unsafe_regression_exits_one(
             "http://mocked-gdev-agent.invalid",
             "--run-id",
             "ci-mocked-gdev-unsafe",
+            "--component-revision",
+            "fixture:mocked-ci",
             "--run-dir",
             str(run_dir),
             "--threshold-config",

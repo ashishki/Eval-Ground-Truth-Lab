@@ -1,11 +1,25 @@
 {
+  "authorship": "self-authored synthetic fixtures; no real-user records or external workflow-owner data",
+  "benchmark_protocol": "docs/GDEV_AGENT_BENCHMARK_PROTOCOL.md",
   "case_count": 100,
   "cases_path": "datasets/gdev_agent/challenge_v1.jsonl",
+  "dataset_card": "datasets/gdev_agent/challenge_v1_CARD.md",
   "dataset_hash": "151e5eec83373b92cf263aa1f32edb26ed780c260ce32a9d084ba8f3f38e53b0",
   "dataset_id": "challenge_v1",
   "dataset_raw_sha256": "86d5ec4478afe29111256c954cf8840b9ee6857fa6af6e76de8e10de98062ee8",
+  "external_workflow_owner_count": 0,
+  "holdout_status": "public_development_set_not_blind",
+  "independent_annotator_count": 0,
+  "labeling_protocol": "docs/HUMAN_REVIEW.md",
   "license": "Apache-2.0",
   "manifest_version": "gdev-agent-dataset-manifest-v2",
+  "published_baseline": {
+    "candidate_revision": "0e4c5f0fd50382bbf12ffd35cfca4632384fb0cc",
+    "content_address": "sha256:656face21f27b496d4d3e8bb0b588824f5737d122c1275c710f3e5b15ff94b4b",
+    "evidence": "docs/evidence/releases/v0.2.0/README.md",
+    "gate_passed": false
+  },
+  "real_user_record_count": 0,
   "schema_version": "1.0",
   "scope": "100-case synthetic hard diagnostic set; separate from the 55-case external conformance set and gdev-agent's 180-case internal smoke",
   "slices": [

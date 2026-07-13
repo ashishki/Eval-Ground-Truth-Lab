@@ -23,6 +23,8 @@ FORBIDDEN_GDEV_CASE_FIELDS = frozenset(
         "command",
         "endpoint",
         "host",
+        "request_namespace",
+        "request_namespace_id",
         "tenant_id",
         "tenant_secret",
         "token",
@@ -31,6 +33,69 @@ FORBIDDEN_GDEV_CASE_FIELDS = frozenset(
         "webhook_secret",
     }
 )
+
+REQUEST_NAMESPACE_SCHEMA_VERSION = "gdev-agent-request-namespace-v1"
+_SCOPED_ID_KINDS = frozenset({"message_id", "request_id"})
+
+
+class MissingGdevRequestNamespaceError(ValueError):
+    """Raised when a live HTTP adapter is invoked without run-scoped IDs."""
+
+
+@dataclass(frozen=True)
+class GdevRequestNamespace:
+    """Deterministic namespace for IDs sent to a stateful gdev-agent service."""
+
+    run_id: str
+    candidate_version: str
+    component_revision: str
+    dataset_hash: str
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "run_id",
+            "candidate_version",
+            "component_revision",
+            "dataset_hash",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be a non-empty string")
+
+    @property
+    def context_sha256(self) -> str:
+        return hashlib.sha256(_canonical_json_bytes(self.context_mapping())).hexdigest()
+
+    @property
+    def identifier(self) -> str:
+        return f"gdev-eval-v1-{self.context_sha256}"
+
+    def context_mapping(self) -> dict[str, str]:
+        return {
+            "candidate_version": self.candidate_version,
+            "component_revision": self.component_revision,
+            "dataset_hash": self.dataset_hash,
+            "run_id": self.run_id,
+            "schema_version": REQUEST_NAMESPACE_SCHEMA_VERSION,
+        }
+
+    def to_mapping(self) -> dict[str, Any]:
+        return {
+            "context": self.context_mapping(),
+            "context_sha256": self.context_sha256,
+            "identifier": self.identifier,
+            "schema_version": REQUEST_NAMESPACE_SCHEMA_VERSION,
+        }
+
+    def scoped_id(self, kind: str, original_id: str) -> str:
+        if kind not in _SCOPED_ID_KINDS:
+            raise ValueError(f"Unsupported gdev ID kind: {kind}")
+        if not isinstance(original_id, str) or not original_id:
+            raise ValueError("original_id must be a non-empty string")
+        case_digest = hashlib.sha256(
+            _canonical_json_bytes({"kind": kind, "original_id": original_id})
+        ).hexdigest()
+        return f"{self.identifier}-{kind}-{case_digest[:24]}"
 
 
 @dataclass(frozen=True)
@@ -74,17 +139,38 @@ class GdevAgentHttpAdapter:
         self,
         config: GdevAgentConfig,
         *,
+        request_namespace: GdevRequestNamespace | None = None,
         transport: Callable[[str, bytes, dict[str, str]], GdevAgentHttpResponse] | None = None,
     ) -> None:
         if not config.base_url.startswith(("http://", "https://")):
             raise ValueError("base_url must be an http(s) URL")
         self.config = config
+        self.request_namespace = request_namespace
         self._transport = transport or _post_signed_json
 
+    def with_request_namespace(
+        self, request_namespace: GdevRequestNamespace
+    ) -> GdevAgentHttpAdapter:
+        """Return an equivalent adapter bound to one immutable eval-run namespace."""
+
+        return GdevAgentHttpAdapter(
+            self.config,
+            request_namespace=request_namespace,
+            transport=self._transport,
+        )
+
     def invoke(self, case: Mapping[str, Any]) -> AdapterResult:
+        if self.request_namespace is None:
+            raise MissingGdevRequestNamespaceError(
+                "GdevAgentHttpAdapter requires a deterministic request namespace before invoke"
+            )
         _reject_forbidden_fields(case)
         trace = start_trace("candidate.gdev_agent.http")
-        payload = _build_webhook_payload(case=case, config=self.config)
+        payload = _build_webhook_payload(
+            case=case,
+            config=self.config,
+            request_namespace=self.request_namespace,
+        )
         body = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
         headers = _signed_headers(
             body=body,
@@ -111,7 +197,12 @@ class GdevAgentHttpAdapter:
         )
 
 
-def _build_webhook_payload(*, case: Mapping[str, Any], config: GdevAgentConfig) -> dict[str, Any]:
+def _build_webhook_payload(
+    *,
+    case: Mapping[str, Any],
+    config: GdevAgentConfig,
+    request_namespace: GdevRequestNamespace,
+) -> dict[str, Any]:
     case_input = case.get("input")
     if not isinstance(case_input, Mapping):
         raise ValueError("gdev-agent case input must be an object")
@@ -122,11 +213,15 @@ def _build_webhook_payload(*, case: Mapping[str, Any], config: GdevAgentConfig) 
     metadata = case_input.get("metadata")
     payload_metadata = dict(metadata) if isinstance(metadata, Mapping) else {}
     payload_metadata["eval_case_id"] = str(case["id"])
+    payload_metadata["eval_request_namespace"] = request_namespace.identifier
+
+    request_id = _optional_string(case_input.get("request_id")) or str(case["id"])
+    message_id = _optional_string(case_input.get("message_id")) or str(case["id"])
 
     return {
-        "request_id": _optional_string(case_input.get("request_id")) or str(case["id"]),
+        "request_id": request_namespace.scoped_id("request_id", request_id),
         "tenant_id": config.tenant_id,
-        "message_id": _optional_string(case_input.get("message_id")) or str(case["id"]),
+        "message_id": request_namespace.scoped_id("message_id", message_id),
         "user_id": _optional_string(case_input.get("user_id")),
         "text": text,
         "metadata": payload_metadata,
@@ -207,3 +302,7 @@ def _reject_forbidden_fields(value: Any, path: str = "case") -> None:
 
 def _optional_string(value: Any) -> str | None:
     return value if isinstance(value, str) else None
+
+
+def _canonical_json_bytes(value: Mapping[str, Any]) -> bytes:
+    return json.dumps(value, separators=(",", ":"), sort_keys=True).encode("utf-8")

@@ -347,6 +347,10 @@ def render_challenge_markdown(result: Mapping[str, Any]) -> str:
     run = _mapping(result.get("run"), "run")
     provenance = _mapping(result.get("provenance"), "provenance")
     runtime = _mapping(provenance.get("runtime"), "provenance.runtime")
+    request_namespace = _mapping(
+        provenance.get("request_namespace"),
+        "provenance.request_namespace",
+    )
     dataset = _mapping(result.get("dataset"), "dataset")
     lines = [
         "# gdev-agent Challenge Run",
@@ -366,6 +370,9 @@ def render_challenge_markdown(result: Mapping[str, Any]) -> str:
         f"- Environment: `{provenance.get('environment_label')}`",
         f"- Fixture: `{provenance.get('fixture')}`",
         f"- Harness: `{provenance.get('harness_version')}`",
+        f"- Request namespace: `{request_namespace.get('identifier')}`",
+        f"- Request namespace adapter mode: `{request_namespace.get('adapter_mode')}`",
+        f"- Request namespace applied: `{request_namespace.get('applied')}`",
         f"- Python: `{runtime.get('python')}`",
         f"- Dataset: `{dataset.get('dataset_id')}` / `{dataset.get('dataset_hash')}`",
         "",

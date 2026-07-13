@@ -165,6 +165,21 @@ def test_gdev_agent_challenge_manifest_hash_matches_dataset() -> None:
     assert manifest["dataset_raw_sha256"] == _sha256(CHALLENGE_DATASET_PATH)
     assert manifest["threshold_config_raw_sha256"] == _sha256(CHALLENGE_THRESHOLDS_PATH)
     assert manifest["license"] == "Apache-2.0"
+    assert manifest["dataset_card"] == "datasets/gdev_agent/challenge_v1_CARD.md"
+    assert manifest["benchmark_protocol"] == "docs/GDEV_AGENT_BENCHMARK_PROTOCOL.md"
+    assert manifest["labeling_protocol"] == "docs/HUMAN_REVIEW.md"
+    assert manifest["holdout_status"] == "public_development_set_not_blind"
+    assert manifest["independent_annotator_count"] == 0
+    assert manifest["external_workflow_owner_count"] == 0
+    assert manifest["real_user_record_count"] == 0
+    assert manifest["published_baseline"] == {
+        "candidate_revision": "0e4c5f0fd50382bbf12ffd35cfca4632384fb0cc",
+        "content_address": (
+            "sha256:656face21f27b496d4d3e8bb0b588824f5737d122c1275c710f3e5b15ff94b4b"
+        ),
+        "evidence": "docs/evidence/releases/v0.2.0/README.md",
+        "gate_passed": False,
+    }
     assert "100-case" in manifest["scope"]
     assert "55-case" in manifest["scope"]
     assert "180-case" in manifest["scope"]
@@ -200,8 +215,12 @@ def test_gdev_agent_challenge_docs_and_report_are_linked() -> None:
         assert required_text in report
 
     assert "docs/GDEV_AGENT_CHALLENGE_SET.md" in evidence_index
+    assert "docs/GDEV_AGENT_BENCHMARK_PROTOCOL.md" in evidence_index
+    assert "datasets/gdev_agent/challenge_v1_CARD.md" in evidence_index
+    assert "docs/evidence/releases/v0.2.0/README.md" in evidence_index
     assert "reports/gdev-agent/challenge_report.md" in evidence_index
     assert "challenge_report.md" in readme
+    assert "docs/evidence/releases/v0.2.0/README.md" in readme
 
 
 def test_gdev_agent_challenge_dataset_contains_no_real_data() -> None:

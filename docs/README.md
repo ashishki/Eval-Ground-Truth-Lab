@@ -27,8 +27,8 @@ validation evidence for Eval Ground Truth Lab.
 - Optional LLM judge is disabled by default and budget-gated.
 - Current proof surface: seeded smoke gate, v1 synthetic evidence pack, a
   passing local gdev-agent integration proof, and a committed gdev-agent
-  diagnostic challenge set, not a production eval platform or hosted SaaS
-  claim.
+  diagnostic challenge whose canonical fixed-candidate run is published as
+  FAIL, not a production eval platform or hosted SaaS claim.
 
 ## Key Decisions
 
@@ -44,8 +44,14 @@ validation evidence for Eval Ground Truth Lab.
 - `reports/v1/evidence_report.md` - v1 synthetic evidence report.
 - `reports/gdev-agent/baseline_report.md` - gdev-agent local baseline report.
 - `docs/GDEV_AGENT_CHALLENGE_SET.md` - gdev-agent hard-case diagnostic dataset.
+- `docs/GDEV_AGENT_BENCHMARK_PROTOCOL.md` - freeze, labeling, leakage, and
+  publication rules for public development sets and future blind holdouts.
+- `datasets/gdev_agent/challenge_v1_CARD.md` - provenance, hypotheses, baseline,
+  and limitations for the public challenge.
 - `reports/gdev-agent/challenge_report.md` - committed challenge-set scope
   report.
+- `docs/evidence/releases/v0.2.0/README.md` - executed canonical local challenge
+  evidence with a verified failing gate.
 
 ## Active Tasks
 
@@ -62,8 +68,11 @@ validation evidence for Eval Ground Truth Lab.
   without credentials and budget.
 - File-backed human review queue is implemented.
 - Static HTML report and final evidence pack are implemented.
-- The challenge set is committed as diagnostic evidence, but live challenge-run
-  promotion and expected-failure summary metrics remain future work.
+- The canonical local challenge run, expected-failure summary metrics, dataset
+  card, and content-addressed package are published. The fixed candidate fails
+  five thresholds.
+- Independent labels, a blind successor holdout, an externally owned adapter,
+  and real-user feedback remain external-validation work and are not claimed.
 - Runtime Grid live-local proof exists as an optional operator-run path in the
   runtime repository; it is not a hosted eval scheduler.
 - Dashboard, hosted service, continuous eval, and production platform claims are

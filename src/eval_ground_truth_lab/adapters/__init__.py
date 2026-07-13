@@ -4,6 +4,8 @@ from eval_ground_truth_lab.adapters.gdev_agent import (
     GdevAgentConfig,
     GdevAgentHttpAdapter,
     GdevAgentHttpResponse,
+    GdevRequestNamespace,
+    MissingGdevRequestNamespaceError,
 )
 from eval_ground_truth_lab.adapters.gdev_normalizer import (
     NormalizedGdevOutput,
@@ -18,8 +20,10 @@ __all__ = [
     "GdevAgentConfig",
     "GdevAgentHttpAdapter",
     "GdevAgentHttpResponse",
+    "GdevRequestNamespace",
     "HttpCandidateAdapter",
     "HttpResponse",
+    "MissingGdevRequestNamespaceError",
     "NormalizedGdevOutput",
     "SyntheticDemoAdapter",
     "UnsafeAdapterInputError",

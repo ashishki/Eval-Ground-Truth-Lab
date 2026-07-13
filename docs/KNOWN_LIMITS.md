@@ -23,13 +23,19 @@ production eval platform.
 - The 55-case gdev-agent baseline is a curated integration/conformance set. It
   is not a hard challenge set and does not hide the need for ambiguous,
   expected-failure, and policy-stress eval cases.
-- A 100-case gdev-agent challenge set is committed as diagnostic evidence, but
-  the committed `reports/gdev-agent/challenge_report.md` is a dataset/scope
-  report rather than a completed live challenge run.
-- `run-gdev-agent-challenge` now produces expected-failure reconciliation,
-  per-slice metrics, JSON, Markdown, and a verified manifest. A canonical result
-  still requires an operator-run fixed gdev-agent service and exact revision;
-  no passing result is inferred from deterministic test fixtures.
+- The committed `reports/gdev-agent/challenge_report.md` is a static
+  dataset/scope report. The separate v0.2.0 package is a completed canonical
+  local run against exact `gdev-agent` revision `0e4c5f0`; its gate fails five
+  thresholds and does not approve that workload for release.
+- The 100-case challenge is public, self-authored development data with zero
+  independent annotators or external workflow owners. It is not blind,
+  expert-labeled, or evidence of generalization. Tuning a candidate against its
+  text contaminates the set for those claims.
+- Built-in live gdev HTTP runs scope `request_id` and `message_id` by a
+  deterministic run/candidate/component/dataset namespace, preventing stale
+  Redis dedup responses from crossing eval runs. This does not clear Redis,
+  validate arbitrary custom adapters, or replace gdev-agent's configured dedup
+  TTL and operational lifecycle controls.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake
@@ -37,7 +43,8 @@ production eval platform.
 - Live judge cost gates require telemetry rollup output and an approved budget
   policy.
 - Human review is file-backed and auditable, but there is no multi-user review
-  workflow or dashboard.
+  workflow or dashboard. `human_review_required` is a reference label, not proof
+  that a human reviewed each challenge output.
 - Static HTML is derivative; markdown reports and JSON run artifacts remain
   canonical.
 - Local checksums and content addresses make evidence tamper-evident; they do
