@@ -27,6 +27,9 @@ def test_action_documentation_states_security_and_claim_boundaries() -> None:
         "github_workspace",
         "synthetic",
         "not a production",
+        "case-id sets must match",
+        "finite",
+        "status `completed`",
         "report",
         "conclusion",
     ):

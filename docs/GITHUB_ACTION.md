@@ -50,8 +50,8 @@ source.
 
 | Name | Required | Meaning |
 | --- | --- | --- |
-| `baseline` | yes | Baseline RunRecord JSON path. |
-| `candidate` | yes | Candidate RunRecord JSON path. |
+| `baseline` | yes | Completed, non-empty baseline RunRecord JSON path. |
+| `candidate` | yes | Completed, non-empty candidate RunRecord JSON path. |
 | `threshold-config` | yes | Comparison threshold JSON path. |
 | `report` | no | Markdown report destination; defaults to `.eval-lab/release-gate.md`. |
 
@@ -59,9 +59,41 @@ Every path may be absolute or relative, but its resolved target must remain
 inside `GITHUB_WORKSPACE`. Input files must exist and be regular files. The
 report may not overwrite an input or use a symbolic-link leaf. NUL, CR, and LF
 characters are rejected before evaluation. The helper uses Python argument
-passing rather than a shell command, writes to a unique file beside the target,
-fsyncs it, and atomically replaces the requested report only after a fresh
-comparison report exists.
+passing rather than a shell command. After every path is safely resolved, it
+removes any previous report target before reading decision inputs, writes to a
+unique file beside the target, fsyncs it, and atomically places the requested
+report only after a fresh comparison report exists.
+
+### Decision-input contract
+
+Both run artifacts must be canonical JSON objects with every decision-bearing
+RunRecord field present. Each must have exact status `completed`, a non-empty
+`completed_at`, and at least one case result. Case IDs must be non-empty and
+unique within each run, and the baseline and candidate case-ID sets must match
+exactly. The validator version and run type must also match; the comparison
+engine continues to require the same dataset hash.
+
+Aggregate cost and latency values and every case-level cost/latency value must
+be JSON numbers rather than booleans or numeric strings, finite, and
+non-negative. Aggregate total/per-case cost and p50/p95 latency must recompute
+from the complete case results. This prevents omitted cases or caller-authored
+aggregate values from turning an incomplete candidate into a PASS.
+
+Threshold JSON is strict and duplicate keys are rejected. The native schema
+requires exactly these five decision fields, plus an optional string `version`:
+
+- `max_accuracy_drop`;
+- `max_invalid_output_rate_increase`;
+- `max_unsafe_auto_approval_rate_increase`;
+- `max_latency_p95_delta_ms`;
+- `max_cost_per_case_delta_usd`.
+
+The documented legacy gdev comparison schema remains supported with all five
+of its comparison fields required. Missing and unknown fields, booleans,
+numeric strings, negative values, non-standard `NaN`/`Infinity`, and
+floating-point overflow such as `1e309` are rejected. Accuracy, rate, and drop values must be
+within `[0, 1]`; cost and latency allowances must be finite and non-negative.
+Valid native and legacy configurations retain the CLI's comparison semantics.
 
 The Action emits:
 
@@ -75,9 +107,11 @@ directory.
 
 `pass` returns status `0`. A threshold-blocked `fail` still publishes the fresh
 report and summary, then returns status `1`. Configuration or execution errors
-return status `2`, emit no report path, and never copy a pre-existing target
-into `GITHUB_STEP_SUMMARY`. Consumers that need to inspect outputs after a
-failure should use an `if: always()` follow-up step.
+return status `2`, emit no report path, remove the configured target, and never
+copy a pre-existing target into `GITHUB_STEP_SUMMARY`. This makes a fixed-path
+`if: always()` artifact uploader unable to mistake an earlier PASS report for
+the current decision. An unsafe or unresolved report path is rejected without
+touching its target.
 
 ## Security boundary
 
@@ -86,8 +120,9 @@ failure should use an `if: always()` follow-up step.
 - Caller checkout should set `persist-credentials: false`.
 - Runner output and summary files are written directly with Python, not through
   workflow-command interpolation or generated shell fragments.
-- Existing report content is never read as current evidence. Only the unique
-  report created by this invocation can be published or summarized.
+- Existing report content is removed after path validation and never read as
+  current evidence. Only the unique report created by this invocation can be
+  published or summarized; an Action error leaves the configured target absent.
 - The report preview in `GITHUB_STEP_SUMMARY` is bounded; the full workspace
   report remains authoritative.
 
