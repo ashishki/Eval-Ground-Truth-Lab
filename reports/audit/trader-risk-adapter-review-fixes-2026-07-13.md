@@ -122,8 +122,13 @@ both regression-tested rejection paths.
 | Source identity commit/tree/path/blob mutation matrix | all rejected |
 | Installed-wheel console replay from unrelated cwd | PASS; 8-artifact manifest verified; package binding matches |
 | Two clean commit-epoch wheel builds | byte-identical |
+| HTTPS clean-clone reviewer path | PASS at `571d59a7774747ea455b298756d1f8accd7694ec`; expected smoke exit `1`, 8/8 artifacts verified, 29 seconds |
 | Canonical symlink, workstation-path, and secret-marker scan | clean |
-| GitHub exact-head CI | recorded in draft PR #7 after push; no pre-push status is asserted here |
+| GitHub evidence-head CI | run #52 (`29275187957`) at `571d59a7774747ea455b298756d1f8accd7694ec`: success; every job step passed |
+
+The draft PR body records the separate exact-final-head CI after this report-only
+receipt commit is pushed, avoiding a self-referential claim about an uncreated
+commit or workflow run.
 
 The wheel built twice from clean archives of the implementation commit with its
 exact epoch `1783967141` is
