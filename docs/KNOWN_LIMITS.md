@@ -30,6 +30,11 @@ production eval platform.
   per-slice metrics, JSON, Markdown, and a verified manifest. A canonical result
   still requires an operator-run fixed gdev-agent service and exact revision;
   no passing result is inferred from deterministic test fixtures.
+- Built-in live gdev HTTP runs scope `request_id` and `message_id` by a
+  deterministic run/candidate/component/dataset namespace, preventing stale
+  Redis dedup responses from crossing eval runs. This does not clear Redis,
+  validate arbitrary custom adapters, or replace gdev-agent's configured dedup
+  TTL and operational lifecycle controls.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

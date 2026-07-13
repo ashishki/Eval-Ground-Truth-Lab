@@ -107,6 +107,7 @@ python -m eval_ground_truth_lab.cli run-gdev-agent \
   --base-url http://localhost:8000 \
   --run-id gdev-baseline-v1 \
   --candidate-version gdev-agent-demo-live-local-v2 \
+  --component-revision <full-gdev-git-sha> \
   --report reports/gdev-agent/baseline_report.md
 ```
 
@@ -129,6 +130,11 @@ The challenge command requires explicit component provenance and writes JSON,
 Markdown, a terminal run record, and a content-addressed manifest. Its ten
 provider-error cases are deterministic harness injections; the remaining 90
 cases call the configured candidate. A failed threshold returns exit code `1`.
+Live HTTP request and message IDs are scoped by a deterministic digest of the
+run ID, candidate version, component revision, and dataset hash so an earlier
+gdev Redis dedup entry cannot be reused by a different eval run. The namespace
+identifier and whether it was applied are recorded in challenge provenance and
+manifest metadata.
 
 ```bash
 eval-ground-truth-lab run-gdev-agent-challenge \

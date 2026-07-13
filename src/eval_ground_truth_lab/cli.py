@@ -12,9 +12,14 @@ from typing import Any
 
 from eval_ground_truth_lab import __version__
 from eval_ground_truth_lab import challenge as challenge_module
-from eval_ground_truth_lab.adapters import GdevAgentConfig, GdevAgentHttpAdapter
+from eval_ground_truth_lab.adapters import (
+    GdevAgentConfig,
+    GdevAgentHttpAdapter,
+    GdevRequestNamespace,
+)
 from eval_ground_truth_lab.adapters import gdev_agent as gdev_adapter_module
 from eval_ground_truth_lab.challenge import (
+    CandidateAdapter,
     ChallengeThresholds,
     FaultInjectingAdapter,
     build_challenge_result,
@@ -62,6 +67,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     gdev_parser.add_argument("--run-id")
     gdev_parser.add_argument("--run-dir", default="runs")
     gdev_parser.add_argument("--candidate-version", default="gdev-agent-demo")
+    gdev_parser.add_argument("--component-revision", required=True)
     gdev_parser.add_argument("--report", required=True)
     gdev_parser.add_argument(
         "--threshold-config",
@@ -126,6 +132,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             run_id=args.run_id,
             run_dir=args.run_dir,
             candidate_version=args.candidate_version,
+            component_revision=args.component_revision,
             threshold_config_path=args.threshold_config,
         )
     if args.command == "run-gdev-agent-challenge":
@@ -216,12 +223,14 @@ def run_gdev_agent_eval(
     run_id: str | None = None,
     run_dir: str | Path = "runs",
     candidate_version: str = "gdev-agent-demo",
+    component_revision: str,
     threshold_config_path: str | Path = "datasets/gdev_agent/thresholds.json",
-    adapter: GdevAgentHttpAdapter | None = None,
+    adapter: CandidateAdapter | None = None,
 ) -> int:
+    _validate_component_revision(component_revision)
     dataset = load_dataset(dataset_path)
     validator_thresholds = _load_gdev_validator_thresholds(Path(threshold_config_path))
-    selected_adapter = adapter or _build_gdev_adapter(base_url)
+    delegate = adapter or _build_gdev_adapter(base_url)
     store = RunStore(run_dir)
     run = store.create_run(
         run_id=run_id,
@@ -230,6 +239,17 @@ def run_gdev_agent_eval(
         candidate_version=candidate_version,
         validator_version="gdev-validators-v1",
         threshold_config_version=_threshold_config_version(Path(threshold_config_path)),
+    )
+    request_namespace = GdevRequestNamespace(
+        run_id=run.run_id,
+        candidate_version=candidate_version,
+        component_revision=component_revision,
+        dataset_hash=dataset.metadata.dataset_hash,
+    )
+    selected_adapter, adapter_mode = _bind_request_namespace(delegate, request_namespace)
+    request_namespace_evidence = _request_namespace_evidence(
+        request_namespace,
+        adapter_mode=adapter_mode,
     )
 
     has_failure = False
@@ -264,6 +284,7 @@ def run_gdev_agent_eval(
         dataset=dataset,
         threshold_config_path=Path(threshold_config_path),
         run_artifact_path=Path(run_dir) / f"{completed.run_id}.json",
+        request_namespace=request_namespace_evidence,
     )
     return 1 if has_failure else 0
 
@@ -281,7 +302,7 @@ def run_gdev_agent_challenge(
     run_id: str | None = None,
     run_dir: str | Path = "runs",
     threshold_config_path: str | Path = "datasets/gdev_agent/challenge_thresholds.json",
-    adapter: GdevAgentHttpAdapter | None = None,
+    adapter: CandidateAdapter | None = None,
 ) -> int:
     is_fixture = _validate_challenge_provenance(
         component_revision=component_revision,
@@ -301,11 +322,6 @@ def run_gdev_agent_challenge(
     thresholds = _load_challenge_thresholds(threshold_source)
     validator_thresholds = _load_gdev_validator_thresholds(threshold_source)
     delegate = adapter or _build_gdev_adapter(base_url)
-    selected_adapter = FaultInjectingAdapter(
-        delegate,
-        fault_cost_usd=thresholds.max_cost_per_case_usd + 1.0,
-        fault_latency_ms=thresholds.max_latency_p95_ms + 1_000.0,
-    )
     store = RunStore(run_dir)
     run = store.create_run(
         run_id=run_id,
@@ -314,6 +330,22 @@ def run_gdev_agent_challenge(
         candidate_version=candidate_version,
         validator_version="gdev-challenge-validators-v1",
         threshold_config_version=thresholds.version,
+    )
+    request_namespace = GdevRequestNamespace(
+        run_id=run.run_id,
+        candidate_version=candidate_version,
+        component_revision=component_revision,
+        dataset_hash=dataset.metadata.dataset_hash,
+    )
+    namespaced_delegate, adapter_mode = _bind_request_namespace(delegate, request_namespace)
+    request_namespace_evidence = _request_namespace_evidence(
+        request_namespace,
+        adapter_mode=adapter_mode,
+    )
+    selected_adapter = FaultInjectingAdapter(
+        namespaced_delegate,
+        fault_cost_usd=thresholds.max_cost_per_case_usd + 1.0,
+        fault_latency_ms=thresholds.max_latency_p95_ms + 1_000.0,
     )
 
     try:
@@ -346,6 +378,7 @@ def run_gdev_agent_challenge(
     completed = store.complete_run(run.run_id)
     implementation_sha256 = {
         "challenge": sha256_file(Path(challenge_module.__file__)),
+        "cli": sha256_file(Path(__file__)),
         "gdev_adapter": sha256_file(Path(gdev_adapter_module.__file__)),
         "gdev_validators": sha256_file(Path(gdev_validator_module.__file__)),
     }
@@ -367,6 +400,7 @@ def run_gdev_agent_challenge(
             "fixture": is_fixture,
             "harness_version": f"eval-ground-truth-lab-{__version__}",
             "implementation_sha256": implementation_sha256,
+            "request_namespace": request_namespace_evidence,
             "runtime": runtime_environment,
         },
         dataset_raw_sha256=sha256_file(dataset_source),
@@ -405,6 +439,7 @@ def run_gdev_agent_challenge(
             "fixture": is_fixture,
             "gate_passed": result["gate"]["passed"],
             "implementation_sha256": implementation_sha256,
+            "request_namespace": request_namespace_evidence,
             "run_id": completed.run_id,
             "runtime": runtime_environment,
             "threshold_config_sha256": sha256_file(threshold_source),
@@ -417,6 +452,7 @@ def run_gdev_agent_challenge(
                 "content_address": verification.content_address,
                 "gate_passed": result["gate"]["passed"],
                 "manifest": str(manifest_path),
+                "request_namespace": request_namespace.identifier,
                 "run_id": completed.run_id,
             },
             sort_keys=True,
@@ -648,6 +684,7 @@ def _write_gdev_run_report(
     dataset: Dataset,
     threshold_config_path: Path,
     run_artifact_path: Path,
+    request_namespace: Mapping[str, Any],
 ) -> None:
     comparison = ComparisonReport(
         baseline_run_id=run.run_id,
@@ -676,6 +713,10 @@ def _write_gdev_run_report(
             "run artifact": str(run_artifact_path),
             "threshold config": str(threshold_config_path),
             "failure taxonomy": "docs/FAILURE_TAXONOMY.md",
+            "component revision": str(request_namespace["context"]["component_revision"]),
+            "request namespace": str(request_namespace["identifier"]),
+            "request namespace applied": str(request_namespace["applied"]),
+            "request namespace adapter mode": str(request_namespace["adapter_mode"]),
         },
     )
     report_path.write_text(report, encoding="utf-8")
@@ -683,6 +724,29 @@ def _write_gdev_run_report(
 
 def _build_gdev_adapter(base_url: str) -> GdevAgentHttpAdapter:
     return GdevAgentHttpAdapter(GdevAgentConfig.from_environment(base_url=base_url))
+
+
+def _bind_request_namespace(
+    adapter: CandidateAdapter,
+    request_namespace: GdevRequestNamespace,
+) -> tuple[CandidateAdapter, str]:
+    if isinstance(adapter, GdevAgentHttpAdapter):
+        return adapter.with_request_namespace(request_namespace), "gdev_http_namespaced"
+    return adapter, "custom_adapter_passthrough"
+
+
+def _request_namespace_evidence(
+    request_namespace: GdevRequestNamespace,
+    *,
+    adapter_mode: str,
+) -> dict[str, Any]:
+    applied = adapter_mode == "gdev_http_namespaced"
+    return {
+        **request_namespace.to_mapping(),
+        "adapter_mode": adapter_mode,
+        "applied": applied,
+        "applied_fields": ["message_id", "request_id"] if applied else [],
+    }
 
 
 def _read_run_artifact(path: Path) -> RunRecord:
@@ -754,6 +818,18 @@ def _validate_challenge_provenance(
     ):
         raise ValueError("component_image_digest must use sha256:<64 hex characters>")
     return is_fixture
+
+
+def _validate_component_revision(component_revision: str) -> None:
+    if not isinstance(component_revision, str) or not component_revision.strip():
+        raise ValueError("component_revision must be a non-empty string")
+    if component_revision.startswith("fixture:"):
+        return
+    if not re.fullmatch(r"(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})", component_revision):
+        raise ValueError(
+            "component_revision must be a full 40- or 64-character git commit SHA "
+            "or start with 'fixture:'"
+        )
 
 
 if __name__ == "__main__":

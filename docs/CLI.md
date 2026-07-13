@@ -33,6 +33,8 @@ python -m eval_ground_truth_lab.cli run-gdev-agent \
   --dataset datasets/gdev_agent/triage_v1.jsonl \
   --base-url http://localhost:8000 \
   --run-id gdev-baseline-v1 \
+  --candidate-version gdev-agent-demo \
+  --component-revision <full-gdev-git-sha> \
   --report reports/gdev-agent/baseline_report.md
 ```
 
@@ -41,6 +43,10 @@ report at the requested path. It uses `GDEV_AGENT_*` environment variables for
 tenant and webhook configuration unless a caller injects an adapter in code.
 Terminal runs also have a `.sha256` seal; this detects accidental/tampering
 changes but is not a filesystem immutability guarantee.
+`--component-revision` must be a full 40- or 64-character revision (or an
+explicit `fixture:` identity in tests). Together with the run ID, candidate
+version, and dataset hash, it produces the deterministic namespace applied to
+live HTTP `request_id` and `message_id` values.
 
 ## Run gdev-agent Challenge
 
@@ -59,6 +65,9 @@ provider faults in the harness. It writes machine-readable JSON first, renders
 Markdown only from that JSON object, copies the terminal run/seal, and writes a
 content-addressed manifest last. Every declared challenge threshold affects the
 gate; failed gates exit `1` without deleting the evidence.
+Challenge JSON and manifest metadata both record the request namespace,
+namespace inputs, and whether a real gdev HTTP adapter or a custom passthrough
+adapter handled the cases.
 
 ## Verify Evidence
 

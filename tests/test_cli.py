@@ -63,6 +63,8 @@ def test_run_gdev_agent_writes_artifacts_and_report(
             "http://localhost:8000",
             "--run-id",
             "gdev-pass",
+            "--component-revision",
+            "fixture:passing-adapter",
             "--run-dir",
             str(run_dir),
             "--threshold-config",
@@ -81,7 +83,9 @@ def test_run_gdev_agent_writes_artifacts_and_report(
     assert run["status"] == "completed"
     assert run["case_results"][0]["output"]["correct"] is True
     assert run["case_results"][0]["validator_results"]
-    assert "gdev-pass" in report.read_text(encoding="utf-8")
+    report_text = report.read_text(encoding="utf-8")
+    assert "gdev-pass" in report_text
+    assert "custom_adapter_passthrough" in report_text
 
 
 def test_compare_command_returns_one_on_blocking_regression(tmp_path: Path) -> None:

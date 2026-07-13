@@ -6,6 +6,11 @@ from typing import Any
 
 import pytest
 
+from eval_ground_truth_lab.adapters import (
+    GdevAgentConfig,
+    GdevAgentHttpAdapter,
+    GdevAgentHttpResponse,
+)
 from eval_ground_truth_lab.adapters.base import AdapterResult
 from eval_ground_truth_lab.challenge import (
     ChallengeConfigurationError,
@@ -29,6 +34,7 @@ def test_challenge_executes_90_candidate_cases_and_reconciles_10_faults(tmp_path
     result = json.loads((evidence / "challenge-run.json").read_text(encoding="utf-8"))
     report = (evidence / "challenge-report.md").read_text(encoding="utf-8")
     manifest = next(evidence.glob("sha256-*.manifest.json"))
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
 
     assert exit_code == 0
     assert adapter.invocations == 90
@@ -41,8 +47,23 @@ def test_challenge_executes_90_candidate_cases_and_reconciles_10_faults(tmp_path
     assert result["metrics"]["unexpected_pass_count"] == 0
     assert result["metrics"]["human_review_required_count"] == 99
     assert result["provenance"]["fixture"] is True
+    request_namespace = result["provenance"]["request_namespace"]
+    assert request_namespace["adapter_mode"] == "custom_adapter_passthrough"
+    assert request_namespace["applied"] is False
+    assert request_namespace["applied_fields"] == []
+    assert request_namespace["context"] == {
+        "candidate_version": "fixture-passing-candidate",
+        "component_revision": "fixture:not-external-gdev",
+        "dataset_hash": result["dataset"]["dataset_hash"],
+        "run_id": "evidence",
+        "schema_version": "gdev-agent-request-namespace-v1",
+    }
+    assert request_namespace["identifier"].startswith("gdev-eval-v1-")
+    assert manifest_payload["metadata"]["request_namespace"] == request_namespace
+    assert adapter.observed_message_ids[0] == "challenge-ambiguous-multi-intent-001"
     assert set(result["provenance"]["implementation_sha256"]) == {
         "challenge",
+        "cli",
         "gdev_adapter",
         "gdev_validators",
     }
@@ -58,6 +79,8 @@ def test_challenge_executes_90_candidate_cases_and_reconciles_10_faults(tmp_path
     assert report == render_challenge_markdown(result)
     assert "fixture:not-external-gdev" in report
     assert "Deterministic provider faults" in report
+    assert request_namespace["identifier"] in report
+    assert "custom_adapter_passthrough" in report
     assert "gdev-challenge-provider-error-simulation-001" in report
     assert verify_evidence_manifest(manifest).artifact_count == 4
 
@@ -75,6 +98,70 @@ def test_challenge_returns_nonzero_and_preserves_failed_gate_evidence(tmp_path) 
     assert "max_unsafe_auto_approval_rate" in result["gate"]["failed_thresholds"]
     assert result["metrics"]["blocking_failure_count"] == 1
     assert verify_evidence_manifest(next(evidence.glob("sha256-*.manifest.json")))
+
+
+def test_challenge_binds_namespace_to_live_http_adapter_and_records_it(tmp_path) -> None:
+    payloads: list[dict[str, Any]] = []
+
+    def fake_transport(
+        _url: str,
+        body: bytes,
+        _headers: dict[str, str],
+    ) -> GdevAgentHttpResponse:
+        payloads.append(json.loads(body.decode("utf-8")))
+        return GdevAgentHttpResponse(status_code=200, output={})
+
+    adapter = GdevAgentHttpAdapter(
+        GdevAgentConfig(
+            base_url="http://fixture.invalid",
+            tenant_slug="fixture-tenant",
+            tenant_id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            webhook_secret="fixture-secret",
+        ),
+        transport=fake_transport,
+    )
+    evidence = tmp_path / "http-evidence"
+
+    exit_code = run_gdev_agent_challenge(
+        dataset_path=DATASET,
+        base_url="http://fixture.invalid",
+        evidence_dir=evidence,
+        component_revision="a" * 40,
+        component_worktree_state="clean",
+        environment_label="local-mocked-transport",
+        candidate_version="candidate-a",
+        run_id="http-run-a",
+        run_dir=tmp_path / "runs",
+        threshold_config_path=THRESHOLDS,
+        adapter=adapter,
+    )
+
+    result = json.loads((evidence / "challenge-run.json").read_text(encoding="utf-8"))
+    manifest_path = next(evidence.glob("sha256-*.manifest.json"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    request_namespace = result["provenance"]["request_namespace"]
+
+    assert exit_code == 1
+    assert len(payloads) == 90
+    assert request_namespace["adapter_mode"] == "gdev_http_namespaced"
+    assert request_namespace["applied"] is True
+    assert request_namespace["applied_fields"] == ["message_id", "request_id"]
+    assert request_namespace["context"]["run_id"] == "http-run-a"
+    assert request_namespace["context"]["candidate_version"] == "candidate-a"
+    assert manifest["metadata"]["request_namespace"] == request_namespace
+    assert all(
+        payload["metadata"]["eval_request_namespace"] == request_namespace["identifier"]
+        for payload in payloads
+    )
+    assert all(
+        str(payload["request_id"]).startswith(request_namespace["identifier"])
+        for payload in payloads
+    )
+    assert all(
+        str(payload["message_id"]).startswith(request_namespace["identifier"])
+        for payload in payloads
+    )
+    assert verify_evidence_manifest(manifest_path)
 
 
 @pytest.mark.parametrize(
@@ -171,10 +258,12 @@ def _run(tmp_path, *, evidence: Path, adapter: _PassingChallengeAdapter) -> int:
 class _PassingChallengeAdapter:
     def __init__(self, *, unsafe_case_id: str | None = None) -> None:
         self.invocations = 0
+        self.observed_message_ids: list[str] = []
         self.unsafe_case_id = unsafe_case_id
 
     def invoke(self, case: dict[str, Any]) -> AdapterResult:
         self.invocations += 1
+        self.observed_message_ids.append(str(case["input"]["message_id"]))
         expected = case["expected"]
         output = {
             "adapter_error": False,
