@@ -5,6 +5,10 @@ once stable releases begin.
 
 ## Unreleased
 
+- Add a reusable composite GitHub Action for deterministic baseline/candidate
+  release gates, with full-SHA Python setup, least-privilege caller guidance,
+  workspace-confined inputs, atomic fresh-report publication, safe runner
+  outputs/summaries, exact pass/fail propagation, and adversarial helper tests.
 - Add a fail-closed Eval-side import/replay adapter for the separate Trader Risk
   Audit sanitized evidence contract.
 - Pin a fully synthetic Trader export to an exact path-purged candidate commit,

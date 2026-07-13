@@ -71,6 +71,8 @@ Candidate code remains in the system-under-test repository.
 - Deterministic validators for structured output, unsafe auto-approval, cost,
   and latency.
 - Baseline/candidate comparison with CI-style exit codes.
+- Reusable, least-privilege composite GitHub Action for baseline/candidate
+  release decisions with workspace-confined paths and atomic reports.
 - Synthetic, HTTP, and CLI adapter boundaries.
 - gdev-agent dataset, response normalizer, and configured HTTP adapter boundary.
 - gdev-agent live local baseline evidence report from a canonical 55-case run
@@ -150,6 +152,23 @@ echo $?
 CI runs this command and asserts the expected failure code, so the workflow stays
 green while proving the regression gate catches unsafe, invalid, costly, and
 accuracy regressions.
+
+## Reusable GitHub release gate
+
+The root [`action.yml`](action.yml) runs the same deterministic `compare`
+decision in a caller workflow. It emits a normalized report path and a
+`pass`/`fail` conclusion, writes only a freshly generated report to the job
+summary, and preserves the gate exit status so blocking regressions fail CI.
+Inputs and the report destination are confined to `GITHUB_WORKSPACE`; caller
+values are transported through environment variables rather than inserted into
+shell source.
+
+Pin the Action to a reviewed full commit SHA and give the job only
+`contents: read`. See [the reusable Action guide](docs/GITHUB_ACTION.md) for the
+complete workflow, `persist-credentials: false`, inputs, outputs, failure
+behavior, and claim boundaries. The repository's passing smoke compares its
+committed synthetic/local baseline artifact with itself; it proves Action
+wiring, not production quality or external validation.
 
 ## Quickstart: gdev-agent Eval
 
