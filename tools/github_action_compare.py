@@ -63,6 +63,10 @@ _RATE_THRESHOLD_FIELDS = frozenset(
 class ActionConfigurationError(ValueError):
     """Raised when runner-controlled action configuration is unsafe or incomplete."""
 
+    def __init__(self, message: str, *, removable_report: Path | None = None) -> None:
+        super().__init__(message)
+        self.removable_report = removable_report
+
 
 @dataclass(frozen=True)
 class ActionPaths:
@@ -84,6 +88,16 @@ def main(environment: Mapping[str, str] | None = None) -> int:
     try:
         paths = _load_paths(env)
     except ActionConfigurationError as exc:
+        cleanup_error: OSError | None = None
+        if exc.removable_report is not None:
+            try:
+                exc.removable_report.unlink(missing_ok=True)
+            except OSError as report_cleanup_error:
+                cleanup_error = report_cleanup_error
+        if cleanup_error is not None:
+            exc = ActionConfigurationError(
+                f"{exc}; could not remove report target: {cleanup_error}"
+            )
         _emit_error(env, str(exc))
         return ACTION_ERROR
 
@@ -137,14 +151,11 @@ def _load_paths(env: Mapping[str, str]) -> ActionPaths:
     workspace_raw = _required_value(env, "GITHUB_WORKSPACE")
     try:
         workspace = Path(workspace_raw).expanduser().resolve(strict=True)
-    except OSError as exc:
+    except (OSError, RuntimeError) as exc:
         raise ActionConfigurationError("GITHUB_WORKSPACE does not exist") from exc
     if not workspace.is_dir():
         raise ActionConfigurationError("GITHUB_WORKSPACE must identify a directory")
 
-    baseline = _input_path(env, "EVAL_LAB_BASELINE", workspace, must_exist=True)
-    candidate = _input_path(env, "EVAL_LAB_CANDIDATE", workspace, must_exist=True)
-    thresholds = _input_path(env, "EVAL_LAB_THRESHOLD_CONFIG", workspace, must_exist=True)
     report = _input_path(
         env,
         "EVAL_LAB_REPORT",
@@ -152,29 +163,53 @@ def _load_paths(env: Mapping[str, str]) -> ActionPaths:
         must_exist=False,
         reject_leaf_symlink=True,
     )
-
-    for label, path in (
-        ("baseline", baseline),
-        ("candidate", candidate),
-        ("threshold config", thresholds),
-    ):
-        if not path.is_file():
-            raise ActionConfigurationError(f"{label} must identify a regular file")
-
     if report == workspace:
         raise ActionConfigurationError("report must identify a file below GITHUB_WORKSPACE")
     if report.exists() and not report.is_file():
         raise ActionConfigurationError("report target must be a regular file or not exist")
-    if report in {baseline, candidate, thresholds}:
+
+    input_specs = (
+        ("baseline", "EVAL_LAB_BASELINE"),
+        ("candidate", "EVAL_LAB_CANDIDATE"),
+        ("threshold config", "EVAL_LAB_THRESHOLD_CONFIG"),
+    )
+    resolved_inputs: dict[str, Path] = {}
+    input_errors: list[str] = []
+    for label, environment_name in input_specs:
+        try:
+            path = _input_path(env, environment_name, workspace, must_exist=True)
+            if not path.is_file():
+                raise ActionConfigurationError(f"{label} must identify a regular file")
+            resolved_inputs[label] = path
+        except ActionConfigurationError as exc:
+            input_errors.append(str(exc))
+
+    if any(_paths_alias(report, input_path) for input_path in resolved_inputs.values()):
         raise ActionConfigurationError("report must not overwrite an input file")
+    if input_errors:
+        raise ActionConfigurationError(
+            "; ".join(input_errors),
+            removable_report=report,
+        )
 
     return ActionPaths(
         workspace=workspace,
-        baseline=baseline,
-        candidate=candidate,
-        thresholds=thresholds,
+        baseline=resolved_inputs["baseline"],
+        candidate=resolved_inputs["candidate"],
+        thresholds=resolved_inputs["threshold config"],
         report=report,
     )
+
+
+def _paths_alias(left: Path, right: Path) -> bool:
+    if left == right:
+        return True
+    if not left.exists() or not right.exists():
+        return False
+    try:
+        return left.samefile(right)
+    except OSError as exc:
+        raise ActionConfigurationError("report/input alias check could not be completed") from exc
 
 
 def _required_value(env: Mapping[str, str], name: str) -> str:
@@ -202,8 +237,8 @@ def _input_path(
         raise ActionConfigurationError(f"{name} must not be a symbolic link")
     try:
         resolved = candidate.resolve(strict=must_exist)
-    except FileNotFoundError as exc:
-        raise ActionConfigurationError(f"{name} does not exist") from exc
+    except (OSError, RuntimeError) as exc:
+        raise ActionConfigurationError(f"{name} cannot be safely resolved") from exc
     if not resolved.is_relative_to(workspace):
         raise ActionConfigurationError(f"{name} must stay inside GITHUB_WORKSPACE")
     return resolved

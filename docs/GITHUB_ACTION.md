@@ -59,10 +59,13 @@ Every path may be absolute or relative, but its resolved target must remain
 inside `GITHUB_WORKSPACE`. Input files must exist and be regular files. The
 report may not overwrite an input or use a symbolic-link leaf. NUL, CR, and LF
 characters are rejected before evaluation. The helper uses Python argument
-passing rather than a shell command. After every path is safely resolved, it
-removes any previous report target before reading decision inputs, writes to a
-unique file beside the target, fsyncs it, and atomically places the requested
-report only after a fresh comparison report exists.
+passing rather than a shell command. Two-phase validation first resolves the
+report without touching it, then independently checks every input and rejects
+path or hard-link aliases. Once the report is known to be safe and distinct
+from all resolvable inputs, any previous target is removed even when another
+input is invalid. A valid invocation writes to a unique file beside the target,
+fsyncs it, and atomically places the requested report only after a fresh
+comparison report exists.
 
 ### Decision-input contract
 

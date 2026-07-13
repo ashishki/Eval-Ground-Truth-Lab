@@ -490,6 +490,86 @@ def test_paths_cannot_traverse_outside_workspace(
 
 
 @pytest.mark.parametrize(
+    ("input_name", "invalid_value"),
+    [
+        ("EVAL_LAB_BASELINE", "missing-run.json"),
+        ("EVAL_LAB_BASELINE", "../outside.json"),
+        ("EVAL_LAB_CANDIDATE", ""),
+        ("EVAL_LAB_CANDIDATE", "candidate.json\nignored"),
+        ("EVAL_LAB_THRESHOLD_CONFIG", "missing-thresholds.json"),
+    ],
+)
+def test_safe_stale_report_is_removed_when_any_input_path_is_invalid(
+    action_environment: tuple[Path, dict[str, str]],
+    input_name: str,
+    invalid_value: str,
+) -> None:
+    workspace, environment = action_environment
+    (workspace.parent / "outside.json").write_text("{}\n", encoding="utf-8")
+    environment[input_name] = invalid_value
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_input_symlink_loop_is_an_error_and_removes_safe_stale_report(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    (workspace / "loop-a").symlink_to("loop-b")
+    (workspace / "loop-b").symlink_to("loop-a")
+    environment["EVAL_LAB_BASELINE"] = "loop-a"
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_report_symlink_loop_is_rejected_without_touching_it(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    report = workspace / "report-loop-a"
+    report.symlink_to("report-loop-b")
+    (workspace / "report-loop-b").symlink_to("report-loop-a")
+    environment["EVAL_LAB_REPORT"] = report.name
+
+    assert github_action_compare.main(environment) == github_action_compare.ACTION_ERROR
+    assert report.is_symlink()
+    assert (workspace / "report-loop-b").is_symlink()
+
+
+def test_report_alias_is_never_removed_when_another_input_is_invalid(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    baseline = workspace / "baseline.json"
+    original = baseline.read_bytes()
+    environment["EVAL_LAB_REPORT"] = "baseline.json"
+    environment["EVAL_LAB_CANDIDATE"] = "missing-candidate.json"
+
+    assert github_action_compare.main(environment) == github_action_compare.ACTION_ERROR
+    assert baseline.read_bytes() == original
+    assert _read_outputs(Path(environment["GITHUB_OUTPUT"])) == {
+        "report": "",
+        "conclusion": "error",
+    }
+
+
+def test_hardlink_report_alias_is_never_removed(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    baseline = workspace / "baseline.json"
+    report = workspace / "hardlink-report.json"
+    report.hardlink_to(baseline)
+    original = baseline.read_bytes()
+    environment["EVAL_LAB_REPORT"] = report.name
+    environment["EVAL_LAB_CANDIDATE"] = "missing-candidate.json"
+
+    assert github_action_compare.main(environment) == github_action_compare.ACTION_ERROR
+    assert baseline.read_bytes() == original
+    assert report.read_bytes() == original
+
+
+@pytest.mark.parametrize(
     "input_name",
     [
         "GITHUB_WORKSPACE",
