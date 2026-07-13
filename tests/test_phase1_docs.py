@@ -25,15 +25,16 @@ def test_required_phase1_artifacts_exist() -> None:
 
 
 def test_no_unresolved_template_placeholders() -> None:
+    unresolved_template = re.compile(r"(?<!\$)\{\{[^}]+\}\}")
     scanned_paths = [
         *Path(ROOT / "docs").rglob("*.md"),
         ROOT / ".github/workflows/ci.yml",
         ROOT / "pyproject.toml",
     ]
     offenders = {
-        str(path.relative_to(ROOT)): re.findall(r"\{\{[^}]+\}\}", path.read_text())
+        str(path.relative_to(ROOT)): unresolved_template.findall(path.read_text())
         for path in scanned_paths
-        if path.is_file() and re.search(r"\{\{[^}]+\}\}", path.read_text())
+        if path.is_file() and unresolved_template.search(path.read_text())
     }
     assert offenders == {}
 

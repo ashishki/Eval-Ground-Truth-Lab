@@ -21,12 +21,14 @@ def test_ci_uses_least_privilege_and_exact_action_commits() -> None:
     assert [step["uses"] for step in action_steps] == [
         f"actions/checkout@{CHECKOUT_SHA}",
         f"actions/setup-python@{SETUP_PYTHON_SHA}",
+        "./",
     ]
     assert re.findall(r"uses:\s+[^\s@]+@([^\s#]+)", source) == [
         CHECKOUT_SHA,
         SETUP_PYTHON_SHA,
     ]
     assert action_steps[0]["with"]["persist-credentials"] is False
+    assert (ROOT / "action.yml").is_file()
 
 
 def test_reviewer_path_bootstraps_python3_before_module_commands() -> None:

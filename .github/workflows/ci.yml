@@ -41,6 +41,31 @@ jobs:
       - name: Run tests
         run: python -m pytest tests -q --tb=short
 
+      - name: Reusable release gate action smoke
+        id: reusable-release-gate
+        uses: ./
+        with:
+          baseline: reports/gdev-agent/baseline_run.json
+          candidate: reports/gdev-agent/baseline_run.json
+          threshold-config: datasets/smoke/thresholds.json
+          report: .eval-lab-ci/reusable-release-gate.md
+
+      - name: Verify reusable release gate outputs
+        env:
+          EVAL_LAB_ACTION_CONCLUSION: ${{ steps.reusable-release-gate.outputs.conclusion }}
+          EVAL_LAB_ACTION_REPORT: ${{ steps.reusable-release-gate.outputs.report }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          assert os.environ["EVAL_LAB_ACTION_CONCLUSION"] == "pass"
+          report = Path(os.environ["EVAL_LAB_ACTION_REPORT"])
+          assert report == Path(".eval-lab-ci/reusable-release-gate.md")
+          assert report.is_file()
+          assert "# Eval Report" in report.read_text(encoding="utf-8")
+          PY
+
       - name: Build and smoke-test wheel
         run: |
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
