@@ -20,10 +20,25 @@ class ImplementationProvenanceError(RuntimeError):
 @dataclass(frozen=True)
 class _PackageFileSnapshot:
     path: str
-    sha256: str
-    size_bytes: int
-    git_blob_sha1: str
+    payload: bytes
     git_mode: str
+
+    @property
+    def sha256(self) -> str:
+        return hashlib.sha256(self.payload).hexdigest()
+
+    @property
+    def size_bytes(self) -> int:
+        return len(self.payload)
+
+    @property
+    def git_blob_sha1(self) -> str:
+        return _git_blob_sha1(self.payload)
+
+
+@dataclass(frozen=True)
+class _PackageSnapshot:
+    files: tuple[_PackageFileSnapshot, ...]
 
 
 def build_implementation_provenance(
@@ -33,58 +48,164 @@ def build_implementation_provenance(
 ) -> dict[str, Any]:
     """Bind named decision components and the complete installed package payload."""
 
-    root = Path(package_root).resolve()
-    components = {
-        name: _sha256_file(_require_regular_file(Path(path), label=name))
-        for name, path in sorted(component_paths.items())
-    }
-    package_payload, package_files = _package_payload_identity(root)
+    unresolved_root = Path(package_root)
+    if unresolved_root.is_symlink():
+        raise ImplementationProvenanceError(f"Package root is not a directory: {unresolved_root}")
+    root = unresolved_root.resolve()
+    component_relative_paths = _component_relative_paths(
+        component_paths=component_paths,
+        package_root=root,
+    )
+    snapshot = _capture_package_snapshot(root)
+    components = _component_hashes(
+        component_relative_paths=component_relative_paths,
+        snapshot=snapshot,
+    )
+    package_payload = _package_payload_identity(snapshot)
     return {
         "components_sha256": components,
         "package_payload": package_payload,
         "schema_version": IMPLEMENTATION_PROVENANCE_SCHEMA_VERSION,
         "source": _source_identity(
             root,
-            package_files=package_files,
+            package_files=snapshot.files,
             package_payload_sha256=package_payload["sha256"],
         ),
     }
 
 
-def _package_payload_identity(
-    root: Path,
-) -> tuple[dict[str, Any], tuple[_PackageFileSnapshot, ...]]:
+def _component_relative_paths(
+    *,
+    component_paths: Mapping[str, str | Path],
+    package_root: Path,
+) -> dict[str, str]:
+    relative_paths: dict[str, str] = {}
+    for name, path in sorted(component_paths.items()):
+        resolved = Path(path).resolve()
+        try:
+            relative = resolved.relative_to(package_root)
+        except ValueError as exc:
+            raise ImplementationProvenanceError(
+                f"Implementation component {name!r} is outside the package root"
+            ) from exc
+        relative_paths[name] = relative.as_posix()
+    return relative_paths
+
+
+def _capture_package_snapshot(root: Path) -> _PackageSnapshot:
+    """Read one recursive package state into immutable path/mode/byte records."""
+
     if root.is_symlink() or not root.is_dir():
         raise ImplementationProvenanceError(f"Package root is not a directory: {root}")
     files: list[_PackageFileSnapshot] = []
-    for path in sorted(root.rglob("*")):
-        relative = path.relative_to(root)
-        if "__pycache__" in relative.parts or path.suffix in {".pyc", ".pyo"}:
-            continue
-        if path.is_symlink():
+    captured_stats: dict[str, os.stat_result] = {}
+    for path, relative, path_stat in _package_regular_files(root):
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(path, flags)
+        except OSError as exc:
             raise ImplementationProvenanceError(
-                f"Package payload cannot contain symlinks: {relative.as_posix()}"
-            )
-        if path.is_file():
-            with path.open("rb") as source:
-                measured_bytes = source.read()
-                measured_stat = os.fstat(source.fileno())
-            if not stat.S_ISREG(measured_stat.st_mode):
+                f"Package payload entry could not be opened safely: {relative}"
+            ) from exc
+        with os.fdopen(descriptor, "rb") as source:
+            measured_stat = os.fstat(source.fileno())
+            if not stat.S_ISREG(measured_stat.st_mode) or not _same_file(path_stat, measured_stat):
                 raise ImplementationProvenanceError(
-                    f"Package payload entry is not a regular file: {relative.as_posix()}"
+                    f"Package payload entry changed during capture: {relative}"
                 )
-            executable_bits = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
-            files.append(
-                _PackageFileSnapshot(
-                    path=relative.as_posix(),
-                    sha256=hashlib.sha256(measured_bytes).hexdigest(),
-                    size_bytes=len(measured_bytes),
-                    git_blob_sha1=_git_blob_sha1(measured_bytes),
-                    git_mode=("100755" if measured_stat.st_mode & executable_bits else "100644"),
-                )
+            measured_bytes = source.read()
+            final_stat = os.fstat(source.fileno())
+        if not _stable_stat(measured_stat, final_stat):
+            raise ImplementationProvenanceError(
+                f"Package payload entry changed during capture: {relative}"
             )
+        executable_bits = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+        files.append(
+            _PackageFileSnapshot(
+                path=relative,
+                payload=measured_bytes,
+                git_mode=("100755" if measured_stat.st_mode & executable_bits else "100644"),
+            )
+        )
+        captured_stats[relative] = final_stat
     if not files:
         raise ImplementationProvenanceError("Package payload contains no regular files")
+    final_files = _package_regular_files(root)
+    final_stats = {relative: path_stat for _, relative, path_stat in final_files}
+    if set(final_stats) != set(captured_stats) or any(
+        not _stable_stat(captured_stats[path], final_stats[path]) for path in captured_stats
+    ):
+        raise ImplementationProvenanceError("Package payload changed during recursive capture")
+    return _PackageSnapshot(files=tuple(files))
+
+
+def _package_regular_files(root: Path) -> list[tuple[Path, str, os.stat_result]]:
+    files: list[tuple[Path, str, os.stat_result]] = []
+    for path in sorted(root.rglob("*"), key=lambda item: item.relative_to(root).as_posix()):
+        relative_path = path.relative_to(root)
+        if "__pycache__" in relative_path.parts or path.suffix in {".pyc", ".pyo"}:
+            continue
+        relative = relative_path.as_posix()
+        try:
+            path_stat = path.lstat()
+        except OSError as exc:
+            raise ImplementationProvenanceError(
+                f"Package payload entry changed during capture: {relative}"
+            ) from exc
+        if stat.S_ISLNK(path_stat.st_mode):
+            raise ImplementationProvenanceError(
+                f"Package payload cannot contain symlinks: {relative}"
+            )
+        if stat.S_ISDIR(path_stat.st_mode):
+            continue
+        if not stat.S_ISREG(path_stat.st_mode):
+            raise ImplementationProvenanceError(
+                f"Package payload entry is not a regular file: {relative}"
+            )
+        files.append((path, relative, path_stat))
+    return files
+
+
+def _same_file(first: os.stat_result, second: os.stat_result) -> bool:
+    return (first.st_dev, first.st_ino) == (second.st_dev, second.st_ino)
+
+
+def _stable_stat(first: os.stat_result, second: os.stat_result) -> bool:
+    return (
+        first.st_dev,
+        first.st_ino,
+        first.st_mode,
+        first.st_size,
+        first.st_mtime_ns,
+        first.st_ctime_ns,
+    ) == (
+        second.st_dev,
+        second.st_ino,
+        second.st_mode,
+        second.st_size,
+        second.st_mtime_ns,
+        second.st_ctime_ns,
+    )
+
+
+def _component_hashes(
+    *,
+    component_relative_paths: Mapping[str, str],
+    snapshot: _PackageSnapshot,
+) -> dict[str, str]:
+    snapshot_by_path = {file.path: file for file in snapshot.files}
+    components: dict[str, str] = {}
+    for name, relative in component_relative_paths.items():
+        component = snapshot_by_path.get(relative)
+        if component is None:
+            raise ImplementationProvenanceError(
+                f"Implementation component {name!r} is not a regular file in the package snapshot"
+            )
+        components[name] = component.sha256
+    return components
+
+
+def _package_payload_identity(snapshot: _PackageSnapshot) -> dict[str, Any]:
     entries = [
         {
             "mode": file.git_mode,
@@ -92,7 +213,7 @@ def _package_payload_identity(
             "sha256": file.sha256,
             "size_bytes": file.size_bytes,
         }
-        for file in files
+        for file in snapshot.files
     ]
     payload = json.dumps(
         entries,
@@ -100,13 +221,10 @@ def _package_payload_identity(
         separators=(",", ":"),
         sort_keys=True,
     ).encode()
-    return (
-        {
-            "file_count": len(entries),
-            "sha256": hashlib.sha256(payload).hexdigest(),
-        },
-        tuple(files),
-    )
+    return {
+        "file_count": len(entries),
+        "sha256": hashlib.sha256(payload).hexdigest(),
+    }
 
 
 def _source_identity(
@@ -257,24 +375,3 @@ def _try_git(cwd: Path, *args: str) -> str | None:
     if completed.returncode != 0:
         return None
     return completed.stdout.strip()
-
-
-def _require_regular_file(path: Path, *, label: str) -> Path:
-    if path.is_symlink():
-        raise ImplementationProvenanceError(
-            f"Implementation component {label!r} is not a regular file"
-        )
-    resolved = path.resolve()
-    if not resolved.is_file():
-        raise ImplementationProvenanceError(
-            f"Implementation component {label!r} is not a regular file"
-        )
-    return resolved
-
-
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
