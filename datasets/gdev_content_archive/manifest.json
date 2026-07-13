@@ -1,0 +1,27 @@
+{
+  "benchmark_status": "archive_only_not_release_gate",
+  "case_count": 6,
+  "cases_path": "datasets/gdev_content_archive/stub_cases_v1.jsonl",
+  "dataset_card": "datasets/gdev_content_archive/stub_cases_v1_CARD.md",
+  "dataset_hash": "0b064aea2e96d367cbfb033c7b37ac7d204bb02d6646939da0778fa048fa38f4",
+  "dataset_id": "stub_cases_v1",
+  "dataset_raw_sha256": "23ff949c5f746a91cacaeecccfe609984c22f8065c975d1e7b00e9dab1d988d9",
+  "license": "Apache-2.0",
+  "manifest_version": "gdev-content-archive-manifest-v1",
+  "real_user_record_count": 0,
+  "source_git_blob": "e8fda6e2e9134bc66c7fc0dfc30d0bd44f5a84c4",
+  "source_path": "eval/cases.jsonl",
+  "source_raw_sha256": "b7f6e682af5157034da13682c11cd88fa82b4a3a9c34b593a6bba69dd664a34f",
+  "source_repository": "https://github.com/ashishki/gdev-content",
+  "source_repository_head_reviewed": "628da247148b31f7885f3e859d96e939a2ef6454",
+  "source_revision": "44dd93760de2cccf0667f393d7c231bdfbbcabc0",
+  "source_replay": {
+    "expected_negative_cases": 1,
+    "expected_positive_cases": 5,
+    "expectation_match_rate": 1.0,
+    "provider": "stub",
+    "replay_date": "2026-07-13",
+    "result_path_public": null
+  },
+  "synthetic": true
+}

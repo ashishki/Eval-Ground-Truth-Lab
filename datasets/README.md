@@ -14,3 +14,11 @@ The gdev-agent challenge is documented in
 public development set with zero independent annotators, not a blind holdout.
 New datasets must declare their holdout/leakage status rather than inheriting a
 benchmark claim from directory placement.
+
+## Archived migrations
+
+`gdev_content_archive/stub_cases_v1.jsonl` preserves only six deterministic
+fixtures replayed from the superseded `gdev-content` repository. Its dataset
+card and manifest record the exact source commit/blob/hash, transformation,
+dependency set, replay result, and why 20 unverified LLM cases were excluded.
+It is archive material, not a release gate or external adapter.
