@@ -4,7 +4,7 @@ import hashlib
 import importlib.metadata
 import json
 import platform
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from importlib import resources
 from pathlib import Path
@@ -60,6 +60,7 @@ _TRUSTED_CASE_METADATA = {
 _TRUSTED_DATASET_PRIVACY = "fully-synthetic-packaged-expectation-dataset"
 _UNTRUSTED_DATASET_PRIVACY = "caller-supplied-dataset-not-privacy-reviewed"
 _UNTRUSTED_EVIDENCE_PRIVACY = "caller-supplied-evidence-not-privacy-reviewed"
+_CANONICAL_ADAPTER_INVOKE = TraderRiskAuditEvidenceAdapter.invoke
 
 
 class TraderRiskAuditReplayConfigurationError(ValueError):
@@ -114,9 +115,15 @@ def run_trader_risk_audit_replay(
     run_dir: str | Path,
     run_id: str | None = None,
     adapter: TraderRiskAuditEvidenceAdapter | None = None,
+    _after_input_snapshot_hook: Callable[[], None] | None = None,
 ) -> int:
     """Run a Trader evidence snapshot through Eval Lab's exact validators."""
 
+    if adapter is not None:
+        raise TraderRiskAuditReplayConfigurationError(
+            "Evidentiary Trader replay does not accept injected adapters; it always constructs "
+            "the exact canonical TraderRiskAuditEvidenceAdapter from the input snapshot"
+        )
     pack_root = Path(evidence_dir)
     run_root = Path(run_dir)
     _require_separate_run_directory(pack_root=pack_root, run_root=run_root)
@@ -131,16 +138,22 @@ def run_trader_risk_audit_replay(
         evidence_path=evidence_path,
         provenance_path=provenance_path,
     )
+    if _after_input_snapshot_hook is not None:
+        # Private test seam: the callback receives no snapshot or path authority.
+        # Production CLI calls cannot configure it, and all later work continues
+        # from the immutable bytes captured above.
+        _after_input_snapshot_hook()
     dataset = load_dataset_bytes(
         snapshot.dataset_bytes,
         source_path=snapshot.dataset_source_name,
     )
     _require_v1_dataset_coverage(dataset)
     dataset_trust = _validate_and_classify_dataset(dataset=dataset, snapshot=snapshot)
-    selected_adapter = adapter or TraderRiskAuditEvidenceAdapter.from_bytes(
+    selected_adapter = TraderRiskAuditEvidenceAdapter.from_bytes(
         evidence_bytes=snapshot.evidence_bytes,
         provenance_bytes=snapshot.provenance_bytes,
     )
+    _require_canonical_evidentiary_adapter(selected_adapter)
     _require_adapter_snapshot_match(adapter=selected_adapter, snapshot=snapshot)
     source_trust = _classify_source_trust(adapter=selected_adapter, snapshot=snapshot)
     source_provenance = _source_provenance_mapping(
@@ -900,6 +913,21 @@ def _require_adapter_snapshot_match(
     ):
         raise TraderRiskAuditReplayConfigurationError(
             "Provided adapter was not constructed from the replay input snapshots"
+        )
+
+
+def _require_canonical_evidentiary_adapter(adapter: TraderRiskAuditEvidenceAdapter) -> None:
+    """Reject adapter substitution before an evidentiary replay can execute."""
+
+    bound_invoke = getattr(adapter, "invoke", None)
+    actual_invoke = getattr(bound_invoke, "__func__", None)
+    if (
+        type(adapter) is not TraderRiskAuditEvidenceAdapter
+        or actual_invoke is not _CANONICAL_ADAPTER_INVOKE
+    ):
+        raise TraderRiskAuditReplayConfigurationError(
+            "Evidentiary Trader replay requires the exact canonical "
+            "TraderRiskAuditEvidenceAdapter implementation"
         )
 
 

@@ -237,7 +237,7 @@ def test_v1_replay_rejects_non_singleton_dataset_without_creating_a_pack(
     assert not runs.exists()
 
 
-def test_replay_packages_the_exact_validated_snapshots_when_paths_mutate_during_invoke(
+def test_replay_packages_the_exact_validated_snapshots_when_paths_mutate_after_snapshot(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -252,14 +252,11 @@ def test_replay_packages_the_exact_validated_snapshots_when_paths_mutate_during_
     for path, payload in originals.items():
         path.write_bytes(payload)
 
-    class MutatingAdapter(TraderRiskAuditEvidenceAdapter):
-        def invoke(self, case: Mapping[str, Any]) -> AdapterResult:
-            dataset.write_bytes(b"mutated after snapshot\n")
-            evidence.write_bytes(b"{}\n")
-            provenance.write_bytes(b"{}\n")
-            return super().invoke(case)
+    def mutate_input_paths() -> None:
+        dataset.write_bytes(b"mutated after snapshot\n")
+        evidence.write_bytes(b"{}\n")
+        provenance.write_bytes(b"{}\n")
 
-    adapter = MutatingAdapter(evidence_path=evidence, provenance_path=provenance)
     pack = tmp_path / "pack"
     exit_code = run_trader_risk_audit_replay(
         dataset_path=dataset,
@@ -268,7 +265,7 @@ def test_replay_packages_the_exact_validated_snapshots_when_paths_mutate_during_
         evidence_dir=pack,
         run_dir=tmp_path / "runs",
         run_id="mutation-between-validation-and-packaging",
-        adapter=adapter,
+        _after_input_snapshot_hook=mutate_input_paths,
     )
     capsys.readouterr()
 
@@ -277,6 +274,36 @@ def test_replay_packages_the_exact_validated_snapshots_when_paths_mutate_during_
     assert (pack / "inputs/eval-evidence.json").read_bytes() == originals[evidence]
     assert (pack / "inputs/source-provenance.json").read_bytes() == originals[provenance]
     verify_evidence_manifest(next(pack.glob("sha256-*.manifest.json")))
+
+
+def test_evidentiary_replay_rejects_subclass_adapter_override_before_execution(
+    tmp_path: Path,
+) -> None:
+    class OverrideAdapter(TraderRiskAuditEvidenceAdapter):
+        invoked = False
+
+        def invoke(self, case: Mapping[str, Any]) -> AdapterResult:
+            self.invoked = True
+            return super().invoke(case)
+
+    adapter = OverrideAdapter(evidence_path=EVIDENCE, provenance_path=PROVENANCE)
+    pack = tmp_path / "pack"
+    runs = tmp_path / "runs"
+
+    with pytest.raises(TraderRiskAuditReplayConfigurationError, match="does not accept injected"):
+        run_trader_risk_audit_replay(
+            dataset_path=DATASET,
+            evidence_path=EVIDENCE,
+            provenance_path=PROVENANCE,
+            evidence_dir=pack,
+            run_dir=runs,
+            run_id="subclass-adapter-override",
+            adapter=adapter,
+        )
+
+    assert adapter.invoked is False
+    assert not pack.exists()
+    assert not runs.exists()
 
 
 def test_replay_packages_the_locked_terminal_snapshot_when_run_paths_mutate_after_completion(
@@ -533,7 +560,6 @@ def test_matching_caller_expectation_can_pass_without_becoming_trusted(
         evidence_dir=pack,
         run_dir=tmp_path / "runs",
         run_id="passing-but-untrusted-caller-evidence",
-        adapter=adapter,
     )
     capsys.readouterr()
 
