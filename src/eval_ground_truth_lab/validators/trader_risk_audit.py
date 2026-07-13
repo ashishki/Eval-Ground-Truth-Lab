@@ -77,7 +77,7 @@ _TRACE_FIELDS = {"rule_ref", "source_row_refs", "violation_ref"}
 def validate_trader_risk_audit_case(
     *, case_id: str, expected: Mapping[str, Any], actual: Mapping[str, Any]
 ) -> tuple[ValidationResult, ...]:
-    """Compare a verified Trader export with one versioned synthetic expectation."""
+    """Compare a validated Trader export with one versioned synthetic expectation."""
 
     structure_issues = _structure_issues(expected=expected, actual=actual)
     if structure_issues:
@@ -122,7 +122,7 @@ def validate_trader_risk_audit_case(
             case_id=case_id,
             validator_id="trader_risk_audit.source_provenance",
             category="provenance_mismatch",
-            label="pinned Trader Risk Audit source provenance",
+            label="Trader Risk Audit source provenance",
             expected_value=dict(expected_source),
             actual_value=dict(actual_source),
         ),
@@ -130,7 +130,7 @@ def validate_trader_risk_audit_case(
             case_id=case_id,
             validator_id="trader_risk_audit.evidence_identity",
             category="evidence_mismatch",
-            label="sanitized evidence identity",
+            label="evidence identity",
             expected_value={
                 "evidence_content_hash": expected_evidence["evidence_content_hash"],
                 "evidence_sha256": expected["evidence_sha256"],

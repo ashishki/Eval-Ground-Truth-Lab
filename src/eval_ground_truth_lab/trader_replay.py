@@ -16,6 +16,7 @@ from eval_ground_truth_lab.adapters import trader_risk_audit as adapter_module
 from eval_ground_truth_lab.adapters.trader_risk_audit import (
     SYNTHETIC_PRIVACY_CLASSIFICATION,
     TRADER_RISK_AUDIT_ADAPTER_VERSION,
+    TRADER_RISK_AUDIT_PACKAGE,
     TraderRiskAuditEvidenceAdapter,
     read_regular_file_bytes,
 )
@@ -31,6 +32,11 @@ from eval_ground_truth_lab.evidence import (
 from eval_ground_truth_lab.implementation_provenance import build_implementation_provenance
 from eval_ground_truth_lab.runs import CaseResult, RunRecord, RunStore
 from eval_ground_truth_lab.runs import store as run_store_module
+from eval_ground_truth_lab.trader_source_identity import (
+    TraderSourceIdentityProofError,
+    VerifiedTraderSourceIdentity,
+    verify_trader_source_identity_proof,
+)
 from eval_ground_truth_lab.validators import trader_risk_audit as validator_module
 from eval_ground_truth_lab.validators.trader_risk_audit import (
     TRADER_RISK_AUDIT_VALIDATOR_VERSION,
@@ -42,6 +48,7 @@ TRADER_RISK_AUDIT_REPLAY_SCHEMA_VERSION = "eval-lab-trader-risk-audit-replay-v1"
 _DEFAULT_DATASET_NAME = "synthetic_quickstart_v1.jsonl"
 _DEFAULT_EVIDENCE_NAME = "eval-evidence.json"
 _DEFAULT_PROVENANCE_NAME = "synthetic_quickstart_v1.provenance.json"
+_DEFAULT_SOURCE_IDENTITY_PROOF_NAME = "synthetic_quickstart_v1.git-proof.json"
 _TRUSTED_CASE_ID = "synthetic-quickstart-v1"
 _TRUSTED_CASE_INPUT = {"evidence_case_id": _TRUSTED_CASE_ID}
 _TRUSTED_CASE_METADATA = {
@@ -50,7 +57,9 @@ _TRUSTED_CASE_METADATA = {
     "intended_use": "contract_compatibility_replay",
     "source_data": "invented",
 }
+_TRUSTED_DATASET_PRIVACY = "fully-synthetic-packaged-expectation-dataset"
 _UNTRUSTED_DATASET_PRIVACY = "caller-supplied-dataset-not-privacy-reviewed"
+_UNTRUSTED_EVIDENCE_PRIVACY = "caller-supplied-evidence-not-privacy-reviewed"
 
 
 class TraderRiskAuditReplayConfigurationError(ValueError):
@@ -63,7 +72,11 @@ class _TraderReplayInputSnapshot:
     dataset_source_name: str
     evidence_bytes: bytes
     provenance_bytes: bytes
+    source_identity_proof_bytes: bytes
+    trusted_source_identity: VerifiedTraderSourceIdentity
     trusted_dataset_bytes_match: bool
+    trusted_evidence_bytes_match: bool
+    trusted_provenance_bytes_match: bool
 
 
 @dataclass(frozen=True)
@@ -72,6 +85,21 @@ class _TraderDatasetTrust:
     privacy_classification: str
     replay_type: str
     source: str
+
+    def to_mapping(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class _TraderSourceTrust:
+    evidence_source: str
+    privacy_classification: str
+    privacy_reviewed: bool
+    provenance_source: str
+    reviewed: bool
+    source_identity_proof_sha256: str
+    source_identity_verified: bool
+    status: str
 
     def to_mapping(self) -> dict[str, Any]:
         return asdict(self)
@@ -87,7 +115,7 @@ def run_trader_risk_audit_replay(
     run_id: str | None = None,
     adapter: TraderRiskAuditEvidenceAdapter | None = None,
 ) -> int:
-    """Run a pinned sanitized Trader export through Eval Lab's exact validators."""
+    """Run a Trader evidence snapshot through Eval Lab's exact validators."""
 
     pack_root = Path(evidence_dir)
     run_root = Path(run_dir)
@@ -114,20 +142,18 @@ def run_trader_risk_audit_replay(
         provenance_bytes=snapshot.provenance_bytes,
     )
     _require_adapter_snapshot_match(adapter=selected_adapter, snapshot=snapshot)
-    source_provenance = {
-        **selected_adapter.provenance.to_mapping(),
-        "provenance_sha256": selected_adapter.provenance_sha256,
-    }
+    source_trust = _classify_source_trust(adapter=selected_adapter, snapshot=snapshot)
+    source_provenance = _source_provenance_mapping(
+        adapter=selected_adapter,
+        source_trust=source_trust,
+    )
     _prepare_empty_pack_directory(pack_root)
     store = RunStore(run_root)
     run = store.create_run(
         run_id=run_id,
         run_type="trader_risk_audit_evidence_replay",
         dataset_hash=dataset.metadata.dataset_hash,
-        candidate_version=(
-            f"trader-risk-audit-{selected_adapter.provenance.package_version}"
-            f"@{selected_adapter.provenance.source_git_commit[:12]}"
-        ),
+        candidate_version=_candidate_version(selected_adapter, source_trust=source_trust),
         validator_version=TRADER_RISK_AUDIT_VALIDATOR_VERSION,
         threshold_config_version="exact-versioned-synthetic-expectation-v1",
     )
@@ -194,6 +220,7 @@ def run_trader_risk_audit_replay(
         implementation=implementation,
         runtime=runtime,
         dataset_trust=dataset_trust,
+        source_trust=source_trust,
         run_binding=run_binding,
     )
     _require_terminal_result_binding(
@@ -211,6 +238,7 @@ def run_trader_risk_audit_replay(
     dataset_artifact = input_dir / "dataset.jsonl"
     evidence_artifact = input_dir / "eval-evidence.json"
     provenance_artifact = input_dir / "source-provenance.json"
+    source_identity_proof_artifact = input_dir / "source-identity-proof.json"
     run_artifact = run_artifact_dir / f"{completed.run_id}.json"
     seal_artifact = run_artifact_dir / f"{completed.run_id}.sha256"
 
@@ -219,6 +247,7 @@ def run_trader_risk_audit_replay(
     atomic_write_bytes(dataset_artifact, snapshot.dataset_bytes)
     atomic_write_bytes(evidence_artifact, snapshot.evidence_bytes)
     atomic_write_bytes(provenance_artifact, snapshot.provenance_bytes)
+    atomic_write_bytes(source_identity_proof_artifact, snapshot.source_identity_proof_bytes)
     atomic_write_bytes(run_artifact, terminal_snapshot.record_bytes)
     atomic_write_bytes(seal_artifact, terminal_snapshot.seal_bytes)
     declared = [
@@ -227,6 +256,7 @@ def run_trader_risk_audit_replay(
         dataset_artifact.relative_to(pack_root),
         evidence_artifact.relative_to(pack_root),
         provenance_artifact.relative_to(pack_root),
+        source_identity_proof_artifact.relative_to(pack_root),
         run_artifact.relative_to(pack_root),
         seal_artifact.relative_to(pack_root),
     ]
@@ -241,22 +271,21 @@ def run_trader_risk_audit_replay(
             "evidence_content_hash": selected_adapter.provenance.evidence_content_hash,
             "evidence_sha256": selected_adapter.provenance.evidence_sha256,
             "dataset_trust": dataset_trust.to_mapping(),
-            "fixture": dataset_trust.fixture,
+            "fixture": _replay_fixture(dataset_trust=dataset_trust, source_trust=source_trust),
             "gate_passed": not has_failure,
             "harness_version": f"eval-ground-truth-lab-{__version__}",
             "implementation": implementation,
             "implementation_sha256": implementation["components_sha256"],
-            "privacy_classification": dataset_trust.privacy_classification,
+            "privacy_classification": _replay_privacy_classification(
+                dataset_trust=dataset_trust,
+                source_trust=source_trust,
+            ),
             "provenance_sha256": selected_adapter.provenance_sha256,
             "run_id": completed.run_id,
             "runtime": runtime,
             "run": run_binding,
-            "source_privacy_classification": (selected_adapter.provenance.privacy_classification),
-            "source_bundle_sha256": selected_adapter.provenance.source_bundle_sha256,
-            "source_git_blob_sha1": selected_adapter.provenance.source_git_blob_sha1,
-            "source_git_commit": selected_adapter.provenance.source_git_commit,
-            "source_git_tree": selected_adapter.provenance.source_git_tree,
-            "source_path": selected_adapter.provenance.source_path,
+            "source_provenance": source_provenance,
+            "source_trust": source_trust.to_mapping(),
             "validator_version": TRADER_RISK_AUDIT_VALIDATOR_VERSION,
         },
     )
@@ -290,48 +319,89 @@ def render_trader_risk_audit_replay_markdown(result: Mapping[str, Any]) -> str:
     provenance = _mapping(result.get("source_provenance"), "source_provenance")
     result_provenance = _mapping(result.get("provenance"), "provenance")
     dataset_trust = _mapping(result_provenance.get("dataset_trust"), "dataset_trust")
+    source_trust = _mapping(result_provenance.get("source_trust"), "source_trust")
+    source_identity = _mapping(provenance.get("source_identity"), "source_identity")
     run = _mapping(result.get("run"), "run")
     cases = result.get("cases")
     if not isinstance(cases, list):
         raise ValueError("cases must be a list")
     if dataset_trust.get("fixture") is True:
         dataset_statement = (
-            "This is a deterministic compatibility replay of one fully synthetic, sanitized "
-            "expectation dataset."
-        )
-        trust_boundary = (
-            "PASS means the pinned sanitized export matches this self-authored synthetic "
-            "dataset and its exact contract expectations."
+            "This is a deterministic compatibility replay of one fully synthetic expectation "
+            "dataset distributed with Eval Lab."
         )
     else:
         dataset_statement = (
             "This replay uses a caller-supplied expectation dataset that passed the v1 schema "
             "allowlist but was not byte-identical to the packaged privacy-reviewed fixture."
         )
+    if source_trust.get("reviewed") is True:
+        title = "# Trader Risk Audit sanitized evidence replay"
+        source_statement = (
+            "The source evidence is the byte-identical packaged export. Its Git identity is "
+            "bound by the packaged commit-to-tree-to-path-to-blob proof. It is not a "
+            "financial-performance evaluation, live-data audit, external-user case study, "
+            "investment recommendation, or production claim."
+        )
+        source_heading = "## Source pins"
+        source_lines = [
+            f"- Trader package: `{provenance.get('package')}` / "
+            f"`{provenance.get('package_version')}`",
+            f"- Export contract: `{provenance.get('contract_version')}`",
+            f"- Source commit: `{source_identity.get('git_commit')}`",
+            f"- Source tree: `{source_identity.get('git_tree')}`",
+            f"- Source path: `{source_identity.get('path')}`",
+            f"- Source blob: `{source_identity.get('git_blob_sha1')}`",
+            f"- Source bundle SHA-256: `{source_identity.get('bundle_sha256')}`",
+            f"- Evidence SHA-256: `{provenance.get('evidence_sha256')}`",
+            f"- Evidence content hash: `{provenance.get('evidence_content_hash')}`",
+            f"- Privacy classification: `{provenance.get('privacy_classification')}`",
+        ]
+        if dataset_trust.get("fixture") is True:
+            trust_boundary = (
+                "PASS means the pinned sanitized export matches this self-authored synthetic "
+                "dataset and its exact contract expectations."
+            )
+        else:
+            trust_boundary = (
+                "PASS means only that the pinned sanitized export matches this caller-supplied "
+                "schema-valid expectation dataset; Eval Lab makes no fixture or privacy claim "
+                "for that dataset."
+            )
+    else:
+        title = "# Trader Risk Audit caller evidence replay"
+        source_statement = (
+            "The evidence and provenance were supplied or modified by the caller. They passed "
+            "format and internal hash checks only; Eval Lab did not review their privacy status "
+            "or authenticate their source."
+        )
+        source_heading = "## Caller declarations (not trusted)"
+        source_lines = [
+            f"- Declared package: `{provenance.get('package')}` / "
+            f"`{provenance.get('package_version')}`",
+            f"- Declared contract: `{provenance.get('contract_version')}`",
+            f"- Declared commit: `{source_identity.get('git_commit')}`",
+            f"- Declared tree: `{source_identity.get('git_tree')}`",
+            f"- Declared path: `{source_identity.get('path')}`",
+            f"- Declared blob: `{source_identity.get('git_blob_sha1')}`",
+            f"- Input SHA-256: `{provenance.get('evidence_sha256')}`",
+            f"- Effective privacy status: `{provenance.get('privacy_classification')}`",
+        ]
         trust_boundary = (
-            "PASS means only that the pinned sanitized export matches this caller-supplied "
-            "schema-valid expectation dataset; Eval Lab makes no fixture or privacy claim for it."
+            "PASS means only that the caller evidence matches the selected schema-valid "
+            "expectations; Eval Lab makes no source-authenticity or privacy claim for it."
         )
     lines = [
-        "# Trader Risk Audit sanitized evidence replay",
+        title,
         "",
         f"Gate: **{'PASS' if gate.get('passed') else 'FAIL'}**",
         "",
         dataset_statement,
-        "The source evidence is a pinned sanitized Trader Risk Audit export. It is not a "
-        "financial-performance evaluation, live-data",
-        "audit, external-user case study, investment recommendation, or production claim.",
+        source_statement,
         "",
-        "## Source pins",
+        source_heading,
         "",
-        f"- Trader package: `{provenance.get('package')}` / `{provenance.get('package_version')}`",
-        f"- Export contract: `{provenance.get('contract_version')}`",
-        f"- Source commit: `{provenance.get('source_git_commit')}`",
-        f"- Source tree: `{provenance.get('source_git_tree')}`",
-        f"- Source bundle SHA-256: `{provenance.get('source_bundle_sha256')}`",
-        f"- Evidence SHA-256: `{provenance.get('evidence_sha256')}`",
-        f"- Evidence content hash: `{provenance.get('evidence_content_hash')}`",
-        f"- Privacy classification: `{provenance.get('privacy_classification')}`",
+        *source_lines,
         "",
         "## Eval run",
         "",
@@ -382,6 +452,7 @@ def _build_replay_result(
     implementation: Mapping[str, Any],
     runtime: Mapping[str, str],
     dataset_trust: _TraderDatasetTrust,
+    source_trust: _TraderSourceTrust,
     run_binding: Mapping[str, str],
 ) -> dict[str, Any]:
     cases = []
@@ -415,12 +486,16 @@ def _build_replay_result(
         },
         "provenance": {
             "dataset_trust": dataset_trust.to_mapping(),
-            "fixture": dataset_trust.fixture,
+            "fixture": _replay_fixture(dataset_trust=dataset_trust, source_trust=source_trust),
             "harness_version": f"eval-ground-truth-lab-{__version__}",
             "implementation": dict(implementation),
             "implementation_sha256": dict(implementation["components_sha256"]),
-            "privacy_classification": dataset_trust.privacy_classification,
+            "privacy_classification": _replay_privacy_classification(
+                dataset_trust=dataset_trust,
+                source_trust=source_trust,
+            ),
             "runtime": dict(runtime),
+            "source_trust": source_trust.to_mapping(),
         },
         "run": {
             **dict(run_binding),
@@ -433,7 +508,7 @@ def _build_replay_result(
             "evaluates_raw_trades": False,
             "external_user_case_study": False,
             "production_evidence": False,
-            "replay_type": dataset_trust.replay_type,
+            "replay_type": _replay_type(dataset_trust=dataset_trust, source_trust=source_trust),
         },
         "source_provenance": dict(source_provenance),
     }
@@ -459,6 +534,18 @@ def _load_input_snapshot(
     provenance_path: str | Path | None,
 ) -> _TraderReplayInputSnapshot:
     trusted_dataset_bytes = _load_resource_bytes(_DEFAULT_DATASET_NAME)
+    trusted_evidence_bytes = _load_resource_bytes(_DEFAULT_EVIDENCE_NAME)
+    trusted_provenance_bytes = _load_resource_bytes(_DEFAULT_PROVENANCE_NAME)
+    source_identity_proof_bytes = _load_resource_bytes(_DEFAULT_SOURCE_IDENTITY_PROOF_NAME)
+    try:
+        trusted_source_identity = verify_trader_source_identity_proof(
+            proof_bytes=source_identity_proof_bytes,
+            evidence_bytes=trusted_evidence_bytes,
+        )
+    except TraderSourceIdentityProofError as exc:
+        raise TraderRiskAuditReplayConfigurationError(
+            "Packaged Trader source identity proof is invalid"
+        ) from exc
     if dataset_path is None:
         dataset_bytes = trusted_dataset_bytes
         dataset_source_name = _DEFAULT_DATASET_NAME
@@ -468,24 +555,32 @@ def _load_input_snapshot(
             resource_name=_DEFAULT_DATASET_NAME,
             label="Trader Risk Audit replay dataset",
         )
-    evidence_bytes, _ = _load_input_bytes(
-        path=evidence_path,
-        resource_name=_DEFAULT_EVIDENCE_NAME,
-        label="Trader Risk Audit evidence export",
-    )
-    provenance_bytes, _ = _load_input_bytes(
-        path=provenance_path,
-        resource_name=_DEFAULT_PROVENANCE_NAME,
-        label="Trader Risk Audit source provenance",
-    )
+    if evidence_path is None:
+        evidence_bytes = trusted_evidence_bytes
+    else:
+        evidence_bytes = read_regular_file_bytes(
+            evidence_path,
+            "Trader Risk Audit evidence export",
+        )
+    if provenance_path is None:
+        provenance_bytes = trusted_provenance_bytes
+    else:
+        provenance_bytes = read_regular_file_bytes(
+            provenance_path,
+            "Trader Risk Audit source provenance",
+        )
     return _TraderReplayInputSnapshot(
         dataset_bytes=dataset_bytes,
         dataset_source_name=dataset_source_name,
         evidence_bytes=evidence_bytes,
         provenance_bytes=provenance_bytes,
+        source_identity_proof_bytes=source_identity_proof_bytes,
+        trusted_source_identity=trusted_source_identity,
         trusted_dataset_bytes_match=(
             dataset_source_name == _DEFAULT_DATASET_NAME and dataset_bytes == trusted_dataset_bytes
         ),
+        trusted_evidence_bytes_match=evidence_bytes == trusted_evidence_bytes,
+        trusted_provenance_bytes_match=provenance_bytes == trusted_provenance_bytes,
     )
 
 
@@ -558,7 +653,7 @@ def _validate_and_classify_dataset(
     ):
         return _TraderDatasetTrust(
             fixture=True,
-            privacy_classification=SYNTHETIC_PRIVACY_CLASSIFICATION,
+            privacy_classification=_TRUSTED_DATASET_PRIVACY,
             replay_type="pinned_synthetic_sanitized_export",
             source="packaged_byte-identical_fixture",
         )
@@ -568,6 +663,136 @@ def _validate_and_classify_dataset(
         replay_type="caller_supplied_expectation_replay",
         source="caller_supplied_schema_validated_dataset",
     )
+
+
+def _classify_source_trust(
+    *,
+    adapter: TraderRiskAuditEvidenceAdapter,
+    snapshot: _TraderReplayInputSnapshot,
+) -> _TraderSourceTrust:
+    expected_identity = snapshot.trusted_source_identity
+    provenance = adapter.provenance
+    identity_matches_proof = (
+        provenance.source_bundle_sha256 == expected_identity.source_bundle_sha256
+        and provenance.source_git_blob_sha1 == expected_identity.source_git_blob_sha1
+        and provenance.source_git_commit == expected_identity.source_git_commit
+        and provenance.source_git_tree == expected_identity.source_git_tree
+        and provenance.source_path == expected_identity.source_path
+    )
+    reviewed = (
+        snapshot.trusted_evidence_bytes_match
+        and snapshot.trusted_provenance_bytes_match
+        and identity_matches_proof
+    )
+    if (
+        snapshot.trusted_evidence_bytes_match
+        and snapshot.trusted_provenance_bytes_match
+        and not identity_matches_proof
+    ):
+        raise TraderRiskAuditReplayConfigurationError(
+            "Packaged Trader provenance does not match its Git source identity proof"
+        )
+    if reviewed:
+        return _TraderSourceTrust(
+            evidence_source="packaged_byte_identical_evidence",
+            privacy_classification=SYNTHETIC_PRIVACY_CLASSIFICATION,
+            privacy_reviewed=True,
+            provenance_source="packaged_byte_identical_provenance",
+            reviewed=True,
+            source_identity_proof_sha256=expected_identity.proof_sha256,
+            source_identity_verified=True,
+            status="packaged_reviewed_source",
+        )
+    return _TraderSourceTrust(
+        evidence_source=(
+            "packaged_byte_identical_evidence"
+            if snapshot.trusted_evidence_bytes_match
+            else "caller_supplied_or_modified_evidence"
+        ),
+        privacy_classification=_UNTRUSTED_EVIDENCE_PRIVACY,
+        privacy_reviewed=False,
+        provenance_source=(
+            "packaged_byte_identical_provenance"
+            if snapshot.trusted_provenance_bytes_match
+            else "caller_supplied_or_modified_provenance"
+        ),
+        reviewed=False,
+        source_identity_proof_sha256=expected_identity.proof_sha256,
+        source_identity_verified=False,
+        status="caller_source_unreviewed",
+    )
+
+
+def _source_provenance_mapping(
+    *,
+    adapter: TraderRiskAuditEvidenceAdapter,
+    source_trust: _TraderSourceTrust,
+) -> dict[str, Any]:
+    provenance = adapter.provenance
+    return {
+        "adapter_version": provenance.adapter_version,
+        "contract_version": provenance.contract_version,
+        "declared_privacy_classification": provenance.privacy_classification,
+        "evidence_content_hash": provenance.evidence_content_hash,
+        "evidence_sha256": provenance.evidence_sha256,
+        "package": TRADER_RISK_AUDIT_PACKAGE,
+        "package_version": provenance.package_version,
+        "privacy_classification": source_trust.privacy_classification,
+        "provenance_sha256": adapter.provenance_sha256,
+        "source_identity": {
+            "bundle_sha256": provenance.source_bundle_sha256,
+            "git_blob_sha1": provenance.source_git_blob_sha1,
+            "git_commit": provenance.source_git_commit,
+            "git_tree": provenance.source_git_tree,
+            "path": provenance.source_path,
+            "repository_state": provenance.source_repository_state,
+            "status": (
+                "packaged_git_object_chain_verified"
+                if source_trust.source_identity_verified
+                else "caller_declared_not_authenticated"
+            ),
+        },
+        "trust": source_trust.to_mapping(),
+    }
+
+
+def _candidate_version(
+    adapter: TraderRiskAuditEvidenceAdapter,
+    *,
+    source_trust: _TraderSourceTrust,
+) -> str:
+    provenance = adapter.provenance
+    if source_trust.reviewed:
+        return f"trader-risk-audit-{provenance.package_version}@{provenance.source_git_commit[:12]}"
+    return f"trader-risk-audit-caller-evidence@{provenance.evidence_sha256[:12]}"
+
+
+def _replay_type(
+    *,
+    dataset_trust: _TraderDatasetTrust,
+    source_trust: _TraderSourceTrust,
+) -> str:
+    if not source_trust.reviewed:
+        return "caller_supplied_unreviewed_evidence_replay"
+    return dataset_trust.replay_type
+
+
+def _replay_fixture(
+    *,
+    dataset_trust: _TraderDatasetTrust,
+    source_trust: _TraderSourceTrust,
+) -> bool:
+    return dataset_trust.fixture and source_trust.reviewed
+
+
+def _replay_privacy_classification(
+    *,
+    dataset_trust: _TraderDatasetTrust,
+    source_trust: _TraderSourceTrust,
+) -> str:
+    if not source_trust.reviewed:
+        return source_trust.privacy_classification
+    return dataset_trust.privacy_classification
 
 
 def _run_identity(run: RunRecord) -> dict[str, str]:

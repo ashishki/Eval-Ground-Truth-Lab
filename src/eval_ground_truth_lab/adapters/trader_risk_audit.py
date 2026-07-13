@@ -121,11 +121,12 @@ class TraderRiskAuditProvenance:
 
 
 class TraderRiskAuditEvidenceAdapter:
-    """Load one pinned sanitized Trader Risk Audit evidence export.
+    """Load one structurally validated Trader Risk Audit evidence export.
 
     The adapter does not run the financial audit, read raw trades, or infer
-    ground truth. It verifies the upstream export contract and source fixture
-    pins before Eval Lab validators compare observations with a versioned case.
+    ground truth. It checks the export/provenance pair for contract shape and
+    internal hash consistency. The replay layer separately decides whether the
+    bytes match Eval Lab's reviewed package resources and Git-object proof.
     """
 
     def __init__(self, *, evidence_path: str | Path, provenance_path: str | Path) -> None:

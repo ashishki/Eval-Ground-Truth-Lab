@@ -203,7 +203,9 @@ passing workload or production-quality claim.
 ## Quickstart: Trader Risk Audit sanitized evidence replay
 
 This path loads a committed, fully synthetic sanitized export from the separate
-Trader Risk Audit publication candidate. It verifies source and content pins,
+Trader Risk Audit publication candidate. Packaged trust requires byte-identical
+evidence and provenance resources plus an offline Git-object proof that binds
+commit, root tree, repository path, and evidence blob. It verifies content pins,
 applies exact deterministic expectations to every sealed export field, writes a
 sealed run, and packages the exact input bytes it validated. The default inputs
 are package resources, so the command works from an unrelated directory after
@@ -212,7 +214,9 @@ The run JSON and seal come from the locked completion snapshot, and their
 identity is cross-bound to result and manifest. Unknown dataset fields,
 noncanonical synthetic metadata, and duplicate JSON/YAML keys fail before any
 output directory is created; caller overrides never inherit fixture/privacy
-claims merely by declaring synthetic metadata.
+claims merely by declaring synthetic metadata. Caller evidence/provenance
+overrides are explicitly unreviewed even when their internal hashes are
+self-consistent and they retain the packaged commit, tree, path, and case ids.
 
 ```bash
 eval-ground-truth-lab run-trader-risk-audit-replay \

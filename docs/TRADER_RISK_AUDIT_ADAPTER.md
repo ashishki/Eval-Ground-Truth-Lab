@@ -35,10 +35,14 @@ contract `trader-risk-audit-evidence-v1`. Its provenance record pins:
 - provenance-file SHA-256
   `3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402`.
 
-The adapter independently recomputes the fixture SHA-256, Git blob identity,
-and upstream evidence content hash. The bundle digest is a provenance pin; the
-protected bundle is not distributed or opened by this command. Local hashes
-detect drift but do not authenticate a publisher.
+The packaged Git proof contains the exact commit object and every tree object on
+the repository path. Eval Lab recomputes their Git object ids and traverses the
+chain from commit to root tree, path, and evidence blob. It also recomputes the
+fixture SHA-256, Git blob identity, and upstream evidence content hash. The
+bundle digest binds the protected source bundle used to derive this proof; the
+full bundle is not distributed or opened by this command. This authenticates
+the packaged source identity against Eval Lab's reviewed trust anchor, not an
+external publisher identity.
 
 ## Fail-closed validation
 
@@ -60,7 +64,7 @@ checks all of the following:
 - duplicate JSON or YAML mapping keys are rejected recursively;
 - dataset cases cannot select a different evidence path or configure execution.
 
-Eval validators then compare the verified export with the versioned one-case
+Eval validators then compare the validated export with the versioned one-case
 synthetic expectation, including every field that the adapter seals into its
 result. A mismatch returns a failing gate and still writes evidence. A malformed
 or tampered source fails loading before a gate can be claimed. V1 requires
@@ -81,6 +85,16 @@ as the reviewed synthetic fixture. A schema-valid caller override may produce a
 diagnostic PASS or FAIL, but the result and manifest mark it as non-fixture and
 `caller-supplied-dataset-not-privacy-reviewed`.
 
+Evidence trust is independent from dataset trust. Sanitized, pinned, reviewed,
+and source-identity claims require both evidence and provenance to be
+byte-identical to the packaged resources and require the packaged Git-object
+proof to bind commit, tree, path, and blob. Any caller-modified pair is marked
+`caller-supplied-evidence-not-privacy-reviewed`, is not an overall fixture, and
+uses a caller-evidence candidate identity. This remains true when the caller
+recomputes every local content hash while retaining canonical source ids. Its
+Markdown report labels values as caller declarations and makes no packaged
+source or privacy claim.
+
 Run completion returns the exact terminal JSON and checksum-seal bytes created
 while holding the RunStore lock. Replay packaging never reopens those mutable
 source paths. The terminal record SHA-256, seal SHA-256, run id, candidate,
@@ -90,8 +104,10 @@ replay result, and content-addressed manifest.
 Implementation provenance covers the adapter, dataset parser, RunStore,
 manifest writer, replay runner, and validators individually, plus a digest of
 the complete installed package payload. Source executions record the exact Eval
-commit/tree and whether the worktree was clean; installed-wheel executions bind
-the installed package digest instead.
+commit/tree and whether the worktree was clean only when every measured package
+file is tracked at that repository's HEAD. Ignored or untracked installations
+inside an unrelated Git repository are classified as `installed_package` and
+bind the complete installed package digest instead.
 
 ## Reproduce
 
@@ -107,10 +123,10 @@ eval-ground-truth-lab verify-evidence \
   --manifest /tmp/eval-lab-trader-evidence/sha256-*.manifest.json
 ```
 
-The default dataset, evidence, and provenance are installed package resources,
-not current-working-directory paths. Explicit `--dataset`, `--evidence`, and
-`--provenance` overrides remain available and are subject to the same snapshot
-and pin validation.
+The default dataset, evidence, provenance, and Git source proof are installed
+package resources, not current-working-directory paths. Explicit `--dataset`,
+`--evidence`, and `--provenance` overrides remain available and are subject to
+the same snapshot and validation rules.
 
 The first command writes the replay JSON, Markdown decision, exact input files,
 checksum-sealed run record, and content-addressed manifest. Its decision is
