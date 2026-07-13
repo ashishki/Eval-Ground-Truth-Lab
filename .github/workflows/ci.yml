@@ -55,6 +55,15 @@ jobs:
       - name: Mocked gdev-agent smoke
         run: python -m pytest tests/eval/test_gdev_agent_smoke.py tests/adapters/test_gdev_agent_adapter.py -q --tb=short
 
+      - name: Trader Risk Audit sanitized replay
+        run: |
+          python -m eval_ground_truth_lab.cli run-trader-risk-audit-replay \
+            --run-id trader-ci-synthetic-v1 \
+            --run-dir /tmp/eval-lab-trader-ci-runs \
+            --evidence-dir /tmp/eval-lab-trader-ci-evidence
+          python -m eval_ground_truth_lab.cli verify-evidence \
+            --manifest /tmp/eval-lab-trader-ci-evidence/sha256-*.manifest.json
+
       - name: Seeded smoke gate fixture
         run: |
           set +e
