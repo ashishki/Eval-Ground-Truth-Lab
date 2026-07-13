@@ -30,6 +30,16 @@ license explicitly covers code, documentation, manifests, thresholds, and those
 authored synthetic datasets. Contributors must document provenance and may not
 submit data they cannot redistribute.
 
+The Trader Risk Audit compatibility fixture is the sanitized `eval-export`
+derived from that repository's authored `examples/synthetic_quickstart/` data.
+The reviewed path-purged source candidate also declares Apache-2.0 for authored
+source, documentation, configuration, and explicitly synthetic fixtures. Its
+license/data review identifies the synthetic quickstart as Apache-2.0 and keeps
+externally sourced rows under separate source terms. Eval Lab copies only the
+synthetic sanitized export; it does not copy SEC, blockchain, or excluded Dune
+rows. The exact source commit/tree/blob/bundle and fixture hashes are pinned in
+`datasets/trader_risk_audit/synthetic_quickstart_v1.provenance.json`.
+
 ## Boundaries
 
 - The conclusion covers the versions above, not every package a broad future

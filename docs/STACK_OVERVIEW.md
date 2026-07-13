@@ -58,6 +58,13 @@ operator-run local evidence, not hosted operations or continuous eval. The
 latest committed Runtime Grid snapshot records 20/20 queued local HTTP jobs
 completed against a local demo-mode gdev-agent stack on 2026-06-15.
 
+Trader Risk Audit is an additional applied workload, not a fourth stack layer.
+Its separate publication candidate exports sanitized deterministic observations;
+Eval Lab verifies one pinned fully synthetic export and applies exact versioned
+expectations. That path is contract-compatibility evidence only. It does not
+run the Trader engine, inspect raw trades, establish financial quality, or count
+as an external adapter/user case study.
+
 ## Agent And Provider Model
 
 In this stack an agent is a bounded job/workflow contract:

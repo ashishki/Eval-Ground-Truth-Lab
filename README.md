@@ -46,6 +46,9 @@ production SLO.
 - [gdev-agent](https://github.com/ashishki/gdev-agent) is a reference workload.
   Its repository owns application behavior, tenant isolation, and candidate
   fixes.
+- Trader Risk Audit is a separate applied FinTech workload. Its path-purged
+  publication candidate owns deterministic trade-policy auditing; Eval Lab owns
+  only a pinned sanitized evidence import/replay contract.
 - [AI Workflow Playbook](https://github.com/ashishki/AI_workflow_playbook) is an
   independent governance companion, not a runtime dependency.
 - The thin umbrella pins compatible revisions and runs integration proofs; it
@@ -79,6 +82,9 @@ Candidate code remains in the system-under-test repository.
   retained rather than tuned away.
 - CI-safe mocked gdev-agent smoke that does not require Docker Compose or a live
   gdev-agent service.
+- Fail-closed Trader Risk Audit sanitized-export adapter, one fully synthetic
+  exact-expectation dataset, and a content-addressed local replay path pinned to
+  an exact Trader publication-candidate commit/tree/blob/bundle.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
 - Optional OpenAI judge provider contract, disabled by default and tested with
   fake transport only.
@@ -194,6 +200,31 @@ failures, 58 blocking failures, and `10/10` expected faults matched. Five
 thresholds fail. This is canonical evidence of a failing fixed candidate, not a
 passing workload or production-quality claim.
 
+## Quickstart: Trader Risk Audit sanitized evidence replay
+
+This path loads a committed, fully synthetic sanitized export from the separate
+Trader Risk Audit publication candidate. It verifies source and content pins,
+applies exact deterministic expectations, writes a sealed run, and packages the
+decision. It does not run a financial audit or read raw trades.
+
+```bash
+eval-ground-truth-lab run-trader-risk-audit-replay \
+  --run-id trader-synthetic-quickstart-v1 \
+  --run-dir /tmp/eval-lab-trader-runs \
+  --evidence-dir /tmp/eval-lab-trader-evidence
+
+eval-ground-truth-lab verify-evidence \
+  --manifest /tmp/eval-lab-trader-evidence/sha256-*.manifest.json
+```
+
+The expected gate is PASS for this one exact compatibility fixture. PASS is not
+a financial-performance result, external adapter, real-user case study, or
+production claim. See
+[docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
+[dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
+[committed replay pack](docs/evidence/integrations/README.md) verifies at content
+address `sha256:ed96a622a850f72dda4e0c804e4d4251932e646ac7384ed1499d379afef203c9`.
+
 ## Architecture
 
 The canonical architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -265,7 +296,10 @@ benchmark-method package:
 12. Dataset card, provenance, hypotheses, leakage boundary, labeling/review
     protocol, and reproducible content-addressed report: complete for the public
     development set.
-13. Independently owned adapter, independent labels, a blind successor holdout,
+13. Trader Risk Audit sanitized-export adapter, exact synthetic expectation,
+    CI replay, and content-addressed evidence: complete for contract
+    compatibility; no external-user or financial-quality claim.
+14. Independently owned adapter, independent labels, a blind successor holdout,
     and real-user feedback: not claimed; these require external participants.
 
 ## License

@@ -11,6 +11,7 @@ python -m eval_ground_truth_lab.cli seeded-smoke --help
 python -m eval_ground_truth_lab.cli dataset-inspect --help
 python -m eval_ground_truth_lab.cli run-gdev-agent --help
 python -m eval_ground_truth_lab.cli run-gdev-agent-challenge --help
+python -m eval_ground_truth_lab.cli run-trader-risk-audit-replay --help
 python -m eval_ground_truth_lab.cli verify-evidence --help
 python -m eval_ground_truth_lab.cli compare --help
 python -m eval_ground_truth_lab.cli cost-rollup --help
@@ -72,6 +73,26 @@ namespace inputs, and whether a real gdev HTTP adapter or a custom passthrough
 adapter handled the cases.
 Keep `--run-dir` outside `--evidence-dir`: the command copies the sealed terminal
 run into the evidence directory's own `run/` subdirectory during finalization.
+
+## Replay Trader Risk Audit sanitized evidence
+
+```bash
+eval-ground-truth-lab run-trader-risk-audit-replay \
+  --run-id trader-synthetic-quickstart-v1 \
+  --run-dir /tmp/eval-lab-trader-runs \
+  --evidence-dir /tmp/eval-lab-trader-evidence
+```
+
+The default dataset, evidence export, and provenance paths select the committed
+fully synthetic quickstart fixture. The adapter verifies the source pin, file
+SHA-256, Git blob, upstream contract shape, and evidence content hash before
+exact deterministic Eval validators run. The command writes a sealed run and a
+seven-artifact content-addressed evidence pack. A validator mismatch exits `1`
+and retains the pack; malformed or tampered source evidence fails closed.
+
+This is a contract compatibility replay, not a live Trader execution, financial
+policy benchmark, external-user case study, or production evidence. See
+`docs/TRADER_RISK_AUDIT_ADAPTER.md` for the product and claim boundary.
 
 ## Verify Evidence
 

@@ -20,6 +20,11 @@ is not a passing baseline; it is a public development diagnostic with a
 published canonical failing run. Its dataset card records self-authorship, zero
 independent annotators, and leakage limitations.
 
+The separate Trader Risk Audit compatibility dataset contains one fully
+synthetic sanitized-export case. Its exact source commit/tree/blob/bundle and
+content hashes are pinned. It checks an adapter contract, not financial-policy
+quality, raw trade correctness, or external adoption.
+
 ## Baseline Candidate Comparison
 
 Baseline and candidate runs are atomic, checksum-sealed JSON artifacts whose
@@ -71,6 +76,8 @@ The current stack has three concrete paths:
 - Agent Runtime Grid can also run an optional `full-stack-live-local` proof where
   queued workers call a local gdev-agent HTTP endpoint and store sanitized
   runtime artifacts.
+- Eval Lab can verify and replay one pinned sanitized Trader Risk Audit export
+  without importing or absorbing the Trader product code.
 
 The Runtime Grid modes remain separate from Eval Lab's deterministic quality
 authority. Artifact proof is the reproducible default; live-local proof is

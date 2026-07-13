@@ -22,3 +22,10 @@ fixtures replayed from the superseded `gdev-content` repository. Its dataset
 card and manifest record the exact source commit/blob/hash, transformation,
 dependency set, replay result, and why 20 unverified LLM cases were excluded.
 It is archive material, not a release gate or external adapter.
+
+The Trader Risk Audit contract fixture is documented in
+[`trader_risk_audit/synthetic_quickstart_v1_CARD.md`](trader_risk_audit/synthetic_quickstart_v1_CARD.md).
+It is a sanitized output produced from four invented trade observations. The
+fixture remains subject to its explicit source pins and product boundary; its
+presence here is not a real-user, financial-performance, or external-adapter
+claim.

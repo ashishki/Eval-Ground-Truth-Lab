@@ -36,6 +36,14 @@ production eval platform.
   Redis dedup responses from crossing eval runs. This does not clear Redis,
   validate arbitrary custom adapters, or replace gdev-agent's configured dedup
   TTL and operational lifecycle controls.
+- The Trader Risk Audit adapter replays one pinned, sanitized, fully synthetic
+  export from a separate path-purged publication candidate. It does not invoke
+  the Trader rule engine or inspect raw trades. Its PASS is contract-compatibility
+  evidence, not a financial-quality score, external case study, or user proof.
+- Trader source commit/tree/blob and protected bundle digest are pinned. The
+  adapter verifies the fixture SHA-256, Git blob, and evidence content hash, but
+  local hashes do not authenticate the publisher and the protected bundle is not
+  distributed by Eval Lab.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

@@ -1,0 +1,68 @@
+{
+  "artifacts": [
+    {
+      "path": "inputs/dataset.jsonl",
+      "sha256": "fa0c0579b297850c52c4bf4cae007e4a897601c88ae1841c9c1f0988435fa5fe",
+      "size_bytes": 1447
+    },
+    {
+      "path": "inputs/eval-evidence.json",
+      "sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
+      "size_bytes": 3044
+    },
+    {
+      "path": "inputs/source-provenance.json",
+      "sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
+      "size_bytes": 958
+    },
+    {
+      "path": "replay-report.md",
+      "sha256": "c6ce71ec3645468bfa4b6662c11c8ded54503f5a4cf19eb5d6921224acb6e3de",
+      "size_bytes": 1612
+    },
+    {
+      "path": "replay-result.json",
+      "sha256": "65c7d70017138dccc29461126bded1d3737df194298d71182de9e610fb73e3f2",
+      "size_bytes": 2550
+    },
+    {
+      "path": "run/trader-synthetic-quickstart-v1-20260713.json",
+      "sha256": "5cfb79e3ca0f32fbaf30f2c991f71c3c16b61445b7e5aa81cccaadc7763003a3",
+      "size_bytes": 11200
+    },
+    {
+      "path": "run/trader-synthetic-quickstart-v1-20260713.sha256",
+      "sha256": "d9e55b59f6d1e4772e6bed52499218d7d0f744d01ec66beb9493a2cbecdd8e7e",
+      "size_bytes": 118
+    }
+  ],
+  "content_address": "sha256:ed96a622a850f72dda4e0c804e4d4251932e646ac7384ed1499d379afef203c9",
+  "metadata": {
+    "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
+    "contract_version": "trader-risk-audit-evidence-v1",
+    "dataset_hash": "7bac4907ef71734b5ce492d547c50db736a8b9f5d12903213efb9deedbca2944",
+    "dataset_raw_sha256": "fa0c0579b297850c52c4bf4cae007e4a897601c88ae1841c9c1f0988435fa5fe",
+    "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
+    "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
+    "fixture": true,
+    "gate_passed": true,
+    "harness_version": "eval-ground-truth-lab-0.2.0",
+    "implementation_sha256": {
+      "adapter": "c56865389095071edf03695ef0423b76dcaa89ef3e8a2e9ced25be0f77b1d655",
+      "runner": "5db02df8070239e7fc55ab138c9c9ae3106147a6c621ac4ce686715f60ccd0a0",
+      "validators": "5a834696fddddc82824c9256859cc06c4206d8ca3fecad39cb9e012e5eafa0f6"
+    },
+    "privacy_classification": "fully-synthetic-sanitized-export",
+    "run_id": "trader-synthetic-quickstart-v1-20260713",
+    "runtime": {
+      "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+      "python": "3.12.3",
+      "pyyaml": "6.0.3"
+    },
+    "source_bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
+    "source_git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
+    "source_git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
+    "validator_version": "trader-risk-audit-exact-replay-validators-v1"
+  },
+  "schema_version": "eval-lab-evidence-v1"
+}

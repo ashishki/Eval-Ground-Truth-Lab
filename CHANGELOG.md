@@ -3,6 +3,16 @@
 All notable changes are documented here. The project follows semantic versioning
 once stable releases begin.
 
+## Unreleased
+
+- Add a fail-closed Eval-side import/replay adapter for the separate Trader Risk
+  Audit sanitized evidence contract.
+- Pin a fully synthetic Trader export to an exact path-purged candidate commit,
+  tree, Git blob, bundle digest, file SHA-256, and evidence content hash.
+- Add exact deterministic validators, a sealed CLI replay, content-addressed
+  evidence packaging, fixture tests, documentation, and explicit financial,
+  production, and external-validation boundaries.
+
 ## 0.2.0 - 2026-07-13
 
 - Add executable gdev-agent challenge reconciliation and threshold gates.
