@@ -1,0 +1,68 @@
+{
+  "artifacts": [
+    {
+      "path": "challenge-report.md",
+      "sha256": "8c3af29a330a11092586b8b302e7390f3022fdc3a030001103a2b6097e4d16f3",
+      "size_bytes": 16944
+    },
+    {
+      "path": "challenge-run.json",
+      "sha256": "d4bb0dec70d75de8d33d16f583a01ecbc17bf202ae04509d3dec63087a7b3a3b",
+      "size_bytes": 76250
+    },
+    {
+      "path": "run/gdev-challenge-0e4c5f0-canonical-20260713-v3.json",
+      "sha256": "221c5372ebd0cbe6b05dd76216fc9990fd71d083ff754ab45eaab15efc543ed5",
+      "size_bytes": 431109
+    },
+    {
+      "path": "run/gdev-challenge-0e4c5f0-canonical-20260713-v3.sha256",
+      "sha256": "3289b7c4455f27dc92af59706a1311bcdd8cfff4d0555d2ab909b91ff7abaf07",
+      "size_bytes": 123
+    }
+  ],
+  "content_address": "sha256:656face21f27b496d4d3e8bb0b588824f5737d122c1275c710f3e5b15ff94b4b",
+  "metadata": {
+    "candidate_version": "gdev-agent-demo-0e4c5f0",
+    "component_image_digest": "sha256:7dc9fef2ec6fe25745405546ec69f6a6f64c1bfa9f052dc54abfd65498a6f6da",
+    "component_revision": "0e4c5f0fd50382bbf12ffd35cfca4632384fb0cc",
+    "component_worktree_state": "clean",
+    "dataset_hash": "151e5eec83373b92cf263aa1f32edb26ed780c260ce32a9d084ba8f3f38e53b0",
+    "dataset_raw_sha256": "86d5ec4478afe29111256c954cf8840b9ee6857fa6af6e76de8e10de98062ee8",
+    "environment_label": "local-compose-demo-clean-redis",
+    "fixture": false,
+    "gate_passed": false,
+    "implementation_sha256": {
+      "challenge": "217cfcc6a3c1aeca3c7c64223c7f5e237d0de99f5eed897f63762b4c4c484e10",
+      "cli": "e85ac12bb215c028df57f2a141c91ce25c79481df8dff4c67375296e706ebdf1",
+      "gdev_adapter": "871fc2a7b30ca4cfafc4b2c2c775d951881e6d0bd4658ccc505645b023c1ce24",
+      "gdev_validators": "0d31aa405a92544d433b44c1fb1d718078484a6aa5f7d35af6628f0f3d34afcc"
+    },
+    "request_namespace": {
+      "adapter_mode": "gdev_http_namespaced",
+      "applied": true,
+      "applied_fields": [
+        "message_id",
+        "request_id"
+      ],
+      "context": {
+        "candidate_version": "gdev-agent-demo-0e4c5f0",
+        "component_revision": "0e4c5f0fd50382bbf12ffd35cfca4632384fb0cc",
+        "dataset_hash": "151e5eec83373b92cf263aa1f32edb26ed780c260ce32a9d084ba8f3f38e53b0",
+        "run_id": "gdev-challenge-0e4c5f0-canonical-20260713-v3",
+        "schema_version": "gdev-agent-request-namespace-v1"
+      },
+      "context_sha256": "5c65a837141710c3f31f9978823394bd6d51feb3889524dd1ca67bbcf27c4222",
+      "identifier": "gdev-eval-v1-5c65a837141710c3f31f9978823394bd6d51feb3889524dd1ca67bbcf27c4222",
+      "schema_version": "gdev-agent-request-namespace-v1"
+    },
+    "run_id": "gdev-challenge-0e4c5f0-canonical-20260713-v3",
+    "runtime": {
+      "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+      "python": "3.12.3",
+      "pyyaml": "6.0.3"
+    },
+    "threshold_config_sha256": "5b8e311a86a87c5df116515eee06bff8c1cfb3b0ded3b499ed7c20ecd7f0c1bb"
+  },
+  "schema_version": "eval-lab-evidence-v1"
+}
