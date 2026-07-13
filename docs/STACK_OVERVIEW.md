@@ -8,7 +8,7 @@ local evidence stack for reliable AI/agent systems.
 | Layer | Repository | Role | Current evidence |
 | --- | --- | --- | --- |
 | Governed workflow | `gdev-agent` | Multi-tenant support-triage workflow with webhook intake, guardrails, approval, audit, cost, and observability controls. | Local Compose demo, 285-test repository baseline, 180-case internal smoke eval. |
-| Quality layer | `Eval-Ground-Truth-Lab` | Deterministic evaluation framework for structured output, routing, unsafe auto-approval, cost, latency, and adapter behavior. | 55-case live local gdev-agent integration baseline, 100-case diagnostic challenge set, seeded regression smoke, immutable run artifacts. |
+| Quality layer | `Eval-Ground-Truth-Lab` | Deterministic evaluation framework for structured output, routing, unsafe auto-approval, cost, latency, and adapter behavior. | 55-case live local gdev-agent integration baseline, executable 100-case diagnostic challenge, seeded regression smoke, checksum-sealed runs and content-addressed evidence manifests. |
 | Runtime layer | `Agent-Runtime-Grid` | Queue-backed runtime for running many AI/agent jobs with retries, timeouts, idempotent finalization, artifacts, metrics, and cost controls. | 100-job smoke, 500-job reliability proof, failure-injection reports, cross-project artifact proof, and 20-job operator-run live-local HTTP proof snapshot. |
 
 ## Current End-To-End Evidence
@@ -32,6 +32,11 @@ Eval Lab also commits a harder 100-case gdev-agent challenge set. That dataset
 is diagnostic evidence for ambiguous, policy-stress, guard-stress,
 tenant-boundary, malformed-input, and expected-failure cases; it is not a
 replacement for the canonical passing baseline.
+
+The case counts are separate scopes, not a combined score: gdev-agent's 180
+internal smoke cases exercise that repository; Eval Lab's 55 external cases are
+integration/conformance evidence; Eval Lab's 100 challenge cases are a harder
+diagnostic contract with ten harness-injected provider failures.
 
 Runtime Grid's default cross-project mode adds artifact-linked runtime proof:
 

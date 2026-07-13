@@ -10,6 +10,8 @@ python -m eval_ground_truth_lab.cli --help
 python -m eval_ground_truth_lab.cli seeded-smoke --help
 python -m eval_ground_truth_lab.cli dataset-inspect --help
 python -m eval_ground_truth_lab.cli run-gdev-agent --help
+python -m eval_ground_truth_lab.cli run-gdev-agent-challenge --help
+python -m eval_ground_truth_lab.cli verify-evidence --help
 python -m eval_ground_truth_lab.cli compare --help
 python -m eval_ground_truth_lab.cli cost-rollup --help
 python -m eval_ground_truth_lab.cli budget-check --help
@@ -37,6 +39,36 @@ python -m eval_ground_truth_lab.cli run-gdev-agent \
 The command writes a run artifact under `runs/` by default and writes a markdown
 report at the requested path. It uses `GDEV_AGENT_*` environment variables for
 tenant and webhook configuration unless a caller injects an adapter in code.
+Terminal runs also have a `.sha256` seal; this detects accidental/tampering
+changes but is not a filesystem immutability guarantee.
+
+## Run gdev-agent Challenge
+
+```bash
+eval-ground-truth-lab run-gdev-agent-challenge \
+  --base-url http://localhost:8000 \
+  --candidate-version gdev-agent-demo \
+  --component-revision <full-gdev-git-sha> \
+  --component-worktree-state clean \
+  --environment-label local-compose-demo \
+  --evidence-dir /tmp/gdev-challenge-evidence
+```
+
+The command evaluates 90 candidate-facing cases and injects ten declared
+provider faults in the harness. It writes machine-readable JSON first, renders
+Markdown only from that JSON object, copies the terminal run/seal, and writes a
+content-addressed manifest last. Every declared challenge threshold affects the
+gate; failed gates exit `1` without deleting the evidence.
+
+## Verify Evidence
+
+```bash
+eval-ground-truth-lab verify-evidence \
+  --manifest /tmp/gdev-challenge-evidence/sha256-*.manifest.json
+```
+
+Verification fails for a changed or deleted artifact, manifest/content-address
+mismatch, symlink, or an undeclared added file.
 
 ## Compare
 

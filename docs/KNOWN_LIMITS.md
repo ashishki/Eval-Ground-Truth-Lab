@@ -26,8 +26,10 @@ production eval platform.
 - A 100-case gdev-agent challenge set is committed as diagnostic evidence, but
   the committed `reports/gdev-agent/challenge_report.md` is a dataset/scope
   report rather than a completed live challenge run.
-- Expected-failure matching for challenge runs is documented but not yet
-  surfaced as a first-class CLI challenge summary.
+- `run-gdev-agent-challenge` now produces expected-failure reconciliation,
+  per-slice metrics, JSON, Markdown, and a verified manifest. A canonical result
+  still requires an operator-run fixed gdev-agent service and exact revision;
+  no passing result is inferred from deterministic test fixtures.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake
@@ -38,5 +40,7 @@ production eval platform.
   workflow or dashboard.
 - Static HTML is derivative; markdown reports and JSON run artifacts remain
   canonical.
+- Local checksums and content addresses make evidence tamper-evident; they do
+  not make a filesystem immutable or authenticate the publisher.
 - There is no hosted service, production deployment, continuous eval scheduler,
   Kubernetes path, dashboard, or production SaaS claim.

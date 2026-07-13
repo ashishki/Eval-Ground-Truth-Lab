@@ -124,4 +124,3 @@ def _comparison_report() -> ComparisonReport:
             "cost_per_case_delta": "pass",
         },
     )
-

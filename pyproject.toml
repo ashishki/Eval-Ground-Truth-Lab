@@ -1,16 +1,38 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=77,<82"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "eval-ground-truth-lab"
-version = "0.1.0"
+version = "0.2.0"
 description = "Regression evaluation platform for LLM and agent workflows."
-requires-python = ">=3.12"
-dependencies = []
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{name = "Artem Shishkin"}]
+requires-python = ">=3.12,<4.0"
+dependencies = ["PyYAML>=6.0,<7.0"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Documentation = "https://github.com/ashishki/Eval-Ground-Truth-Lab#readme"
+Issues = "https://github.com/ashishki/Eval-Ground-Truth-Lab/issues"
+Repository = "https://github.com/ashishki/Eval-Ground-Truth-Lab"
+
+[project.scripts]
+eval-ground-truth-lab = "eval_ground_truth_lab.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+eval_ground_truth_lab = ["reports/templates/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -21,4 +43,3 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-

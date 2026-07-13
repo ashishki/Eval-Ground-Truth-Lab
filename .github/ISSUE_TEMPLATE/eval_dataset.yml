@@ -1,0 +1,27 @@
+name: Eval dataset proposal
+description: Propose synthetic or lawfully redistributable eval coverage.
+title: "[dataset] "
+labels: ["dataset"]
+body:
+  - type: input
+    id: gap
+    attributes:
+      label: Coverage gap
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Provenance and license
+      description: Explain how the cases were authored and why they may be redistributed.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data boundary
+      options:
+        - label: Cases are synthetic or lawfully redistributable.
+          required: true
+        - label: Cases contain no secrets, personal data, or production endpoints.
+          required: true

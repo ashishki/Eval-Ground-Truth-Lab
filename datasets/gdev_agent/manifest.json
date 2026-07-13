@@ -3,7 +3,11 @@
   "cases_path": "datasets/gdev_agent/triage_v1.jsonl",
   "dataset_hash": "ee4e0d237d43f16a815dcad2f7ff57ebb30404bf39a337d1e74aeeb53befffeb",
   "dataset_id": "triage_v1",
+  "dataset_raw_sha256": "03a2dce6c4d50ee7a8360b94150fa7b7c080c5df08ed6f6c496c2b25d4d4ddd6",
+  "license": "Apache-2.0",
+  "manifest_version": "gdev-agent-dataset-manifest-v2",
   "schema_version": "1.0",
+  "scope": "55-case synthetic external integration/conformance set; separate from the 100-case challenge and gdev-agent's 180-case internal smoke",
   "slices": [
     "billing_refund",
     "account_access",
@@ -17,5 +21,6 @@
     "duplicate_webhook",
     "cross_tenant_boundary"
   ],
-  "threshold_config": "datasets/gdev_agent/thresholds.json"
+  "threshold_config": "datasets/gdev_agent/thresholds.json",
+  "threshold_config_raw_sha256": "17017dd120691fa3ce9f1e482954af6dafe8c7ae6e14690b5ffdb6097a38f979"
 }

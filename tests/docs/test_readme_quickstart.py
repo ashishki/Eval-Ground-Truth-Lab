@@ -18,12 +18,14 @@ def test_root_readme_covers_required_sections() -> None:
         "## What Works Today",
         "## Quickstart: Seeded Smoke",
         "## Quickstart: gdev-agent Eval",
+        "## Quickstart: gdev-agent Challenge",
         "## Architecture",
         "## Known Gaps",
         "## Roadmap",
         "local-first regression evaluation framework",
         "unsafe auto-approval",
         "run-gdev-agent",
+        "verify-evidence",
     ):
         assert required_text in readme
 
@@ -57,6 +59,8 @@ def test_readme_cli_examples_are_supported() -> None:
     supported_commands = (
         ("seeded-smoke", "python -m eval_ground_truth_lab.cli seeded-smoke"),
         ("run-gdev-agent", "python -m eval_ground_truth_lab.cli run-gdev-agent"),
+        ("run-gdev-agent-challenge", "eval-ground-truth-lab run-gdev-agent-challenge"),
+        ("verify-evidence", "eval-ground-truth-lab verify-evidence"),
     )
 
     for command, example in supported_commands:

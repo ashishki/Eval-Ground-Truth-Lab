@@ -45,9 +45,10 @@ evidence.
 | `malformed_user_input` | 10 | Escalate vague or underspecified inputs |
 | `provider_error_simulation` | 10 | Preserve expected harness/provider failures |
 
-## Intended Metrics
+## Executable Metrics
 
-Future live challenge reports should include:
+`run-gdev-agent-challenge` now emits these metrics in JSON and generated
+Markdown:
 
 - `pass_rate_by_slice`
 - `blocking_failure_count`
@@ -64,25 +65,27 @@ python -m eval_ground_truth_lab.cli dataset-inspect \
   --dataset datasets/gdev_agent/challenge_v1.jsonl
 ```
 
-Optional diagnostic live run:
+Diagnostic live run:
 
 ```bash
-python -m eval_ground_truth_lab.cli run-gdev-agent \
-  --dataset datasets/gdev_agent/challenge_v1.jsonl \
+python -m eval_ground_truth_lab.cli run-gdev-agent-challenge \
   --base-url http://localhost:8000 \
   --run-id gdev-challenge-v1 \
-  --candidate-version gdev-agent-demo-challenge-v1 \
-  --threshold-config datasets/gdev_agent/challenge_thresholds.json \
-  --report reports/gdev-agent/challenge_report.md
+  --candidate-version gdev-agent-demo \
+  --component-revision <full-gdev-git-sha> \
+  --component-worktree-state clean \
+  --environment-label local-compose-demo \
+  --evidence-dir /tmp/gdev-challenge-evidence
 ```
 
 ## Known Limits
 
 - This committed report is a dataset and threshold-policy evidence snapshot,
   not a completed live challenge run.
-- Expected-failure matching is not yet surfaced by the `run-gdev-agent` CLI as
-  a dedicated challenge summary.
-- Provider-error simulation cases require explicit adapter/harness
-  fault-injection before they can be treated as fully exercised.
+- The executable engine does not turn this static scope report into a live
+  result. A fixed external gdev-agent service and exact revision are still
+  required before publishing canonical challenge evidence.
+- Provider-error cases are deterministic harness injections and are labeled as
+  such; they are not observed candidate outage claims.
 - The challenge set is synthetic/local evidence and does not claim production
   quality, real user adoption, or hosted operations.
