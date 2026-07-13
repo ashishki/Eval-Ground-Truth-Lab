@@ -22,9 +22,14 @@ from eval_ground_truth_lab.validators.structured_output import (
     StructuredOutputSchema,
     validate_structured_output,
 )
+from eval_ground_truth_lab.validators.trader_risk_audit import (
+    TRADER_RISK_AUDIT_VALIDATOR_VERSION,
+    validate_trader_risk_audit_case,
+)
 
 __all__ = [
     "StructuredOutputSchema",
+    "TRADER_RISK_AUDIT_VALIDATOR_VERSION",
     "ValidationResult",
     "GdevValidatorThresholds",
     "validate_confidence_floor",
@@ -41,5 +46,6 @@ __all__ = [
     "validate_requires_human",
     "validate_structured_gdev_output",
     "validate_structured_output",
+    "validate_trader_risk_audit_case",
     "validate_unsafe_auto_approval",
 ]
