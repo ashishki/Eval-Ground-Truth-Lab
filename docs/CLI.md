@@ -100,14 +100,20 @@ multi-case input fails closed without a PASS pack.
 Evidence/provenance overrides receive no packaged source or privacy claims,
 even if the caller recomputes every internal hash and retains canonical ids.
 Packaged source trust additionally requires the proof to bind the exact commit,
-root tree, repository path, and evidence blob.
+root tree, repository path, and evidence blob. Direct adapter output preserves
+the input values only as `declared_privacy_classification` and `declared_source`
+and reports unassessed effective trust. Replay writes a separate
+`effective_trust` decision before RunStore sealing. A matching caller expectation
+can therefore PASS compatibility validators while the result, manifest, report,
+candidate identity, and sealed run remain explicitly unreviewed.
 
 The packaged terminal JSON and seal come directly from the immutable RunStore
 completion snapshot. Result and manifest bind their hashes plus run id,
 candidate, dataset, validator, and completed status. Implementation provenance
 also binds the parser, RunStore, manifest writer, remaining decision modules,
-complete package payload, and either clean source commit/tree or installed
-artifact digest.
+complete package payload, and either an exact HEAD match for the recursive
+measured-package path set, bytes, and executable modes or an installed-artifact
+digest. It makes no whole-worktree cleanliness claim.
 
 This is a contract compatibility replay, not a live Trader execution, financial
 policy benchmark, external-user case study, or production evidence. See

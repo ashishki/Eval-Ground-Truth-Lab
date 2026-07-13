@@ -95,6 +95,17 @@ recomputes every local content hash while retaining canonical source ids. Its
 Markdown report labels values as caller declarations and makes no packaged
 source or privacy claim.
 
+The structural adapter cannot authenticate its own input paths. Its direct
+output therefore uses `declared_privacy_classification` and `declared_source`
+and sets `effective_trust` to unassessed and not privacy-reviewed. The replay
+layer replaces that trust block only after comparing immutable bytes with the
+packaged resources and verifying the Git-object proof, then seals both the
+declarations and effective decision in RunStore. Compatibility validators use
+neutral “selected expectation” messages. They may PASS for self-consistent
+caller evidence plus a matching caller expectation, but that PASS never upgrades
+the caller-evidence candidate identity, fixture status, report, manifest, or
+sealed effective trust.
+
 Run completion returns the exact terminal JSON and checksum-seal bytes created
 while holding the RunStore lock. Replay packaging never reopens those mutable
 source paths. The terminal record SHA-256, seal SHA-256, run id, candidate,
@@ -103,11 +114,14 @@ replay result, and content-addressed manifest.
 
 Implementation provenance covers the adapter, dataset parser, RunStore,
 manifest writer, replay runner, and validators individually, plus a digest of
-the complete installed package payload. Source executions record the exact Eval
-commit/tree and whether the worktree was clean only when every measured package
-file is tracked at that repository's HEAD. Ignored or untracked installations
-inside an unrelated Git repository are classified as `installed_package` and
-bind the complete installed package digest instead.
+the complete installed package payload, including normalized executable modes.
+Source executions record an Eval commit/tree with
+`measured_package_matches_head=true` only when the exact recursive package path
+set, every byte, and every executable mode match that commit. This is deliberately
+not a whole-worktree cleanliness claim. Index hints such as `assume-unchanged`
+or `skip-worktree`, including a hidden deletion, cannot bypass the comparison.
+Any mismatch, ignored/untracked installation, or unrelated embedded repository
+is classified as `installed_package` and binds the measured artifact digest.
 
 ## Reproduce
 
@@ -154,4 +168,4 @@ milestones that cannot be satisfied by this repository-authored fixture.
 
 The committed 2026-07-13 replay is indexed at
 `docs/evidence/integrations/README.md` and verifies at content address
-`sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627`.
+`sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb`.

@@ -49,7 +49,10 @@ production eval platform.
   noncanonical metadata, and duplicate mapping keys fail before output creation.
 - Reviewed Trader source/privacy claims independently require byte identity with
   both packaged evidence and provenance. Re-self-hashed caller overrides remain
-  unreviewed, even when they repeat canonical source ids.
+  unreviewed, even when they repeat canonical source ids. A matching caller
+  expectation may still produce a diagnostic PASS; the sealed run keeps those
+  values under `declared_*` and records the downgrade separately in
+  `effective_trust`.
 - The terminal run record and seal are immutable completion snapshots and their
   identities are cross-bound in result/manifest. This remains tamper-evidence,
   not filesystem immutability against an actor that can replace the entire pack
@@ -58,6 +61,10 @@ production eval platform.
   offline Git-object proof derived from the protected bundle. The bundle digest
   is bound, but the full bundle is not distributed and Eval Lab's reviewed trust
   anchor does not authenticate an external publisher identity.
+- Eval implementation provenance proves only the measured package payload, not
+  whole-worktree cleanliness. A `git_worktree` identity requires the exact
+  recursive HEAD path set plus byte-for-byte and executable-mode equality;
+  hidden index flags or deletions downgrade it to `installed_package`.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

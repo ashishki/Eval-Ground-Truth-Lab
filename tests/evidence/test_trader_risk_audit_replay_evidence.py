@@ -16,7 +16,7 @@ from eval_ground_truth_lab.validators import trader_risk_audit as validator_modu
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "docs/evidence/integrations/trader-risk-audit-synthetic-v1"
 MANIFEST = PACK / (
-    "sha256-05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627.manifest.json"
+    "sha256-e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb.manifest.json"
 )
 
 
@@ -27,7 +27,7 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
 
     assert verification.artifact_count == 8
     assert verification.content_address == (
-        "sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627"
+        "sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb"
     )
     assert result["gate"] == {"failed_validator_count": 0, "passed": True}
     assert result["dataset"]["dataset_hash"] == (
@@ -48,10 +48,10 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
     assert implementation["components_sha256"] == measured["components_sha256"]
     assert implementation["package_payload"] == measured["package_payload"]
     assert implementation["source"] == {
-        "commit": "56de400bd4e157f70cf1538fbc464b9dbc00257b",
+        "commit": "0860ae64d282c3697c16f59d43b376e8557be108",
         "kind": "git_worktree",
-        "tree": "1b265941e195f053915caa27089f1dd484b3a2c7",
-        "worktree_clean": True,
+        "measured_package_matches_head": True,
+        "tree": "d79cff41a04acecc1d638d311f195fd5df9af248",
     }
     assert manifest["metadata"]["implementation"] == implementation
     assert result["provenance"]["implementation_sha256"] == implementation["components_sha256"]
@@ -88,6 +88,7 @@ def test_committed_trader_run_seal_and_claim_boundary_are_intact() -> None:
     report = (PACK / "replay-report.md").read_text(encoding="utf-8").lower()
     result = _json(PACK / "replay-result.json")
     manifest = _json(MANIFEST)
+    run = _json(run_path)
 
     assert seal_path.read_text(encoding="utf-8").strip() == expected_seal
     assert result["run"]["status"] == "completed"
@@ -110,6 +111,27 @@ def test_committed_trader_run_seal_and_claim_boundary_are_intact() -> None:
     assert (
         manifest["metadata"]["run"]["seal_sha256"]
         == hashlib.sha256(seal_path.read_bytes()).hexdigest()
+    )
+    sealed_case = run["case_results"][0]
+    output = sealed_case["output"]
+    assert output["declared_privacy_classification"] == ("fully-synthetic-sanitized-export")
+    assert output["declared_source"]["git_commit"] == ("bf755a24450ff7c17328fa6d447f36bea8ea0fe5")
+    assert output["effective_trust"] == {
+        "privacy_classification": "fully-synthetic-sanitized-export",
+        "privacy_reviewed": True,
+        "source_identity_status": "packaged_git_object_chain_verified",
+        "source_reviewed": True,
+        "status": "packaged_reviewed_source",
+    }
+    assert "privacy_classification" not in output
+    assert "source" not in output
+    assert all(
+        "selected expectation" in validator["message"]
+        for validator in sealed_case["validator_results"]
+    )
+    assert all(
+        "pinned expectation" not in validator["message"]
+        for validator in sealed_case["validator_results"]
     )
     for required in (
         "fully synthetic",

@@ -9,6 +9,24 @@
         "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
         "contract_version": "trader-risk-audit-evidence-v1",
         "correct": true,
+        "declared_privacy_classification": "fully-synthetic-sanitized-export",
+        "declared_source": {
+          "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
+          "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
+          "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
+          "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
+          "package": "trader-risk-audit",
+          "package_version": "0.2.0",
+          "repository_state": "path-purged-publication-candidate",
+          "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
+        },
+        "effective_trust": {
+          "privacy_classification": "fully-synthetic-sanitized-export",
+          "privacy_reviewed": true,
+          "source_identity_status": "packaged_git_object_chain_verified",
+          "source_reviewed": true,
+          "status": "packaged_reviewed_source"
+        },
         "evidence": {
           "artifact_digests": [
             {
@@ -109,18 +127,7 @@
           ]
         },
         "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
-        "privacy_classification": "fully-synthetic-sanitized-export",
-        "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
-        "source": {
-          "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
-          "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
-          "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
-          "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
-          "package": "trader-risk-audit",
-          "package_version": "0.2.0",
-          "repository_state": "path-purged-publication-candidate",
-          "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
-        }
+        "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402"
       },
       "validator_results": [
         {
@@ -130,15 +137,15 @@
             "actual": {
               "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
               "contract_version": "trader-risk-audit-evidence-v1",
-              "privacy_classification": "fully-synthetic-sanitized-export"
+              "declared_privacy_classification": "fully-synthetic-sanitized-export"
             },
             "expected": {
               "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
               "contract_version": "trader-risk-audit-evidence-v1",
-              "privacy_classification": "fully-synthetic-sanitized-export"
+              "declared_privacy_classification": "fully-synthetic-sanitized-export"
             }
           },
-          "message": "adapter and export contract versions matches the pinned expectation",
+          "message": "adapter and export contract versions matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.adapter_contract"
         },
@@ -147,27 +154,31 @@
           "category": "none",
           "evidence": {
             "actual": {
-              "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
-              "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
-              "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
-              "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
-              "package": "trader-risk-audit",
-              "package_version": "0.2.0",
-              "repository_state": "path-purged-publication-candidate",
-              "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
+              "declared_source": {
+                "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
+                "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
+                "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
+                "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
+                "package": "trader-risk-audit",
+                "package_version": "0.2.0",
+                "repository_state": "path-purged-publication-candidate",
+                "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
+              }
             },
             "expected": {
-              "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
-              "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
-              "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
-              "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
-              "package": "trader-risk-audit",
-              "package_version": "0.2.0",
-              "repository_state": "path-purged-publication-candidate",
-              "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
+              "declared_source": {
+                "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
+                "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
+                "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
+                "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
+                "package": "trader-risk-audit",
+                "package_version": "0.2.0",
+                "repository_state": "path-purged-publication-candidate",
+                "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json"
+              }
             }
           },
-          "message": "Trader Risk Audit source provenance matches the pinned expectation",
+          "message": "caller-declared Trader Risk Audit source provenance matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.source_provenance"
         },
@@ -188,7 +199,7 @@
               "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402"
             }
           },
-          "message": "evidence identity matches the pinned expectation",
+          "message": "evidence identity matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.evidence_identity"
         },
@@ -205,7 +216,7 @@
               "version": "0.2.0"
             }
           },
-          "message": "Trader Risk Audit candidate version matches the pinned expectation",
+          "message": "Trader Risk Audit candidate version matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.candidate_version"
         },
@@ -222,7 +233,7 @@
               "contract_version": "trader-risk-audit-evidence-v1"
             }
           },
-          "message": "evidence case and contract identity matches the pinned expectation",
+          "message": "evidence case and contract identity matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.case_contract"
         },
@@ -245,7 +256,7 @@
               "trace_reference_scheme": "sha256-v1"
             }
           },
-          "message": "evaluation boundary matches the pinned expectation",
+          "message": "evaluation boundary matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.evaluation_boundary"
         },
@@ -314,7 +325,7 @@
               }
             ]
           },
-          "message": "artifact digest receipts matches the pinned expectation",
+          "message": "artifact digest receipts matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.artifact_digests"
         },
@@ -397,7 +408,7 @@
               }
             ]
           },
-          "message": "opaque trace preview matches the pinned expectation",
+          "message": "opaque trace preview matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.trace_preview"
         },
@@ -420,7 +431,7 @@
               "pnl_reconciled": true
             }
           },
-          "message": "upstream manifest, trace, and P&L checks matches the pinned expectation",
+          "message": "upstream manifest, trace, and P&L checks matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.export_checks"
         },
@@ -443,7 +454,7 @@
               "violation_count": 7
             }
           },
-          "message": "synthetic fixture observations matches the pinned expectation",
+          "message": "synthetic fixture observations matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.synthetic_metrics"
         },
@@ -454,14 +465,14 @@
             "actual": "evidence_ready",
             "expected": "evidence_ready"
           },
-          "message": "evidence readiness status matches the pinned expectation",
+          "message": "evidence readiness status matches the selected expectation",
           "passed": true,
           "validator_id": "trader_risk_audit.evidence_status"
         }
       ]
     }
   ],
-  "completed_at": "2026-07-13T16:32:38.476930+00:00",
+  "completed_at": "2026-07-13T17:14:53.435795+00:00",
   "cost_per_case_usd": 0.0,
   "cost_total_usd": 0.0,
   "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
@@ -471,7 +482,7 @@
   "max_candidate_retries": 1,
   "run_id": "trader-synthetic-quickstart-v1-20260713",
   "run_type": "trader_risk_audit_evidence_replay",
-  "started_at": "2026-07-13T16:32:38.419020+00:00",
+  "started_at": "2026-07-13T17:14:53.392774+00:00",
   "status": "completed",
   "threshold_config_version": "exact-versioned-synthetic-expectation-v1",
   "validator_version": "trader-risk-audit-exact-replay-validators-v1"

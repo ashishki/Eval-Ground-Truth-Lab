@@ -27,21 +27,21 @@
     },
     {
       "path": "replay-result.json",
-      "sha256": "81d5580c35d1269b446264c0cbbb2ce637ea96fd7e2a2960a3f069e9af36c1aa",
-      "size_bytes": 5620
+      "sha256": "b764a7fe6aec51ebba792187d4c58b21dd05bce710cdc69c691a32dfc4adc19e",
+      "size_bytes": 5635
     },
     {
       "path": "run/trader-synthetic-quickstart-v1-20260713.json",
-      "sha256": "1d2d0f1ee92a2c9f1260bd453c01a6c846cd30b0f821312dbaf235942e70af4d",
-      "size_bytes": 19397
+      "sha256": "ef46254b2f8011cd2fc504294901595ebd62090c2cf149afb3b0f8caf02b4eb1",
+      "size_bytes": 19909
     },
     {
       "path": "run/trader-synthetic-quickstart-v1-20260713.sha256",
-      "sha256": "021ce91b0766add695568dd621678924f2d32fcd322a1664601f9b42d5f90d61",
+      "sha256": "b55d29eca4fe902fa8b5869cf3d054adcad83c593cf709530c32af4f53e3d86f",
       "size_bytes": 118
     }
   ],
-  "content_address": "sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627",
+  "content_address": "sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb",
   "metadata": {
     "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
     "contract_version": "trader-risk-audit-evidence-v1",
@@ -60,41 +60,41 @@
     "harness_version": "eval-ground-truth-lab-0.2.0",
     "implementation": {
       "components_sha256": {
-        "adapter": "f583ace2af8f76ae41c5fe023d21f6e3c8c85fd4f26f78f0a90cdbbc55cfd08f",
+        "adapter": "ebd94503609802ea7852c0b610657b048963e9a96f67b3104cd64e86aadc818d",
         "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
         "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
         "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
-        "runner": "c965d85e4ece6c77c4a3f8bc6c153355f05f154baf2959f7bba05ed4a08d7bae",
-        "validators": "cdf1ee41104d569fb2531c45d000b5faf493c453e2f7a72533c10f8e2aa20b63"
+        "runner": "cf8658181fd4364239b2435d2a282a3a4e213f048c15c31970a4c316d201f3da",
+        "validators": "355466bb62e0d1882b6380e38488b5e50f2238e01dcf8370a214c333c6e721ca"
       },
       "package_payload": {
         "file_count": 55,
-        "sha256": "158a342742b0522f53c802cf8286508844e5fcfabbf8c84af5e87e5f3437ff9b"
+        "sha256": "68bcc4940f14650e3a7d091aa9feb1c4fdc30db074e4c6e0e336bdf6dd012183"
       },
       "schema_version": "eval-lab-implementation-provenance-v1",
       "source": {
-        "commit": "56de400bd4e157f70cf1538fbc464b9dbc00257b",
+        "commit": "0860ae64d282c3697c16f59d43b376e8557be108",
         "kind": "git_worktree",
-        "tree": "1b265941e195f053915caa27089f1dd484b3a2c7",
-        "worktree_clean": true
+        "measured_package_matches_head": true,
+        "tree": "d79cff41a04acecc1d638d311f195fd5df9af248"
       }
     },
     "implementation_sha256": {
-      "adapter": "f583ace2af8f76ae41c5fe023d21f6e3c8c85fd4f26f78f0a90cdbbc55cfd08f",
+      "adapter": "ebd94503609802ea7852c0b610657b048963e9a96f67b3104cd64e86aadc818d",
       "dataset_parser": "0f322cb5abe0d8af20932c683a1bb8ca0f877fdf5a3fed47e08b3aa9543c0bb3",
       "evidence_manifest": "a9548dc047f53cf7dab0caad441315e76e53efcc9412eb383142d0af9c755d24",
       "run_store": "613eeca0a4fbaab6da5cecb538fba7bec428ee9deff2a6edb35bac558390e389",
-      "runner": "c965d85e4ece6c77c4a3f8bc6c153355f05f154baf2959f7bba05ed4a08d7bae",
-      "validators": "cdf1ee41104d569fb2531c45d000b5faf493c453e2f7a72533c10f8e2aa20b63"
+      "runner": "cf8658181fd4364239b2435d2a282a3a4e213f048c15c31970a4c316d201f3da",
+      "validators": "355466bb62e0d1882b6380e38488b5e50f2238e01dcf8370a214c333c6e721ca"
     },
     "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
     "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
     "run": {
       "candidate_version": "trader-risk-audit-0.2.0@bf755a24450f",
       "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
-      "record_sha256": "1d2d0f1ee92a2c9f1260bd453c01a6c846cd30b0f821312dbaf235942e70af4d",
+      "record_sha256": "ef46254b2f8011cd2fc504294901595ebd62090c2cf149afb3b0f8caf02b4eb1",
       "run_id": "trader-synthetic-quickstart-v1-20260713",
-      "seal_sha256": "021ce91b0766add695568dd621678924f2d32fcd322a1664601f9b42d5f90d61",
+      "seal_sha256": "b55d29eca4fe902fa8b5869cf3d054adcad83c593cf709530c32af4f53e3d86f",
       "status": "completed",
       "validator_version": "trader-risk-audit-exact-replay-validators-v1"
     },

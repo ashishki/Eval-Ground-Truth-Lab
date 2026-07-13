@@ -29,6 +29,12 @@ once stable releases begin.
   packaged offline Git-object proof.
 - Classify ignored or untracked package installations inside unrelated Git
   repositories as installed artifacts with payload digests, not worktrees.
+- Separate caller-declared Trader privacy/source metadata from effective trust
+  in direct adapter output and sealed runs; unreviewed evidence stays downgraded
+  even when a matching caller expectation makes the compatibility gate pass.
+- Replace whole-worktree cleanliness claims with an exact measured-package proof
+  over the recursive HEAD path set, every file byte, and executable mode, including
+  adversarial `assume-unchanged`, `skip-worktree`, and hidden-deletion coverage.
 
 ## 0.2.0 - 2026-07-13
 

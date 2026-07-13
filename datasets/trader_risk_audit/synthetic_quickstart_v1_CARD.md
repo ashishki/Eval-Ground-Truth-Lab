@@ -52,7 +52,12 @@ trusted synthetic labels.
 Evidence/provenance trust is classified separately. Only byte-identical
 packaged resources that match the Git-object proof receive reviewed source and
 privacy claims. A caller-recomputed pair remains unreviewed even when it retains
-the canonical case, commit, tree, and path ids.
+the canonical case, commit, tree, and path ids. The adapter exposes those input
+values only as declarations and starts with unassessed effective trust. Replay
+authenticates packaged bytes or seals an explicit downgrade before validation
+results are stored. A matching caller-supplied expectation can therefore produce
+a diagnostic PASS while the run remains non-fixture, privacy-unreviewed, and
+source-unauthenticated.
 
 PASS means compatibility with this single synthetic contract fixture. It is not
 external validation, investment advice, a production claim, or a general quality

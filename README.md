@@ -217,6 +217,11 @@ output directory is created; caller overrides never inherit fixture/privacy
 claims merely by declaring synthetic metadata. Caller evidence/provenance
 overrides are explicitly unreviewed even when their internal hashes are
 self-consistent and they retain the packaged commit, tree, path, and case ids.
+Direct adapter output labels those values as `declared_*` and starts with
+fail-closed, unassessed effective trust. Replay replaces only `effective_trust`
+from byte identity and the packaged proof before sealing the run. Consequently,
+a matching caller-supplied expectation may produce a diagnostic PASS without
+turning its privacy declaration or source identifiers into trusted facts.
 
 ```bash
 eval-ground-truth-lab run-trader-risk-audit-replay \
@@ -234,7 +239,7 @@ production claim. See
 [docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
 [dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
 [committed replay pack](docs/evidence/integrations/README.md) verifies at content
-address `sha256:05b2f18a78f5961f60d232d9626a471805123f78e4e46120db9c40111e2bd627`.
+address `sha256:e450c9a7561f88f8f90ce1464457d8ddb18435ce105451a9dbb8ab6e64c4d5fb`.
 
 ## Architecture
 
