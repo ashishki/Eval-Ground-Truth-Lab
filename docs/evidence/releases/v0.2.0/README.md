@@ -11,6 +11,15 @@ This package is the first committed 100-case challenge execution against a
 fixed, clean `gdev-agent` revision. It is canonical evidence of what happened,
 not a claim that the reference workload met the release thresholds.
 
+## Version boundary
+
+The repository already declared package version `0.2.0` before its first Git
+tag, so this hardening/evidence boundary is released as `v0.2.0` rather than
+back-numbered to `v0.1.0`. It is not a feedback-driven maintenance release and
+does not satisfy the separate milestone for changes based on real external-user
+feedback. Such a change requires its own later version, issue, regression test,
+and evidence.
+
 ## Fixed inputs
 
 | Input | Value |

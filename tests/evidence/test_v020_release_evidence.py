@@ -69,6 +69,7 @@ def test_v020_release_docs_preserve_failure_and_public_dataset_boundary() -> Non
         "58",
         "not a blind holdout",
         "does not establish",
+        "not a feedback-driven maintenance release",
     ):
         assert required.lower() in release_readme.lower()
 
