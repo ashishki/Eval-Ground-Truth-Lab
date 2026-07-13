@@ -30,9 +30,22 @@ def test_adapter_verifies_pinned_sanitized_export_deterministically() -> None:
     second = adapter.invoke(deepcopy(CASE))
 
     assert first == second
+    assert first.output is not second.output
+    assert first.output["evidence"] is not second.output["evidence"]
+    assert first.output["evidence"]["metrics"] is not second.output["evidence"]["metrics"]
+    assert (
+        first.output["evidence"]["artifact_digests"]
+        is not second.output["evidence"]["artifact_digests"]
+    )
+    assert (
+        first.output["evidence"]["trace_preview"] is not second.output["evidence"]["trace_preview"]
+    )
     assert first.trace_id == "trader-evidence-d7e6fe92f50ba410a2c23882"
     assert first.operation_name == "candidate.trader_risk_audit.evidence_replay"
     assert first.output["adapter_version"] == "eval-lab-trader-risk-audit-adapter-v1"
+    assert first.output["provenance_sha256"] == (
+        "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402"
+    )
     assert first.output["source"] == {
         "bundle_sha256": ("2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca"),
         "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
@@ -41,7 +54,19 @@ def test_adapter_verifies_pinned_sanitized_export_deterministically() -> None:
         "package": "trader-risk-audit",
         "package_version": "0.2.0",
         "repository_state": "path-purged-publication-candidate",
+        "source_path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json",
     }
+
+    first.output["evidence"]["metrics"]["violation_count"] = 999
+    first.output["evidence"]["artifact_digests"][0]["name"] = "mutated"
+    first.output["evidence"]["trace_preview"][0]["source_row_refs"].append("mutated")
+    third = adapter.invoke(CASE)
+    assert second.output["evidence"]["metrics"]["violation_count"] == 7
+    assert third.output == second.output
+    assert (
+        third.output["evidence"]["trace_preview"][0]["source_row_refs"]
+        is not second.output["evidence"]["trace_preview"][0]["source_row_refs"]
+    )
     serialized = json.dumps(first.output, sort_keys=True)
     for forbidden in ("/home/", "account_id", "api_key", "private_key", "trades.csv"):
         assert forbidden not in serialized.lower()

@@ -39,6 +39,15 @@ jobs:
           /tmp/eval-lab-wheel/bin/pip install dist/*.whl
           /tmp/eval-lab-wheel/bin/pip check
           /tmp/eval-lab-wheel/bin/eval-ground-truth-lab --help
+          mkdir -p /tmp/eval-lab-wheel-cwd
+          cd /tmp/eval-lab-wheel-cwd
+          /tmp/eval-lab-wheel/bin/eval-ground-truth-lab run-trader-risk-audit-replay \
+            --run-id trader-installed-wheel-synthetic-v1 \
+            --run-dir /tmp/eval-lab-wheel-trader-runs \
+            --evidence-dir /tmp/eval-lab-wheel-trader-evidence
+          /tmp/eval-lab-wheel/bin/eval-ground-truth-lab verify-evidence \
+            --manifest /tmp/eval-lab-wheel-trader-evidence/sha256-*.manifest.json
+          cd "$GITHUB_WORKSPACE"
           /tmp/eval-lab-wheel/bin/python - <<'PY'
           from eval_ground_truth_lab.reports.html import render_html_report
 

@@ -3,7 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
+import stat
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
@@ -127,12 +129,43 @@ class TraderRiskAuditEvidenceAdapter:
     """
 
     def __init__(self, *, evidence_path: str | Path, provenance_path: str | Path) -> None:
-        self.evidence_path = Path(evidence_path)
-        self.provenance_path = Path(provenance_path)
-        evidence_bytes, raw_evidence = _read_json_object(self.evidence_path, "evidence export")
-        _, raw_provenance = _read_json_object(self.provenance_path, "source provenance")
+        evidence_bytes = read_regular_file_bytes(evidence_path, "evidence export")
+        provenance_bytes = read_regular_file_bytes(provenance_path, "source provenance")
+        self._initialize(evidence_bytes=evidence_bytes, provenance_bytes=provenance_bytes)
+
+    @classmethod
+    def from_bytes(
+        cls, *, evidence_bytes: bytes, provenance_bytes: bytes
+    ) -> TraderRiskAuditEvidenceAdapter:
+        """Build from exact input snapshots without reopening a source path."""
+
+        adapter = cls.__new__(cls)
+        adapter._initialize(
+            evidence_bytes=bytes(evidence_bytes),
+            provenance_bytes=bytes(provenance_bytes),
+        )
+        return adapter
+
+    @property
+    def evidence_bytes(self) -> bytes:
+        return self._evidence_bytes
+
+    @property
+    def provenance_bytes(self) -> bytes:
+        return self._provenance_bytes
+
+    @property
+    def provenance_sha256(self) -> str:
+        return hashlib.sha256(self._provenance_bytes).hexdigest()
+
+    def _initialize(self, *, evidence_bytes: bytes, provenance_bytes: bytes) -> None:
+        self._evidence_bytes = bytes(evidence_bytes)
+        self._provenance_bytes = bytes(provenance_bytes)
+        raw_evidence = _parse_json_object_bytes(self._evidence_bytes, "evidence export")
+        raw_provenance = _parse_json_object_bytes(self._provenance_bytes, "source provenance")
         self.provenance = _validate_provenance(raw_provenance, evidence_bytes=evidence_bytes)
-        self.evidence = _validate_evidence(raw_evidence, provenance=self.provenance)
+        validated = _validate_evidence(raw_evidence, provenance=self.provenance)
+        self._case_id = str(validated["case_id"])
 
     def invoke(self, case: Mapping[str, Any]) -> AdapterResult:
         case_id = case.get("id")
@@ -147,17 +180,26 @@ class TraderRiskAuditEvidenceAdapter:
             raise UnsafeAdapterInputError(
                 "Trader Risk Audit evidence_case_id must match the dataset case id"
             )
-        if self.evidence["case_id"] != case_id:
+        if self._case_id != case_id:
             raise TraderRiskAuditEvidenceError(
                 "Trader Risk Audit export case_id does not match the dataset case id"
             )
 
+        # Parse and validate the immutable source snapshot for every invocation.
+        # The returned mapping and all nested containers are therefore unique to
+        # this AdapterResult and cannot mutate later results or adapter state.
+        evidence = _validate_evidence(
+            _parse_json_object_bytes(self._evidence_bytes, "evidence export"),
+            provenance=self.provenance,
+        )
+
         output = {
             "adapter_version": self.provenance.adapter_version,
             "contract_version": self.provenance.contract_version,
-            "evidence": self.evidence,
+            "evidence": evidence,
             "evidence_sha256": self.provenance.evidence_sha256,
             "privacy_classification": self.provenance.privacy_classification,
+            "provenance_sha256": self.provenance_sha256,
             "source": {
                 "bundle_sha256": self.provenance.source_bundle_sha256,
                 "git_blob_sha1": self.provenance.source_git_blob_sha1,
@@ -166,6 +208,7 @@ class TraderRiskAuditEvidenceAdapter:
                 "package": TRADER_RISK_AUDIT_PACKAGE,
                 "package_version": self.provenance.package_version,
                 "repository_state": self.provenance.source_repository_state,
+                "source_path": self.provenance.source_path,
             },
         }
         return AdapterResult(
@@ -359,17 +402,45 @@ def _validate_trace_preview(value: Any, *, violation_count: int) -> None:
             _required_reference(row_ref, "row")
 
 
-def _read_json_object(path: Path, label: str) -> tuple[bytes, Mapping[str, Any]]:
-    if path.is_symlink() or not path.is_file():
-        raise TraderRiskAuditEvidenceError(f"{label} must be a regular file")
+def read_regular_file_bytes(path: str | Path, label: str) -> bytes:
+    """Read one regular-file snapshot without following a final symlink."""
+
+    source_path = Path(path)
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
-        raw_bytes = path.read_bytes()
-        raw = json.loads(raw_bytes)
-    except (OSError, json.JSONDecodeError) as exc:
+        descriptor = os.open(source_path, flags)
+    except OSError as exc:
+        raise TraderRiskAuditEvidenceError(f"{label} must be an accessible regular file") from exc
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise TraderRiskAuditEvidenceError(f"{label} must be a regular file")
+        chunks: list[bytes] = []
+        while chunk := os.read(descriptor, 1024 * 1024):
+            chunks.append(chunk)
+        return b"".join(chunks)
+    except OSError as exc:
         raise TraderRiskAuditEvidenceError(f"Cannot read {label}") from exc
+    finally:
+        os.close(descriptor)
+
+
+def _parse_json_object_bytes(raw_bytes: bytes, label: str) -> Mapping[str, Any]:
+    try:
+        raw = json.loads(raw_bytes, object_pairs_hook=_reject_duplicate_object_fields)
+    except json.JSONDecodeError as exc:
+        raise TraderRiskAuditEvidenceError(f"Cannot parse {label}") from exc
     if not isinstance(raw, Mapping):
         raise TraderRiskAuditEvidenceError(f"{label} must be a JSON object")
-    return raw_bytes, raw
+    return raw
+
+
+def _reject_duplicate_object_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise TraderRiskAuditEvidenceError(f"Duplicate JSON object field: {key}")
+        result[key] = value
+    return result
 
 
 def _mapping(value: Any, field: str) -> Mapping[str, Any]:

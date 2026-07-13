@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
+from importlib import resources
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from eval_ground_truth_lab import cli
+from eval_ground_truth_lab.adapters import AdapterResult, TraderRiskAuditEvidenceAdapter
 from eval_ground_truth_lab.evidence import verify_evidence_manifest
-from eval_ground_truth_lab.trader_replay import run_trader_risk_audit_replay
+from eval_ground_truth_lab.trader_replay import (
+    TraderRiskAuditReplayConfigurationError,
+    run_trader_risk_audit_replay,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 DATASET_ROOT = ROOT / "datasets/trader_risk_audit"
@@ -93,6 +100,147 @@ def test_changed_ground_truth_returns_failing_gate_with_evidence(
     assert result["gate"] == {"failed_validator_count": 1, "passed": False}
     assert result["cases"][0]["failed_validators"] == ["trader_risk_audit.synthetic_metrics"]
     verify_evidence_manifest(next(pack.glob("sha256-*.manifest.json")))
+
+
+def test_default_packaged_inputs_replay_from_unrelated_working_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    unrelated = tmp_path / "unrelated-working-directory"
+    unrelated.mkdir()
+    pack = tmp_path / "pack"
+    monkeypatch.chdir(unrelated)
+
+    exit_code = cli.main(
+        [
+            "run-trader-risk-audit-replay",
+            "--evidence-dir",
+            str(pack),
+            "--run-dir",
+            str(tmp_path / "runs"),
+            "--run-id",
+            "trader-packaged-defaults",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert output["gate_passed"] is True
+    assert (pack / "inputs/dataset.jsonl").read_bytes() == DATASET.read_bytes()
+    assert (pack / "inputs/eval-evidence.json").read_bytes() == EVIDENCE.read_bytes()
+    assert (pack / "inputs/source-provenance.json").read_bytes() == PROVENANCE.read_bytes()
+    verify_evidence_manifest(Path(output["manifest"]))
+
+
+def test_packaged_defaults_are_byte_identical_to_repository_fixtures() -> None:
+    resource_root = (
+        resources.files("eval_ground_truth_lab").joinpath("resources").joinpath("trader_risk_audit")
+    )
+
+    assert (
+        resource_root.joinpath("synthetic_quickstart_v1.jsonl").read_bytes() == DATASET.read_bytes()
+    )
+    assert resource_root.joinpath("eval-evidence.json").read_bytes() == EVIDENCE.read_bytes()
+    assert (
+        resource_root.joinpath("synthetic_quickstart_v1.provenance.json").read_bytes()
+        == PROVENANCE.read_bytes()
+    )
+
+
+@pytest.mark.parametrize("case_count", [0, 2])
+def test_v1_replay_rejects_non_singleton_dataset_without_creating_a_pack(
+    tmp_path: Path,
+    case_count: int,
+) -> None:
+    dataset = tmp_path / "invalid-coverage.jsonl"
+    dataset.write_bytes(DATASET.read_bytes() * case_count)
+    pack = tmp_path / "pack"
+    runs = tmp_path / "runs"
+
+    with pytest.raises(TraderRiskAuditReplayConfigurationError, match="exactly one"):
+        run_trader_risk_audit_replay(
+            dataset_path=dataset,
+            evidence_path=EVIDENCE,
+            provenance_path=PROVENANCE,
+            evidence_dir=pack,
+            run_dir=runs,
+            run_id=f"invalid-{case_count}-case-coverage",
+        )
+
+    assert not pack.exists()
+    assert not runs.exists()
+
+
+def test_replay_packages_the_exact_validated_snapshots_when_paths_mutate_during_invoke(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset = tmp_path / "dataset.jsonl"
+    evidence = tmp_path / "eval-evidence.json"
+    provenance = tmp_path / "provenance.json"
+    originals = {
+        dataset: DATASET.read_bytes(),
+        evidence: EVIDENCE.read_bytes(),
+        provenance: PROVENANCE.read_bytes(),
+    }
+    for path, payload in originals.items():
+        path.write_bytes(payload)
+
+    class MutatingAdapter(TraderRiskAuditEvidenceAdapter):
+        def invoke(self, case: Mapping[str, Any]) -> AdapterResult:
+            dataset.write_bytes(b"mutated after snapshot\n")
+            evidence.write_bytes(b"{}\n")
+            provenance.write_bytes(b"{}\n")
+            return super().invoke(case)
+
+    adapter = MutatingAdapter(evidence_path=evidence, provenance_path=provenance)
+    pack = tmp_path / "pack"
+    exit_code = run_trader_risk_audit_replay(
+        dataset_path=dataset,
+        evidence_path=evidence,
+        provenance_path=provenance,
+        evidence_dir=pack,
+        run_dir=tmp_path / "runs",
+        run_id="mutation-between-validation-and-packaging",
+        adapter=adapter,
+    )
+    capsys.readouterr()
+
+    assert exit_code == 0
+    assert (pack / "inputs/dataset.jsonl").read_bytes() == originals[dataset]
+    assert (pack / "inputs/eval-evidence.json").read_bytes() == originals[evidence]
+    assert (pack / "inputs/source-provenance.json").read_bytes() == originals[provenance]
+    verify_evidence_manifest(next(pack.glob("sha256-*.manifest.json")))
+
+
+def test_safe_but_false_provenance_source_path_cannot_pass(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    changed = json.loads(PROVENANCE.read_text(encoding="utf-8"))
+    changed["source"]["source_path"] = "examples/synthetic_quickstart/other.json"
+    provenance = tmp_path / "changed-provenance.json"
+    provenance.write_text(json.dumps(changed, sort_keys=True) + "\n", encoding="utf-8")
+    pack = tmp_path / "pack"
+
+    exit_code = run_trader_risk_audit_replay(
+        dataset_path=DATASET,
+        evidence_path=EVIDENCE,
+        provenance_path=provenance,
+        evidence_dir=pack,
+        run_dir=tmp_path / "runs",
+        run_id="false-source-path",
+    )
+    capsys.readouterr()
+    result = _json(pack / "replay-result.json")
+
+    assert exit_code == 1
+    assert result["gate"]["passed"] is False
+    assert result["cases"][0]["failed_validators"] == [
+        "trader_risk_audit.source_provenance",
+        "trader_risk_audit.evidence_identity",
+    ]
 
 
 def test_run_directory_cannot_be_nested_in_evidence_pack(tmp_path: Path) -> None:

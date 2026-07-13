@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from eval_ground_truth_lab.datasets import DatasetValidationError, load_dataset
+from eval_ground_truth_lab.datasets import DatasetValidationError, load_dataset, load_dataset_bytes
 
 
 def test_valid_jsonl_dataset_metadata(tmp_path) -> None:
@@ -140,3 +140,24 @@ def test_metadata_key_order_does_not_change_dataset_hash(tmp_path) -> None:
     second = load_dataset(second_path)
 
     assert first.metadata.dataset_hash == second.metadata.dataset_hash
+
+
+def test_byte_snapshot_loader_matches_path_loader(tmp_path) -> None:
+    dataset_path = tmp_path / "snapshot.jsonl"
+    payload = (
+        json.dumps(
+            {
+                "id": "snapshot-001",
+                "input": {"value": "synthetic"},
+                "expected": {"status": "ready"},
+            },
+            sort_keys=True,
+        )
+        + "\n"
+    ).encode()
+    dataset_path.write_bytes(payload)
+
+    from_path = load_dataset(dataset_path)
+    from_snapshot = load_dataset_bytes(payload, source_path=dataset_path)
+
+    assert from_snapshot == from_path

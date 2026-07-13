@@ -1,9 +1,9 @@
 {
   "case_count": 1,
   "dataset_file": "synthetic_quickstart_v1.jsonl",
-  "dataset_hash": "7bac4907ef71734b5ce492d547c50db736a8b9f5d12903213efb9deedbca2944",
+  "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
   "dataset_id": "synthetic_quickstart_v1",
-  "dataset_raw_sha256": "fa0c0579b297850c52c4bf4cae007e4a897601c88ae1841c9c1f0988435fa5fe",
+  "dataset_raw_sha256": "be3a2718ad3c38c44be76165198a555156e2663fdde2843c6836e87b96db115f",
   "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
   "evidence_file": "fixtures/synthetic_quickstart_v1/eval-evidence.json",
   "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",

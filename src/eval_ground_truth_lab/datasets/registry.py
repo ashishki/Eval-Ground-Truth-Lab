@@ -92,10 +92,29 @@ class Dataset:
 
 def load_dataset(path: str | Path) -> Dataset:
     source_path = Path(path)
+    return load_dataset_bytes(source_path.read_bytes(), source_path=source_path)
+
+
+def load_dataset_bytes(payload: bytes, *, source_path: str | Path) -> Dataset:
+    """Load a dataset from one immutable byte snapshot.
+
+    Callers that must bind validation and later packaging to the same input can
+    read a file or package resource once and pass those exact bytes here.
+    """
+
+    source_path = Path(source_path)
+    try:
+        text = payload.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise DatasetValidationError(
+            case_id=None,
+            field="encoding",
+            message=f"Dataset {source_path} must be UTF-8",
+        ) from exc
     if source_path.suffix.lower() in {".yaml", ".yml"}:
-        dataset_id, schema_version, raw_cases = _load_yaml(source_path)
+        dataset_id, schema_version, raw_cases = _load_yaml_text(text, source_path)
     elif source_path.suffix.lower() == ".jsonl":
-        dataset_id, schema_version, raw_cases = _load_jsonl(source_path)
+        dataset_id, schema_version, raw_cases = _load_jsonl_text(text, source_path)
     else:
         raise ValueError(f"Unsupported dataset extension for {source_path}")
 
@@ -116,34 +135,32 @@ def load_dataset(path: str | Path) -> Dataset:
     )
 
 
-def _load_jsonl(path: Path) -> tuple[str, str, list[dict[str, Any]]]:
+def _load_jsonl_text(text: str, path: Path) -> tuple[str, str, list[dict[str, Any]]]:
     raw_cases: list[dict[str, Any]] = []
-    with path.open(encoding="utf-8") as dataset_file:
-        for line_number, line in enumerate(dataset_file, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            try:
-                raw = json.loads(stripped)
-            except json.JSONDecodeError as exc:
-                raise DatasetValidationError(
-                    case_id=f"line {line_number}",
-                    field="json",
-                    message=f"Dataset line {line_number} is not valid JSON: {exc.msg}",
-                ) from exc
-            if not isinstance(raw, dict):
-                raise DatasetValidationError(
-                    case_id=f"line {line_number}",
-                    field="case",
-                    message=f"Dataset line {line_number} must be a JSON object",
-                )
-            raw_cases.append(raw)
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        try:
+            raw = json.loads(stripped)
+        except json.JSONDecodeError as exc:
+            raise DatasetValidationError(
+                case_id=f"line {line_number}",
+                field="json",
+                message=f"Dataset line {line_number} is not valid JSON: {exc.msg}",
+            ) from exc
+        if not isinstance(raw, dict):
+            raise DatasetValidationError(
+                case_id=f"line {line_number}",
+                field="case",
+                message=f"Dataset line {line_number} must be a JSON object",
+            )
+        raw_cases.append(raw)
     return path.stem, DEFAULT_SCHEMA_VERSION, raw_cases
 
 
-def _load_yaml(path: Path) -> tuple[str, str, list[dict[str, Any]]]:
-    with path.open(encoding="utf-8") as dataset_file:
-        raw = yaml.safe_load(dataset_file)
+def _load_yaml_text(text: str, path: Path) -> tuple[str, str, list[dict[str, Any]]]:
+    raw = yaml.safe_load(text)
 
     if isinstance(raw, list):
         return path.stem, DEFAULT_SCHEMA_VERSION, _validate_raw_case_list(raw)

@@ -32,7 +32,10 @@ eval-ground-truth-lab = "eval_ground_truth_lab.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-eval_ground_truth_lab = ["reports/templates/*.html"]
+eval_ground_truth_lab = [
+  "reports/templates/*.html",
+  "resources/trader_risk_audit/*",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.metadata
 import json
 import platform
 from collections.abc import Mapping
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -13,8 +15,9 @@ from eval_ground_truth_lab.adapters import trader_risk_audit as adapter_module
 from eval_ground_truth_lab.adapters.trader_risk_audit import (
     TRADER_RISK_AUDIT_ADAPTER_VERSION,
     TraderRiskAuditEvidenceAdapter,
+    read_regular_file_bytes,
 )
-from eval_ground_truth_lab.datasets import Dataset, load_dataset
+from eval_ground_truth_lab.datasets import Dataset, load_dataset_bytes
 from eval_ground_truth_lab.evidence import (
     atomic_write_bytes,
     atomic_write_json,
@@ -31,13 +34,28 @@ from eval_ground_truth_lab.validators.trader_risk_audit import (
 )
 
 TRADER_RISK_AUDIT_REPLAY_SCHEMA_VERSION = "eval-lab-trader-risk-audit-replay-v1"
+_DEFAULT_DATASET_NAME = "synthetic_quickstart_v1.jsonl"
+_DEFAULT_EVIDENCE_NAME = "eval-evidence.json"
+_DEFAULT_PROVENANCE_NAME = "synthetic_quickstart_v1.provenance.json"
+
+
+class TraderRiskAuditReplayConfigurationError(ValueError):
+    """Raised before a replay starts when its fixed v1 coverage is invalid."""
+
+
+@dataclass(frozen=True)
+class _TraderReplayInputSnapshot:
+    dataset_bytes: bytes
+    dataset_source_name: str
+    evidence_bytes: bytes
+    provenance_bytes: bytes
 
 
 def run_trader_risk_audit_replay(
     *,
-    dataset_path: str | Path,
-    evidence_path: str | Path,
-    provenance_path: str | Path,
+    dataset_path: str | Path | None = None,
+    evidence_path: str | Path | None = None,
+    provenance_path: str | Path | None = None,
     evidence_dir: str | Path,
     run_dir: str | Path,
     run_id: str | None = None,
@@ -48,17 +66,32 @@ def run_trader_risk_audit_replay(
     pack_root = Path(evidence_dir)
     run_root = Path(run_dir)
     _require_separate_run_directory(pack_root=pack_root, run_root=run_root)
-    _require_empty_pack_directory(pack_root)
+    _require_available_pack_directory(pack_root)
 
-    dataset_source = Path(dataset_path)
-    evidence_source = Path(evidence_path)
-    provenance_source = Path(provenance_path)
-    dataset = load_dataset(dataset_source)
-    selected_adapter = adapter or TraderRiskAuditEvidenceAdapter(
-        evidence_path=evidence_source,
-        provenance_path=provenance_source,
+    # Read every caller-controlled input exactly once. Parsing, validation,
+    # hashing, adapter execution, and evidence packaging all use these same
+    # immutable byte snapshots, so a later path mutation cannot change what is
+    # sealed into the pack.
+    snapshot = _load_input_snapshot(
+        dataset_path=dataset_path,
+        evidence_path=evidence_path,
+        provenance_path=provenance_path,
     )
-    source_provenance = selected_adapter.provenance.to_mapping()
+    dataset = load_dataset_bytes(
+        snapshot.dataset_bytes,
+        source_path=snapshot.dataset_source_name,
+    )
+    _require_v1_dataset_coverage(dataset)
+    selected_adapter = adapter or TraderRiskAuditEvidenceAdapter.from_bytes(
+        evidence_bytes=snapshot.evidence_bytes,
+        provenance_bytes=snapshot.provenance_bytes,
+    )
+    _require_adapter_snapshot_match(adapter=selected_adapter, snapshot=snapshot)
+    source_provenance = {
+        **selected_adapter.provenance.to_mapping(),
+        "provenance_sha256": selected_adapter.provenance_sha256,
+    }
+    _prepare_empty_pack_directory(pack_root)
     store = RunStore(run_root)
     run = store.create_run(
         run_id=run_id,
@@ -118,7 +151,7 @@ def run_trader_risk_audit_replay(
         dataset=dataset,
         run=completed,
         source_provenance=source_provenance,
-        dataset_raw_sha256=sha256_file(dataset_source),
+        dataset_raw_sha256=_sha256_bytes(snapshot.dataset_bytes),
         implementation_sha256=implementation_sha256,
         runtime=runtime,
     )
@@ -139,9 +172,9 @@ def run_trader_risk_audit_replay(
 
     atomic_write_json(result_path, result)
     atomic_write_text(report_path, render_trader_risk_audit_replay_markdown(result))
-    atomic_write_bytes(dataset_artifact, dataset_source.read_bytes())
-    atomic_write_bytes(evidence_artifact, evidence_source.read_bytes())
-    atomic_write_bytes(provenance_artifact, provenance_source.read_bytes())
+    atomic_write_bytes(dataset_artifact, snapshot.dataset_bytes)
+    atomic_write_bytes(evidence_artifact, snapshot.evidence_bytes)
+    atomic_write_bytes(provenance_artifact, snapshot.provenance_bytes)
     atomic_write_bytes(run_artifact, run_source.read_bytes())
     atomic_write_bytes(seal_artifact, seal_source.read_bytes())
     declared = [
@@ -160,7 +193,7 @@ def run_trader_risk_audit_replay(
             "adapter_version": TRADER_RISK_AUDIT_ADAPTER_VERSION,
             "contract_version": selected_adapter.provenance.contract_version,
             "dataset_hash": dataset.metadata.dataset_hash,
-            "dataset_raw_sha256": sha256_file(dataset_source),
+            "dataset_raw_sha256": _sha256_bytes(snapshot.dataset_bytes),
             "evidence_content_hash": selected_adapter.provenance.evidence_content_hash,
             "evidence_sha256": selected_adapter.provenance.evidence_sha256,
             "fixture": True,
@@ -168,11 +201,14 @@ def run_trader_risk_audit_replay(
             "harness_version": f"eval-ground-truth-lab-{__version__}",
             "implementation_sha256": implementation_sha256,
             "privacy_classification": selected_adapter.provenance.privacy_classification,
+            "provenance_sha256": selected_adapter.provenance_sha256,
             "run_id": completed.run_id,
             "runtime": runtime,
             "source_bundle_sha256": selected_adapter.provenance.source_bundle_sha256,
+            "source_git_blob_sha1": selected_adapter.provenance.source_git_blob_sha1,
             "source_git_commit": selected_adapter.provenance.source_git_commit,
             "source_git_tree": selected_adapter.provenance.source_git_tree,
+            "source_path": selected_adapter.provenance.source_path,
             "validator_version": TRADER_RISK_AUDIT_VALIDATOR_VERSION,
         },
     )
@@ -320,13 +356,94 @@ def _build_replay_result(
     }
 
 
-def _require_empty_pack_directory(path: Path) -> None:
+def _require_available_pack_directory(path: Path) -> None:
     if path.exists():
         if not path.is_dir():
             raise ValueError(f"Evidence path is not a directory: {path}")
         if any(path.iterdir()):
             raise ValueError(f"Evidence directory must be empty: {path}")
+
+
+def _prepare_empty_pack_directory(path: Path) -> None:
+    _require_available_pack_directory(path)
     path.mkdir(parents=True, exist_ok=True)
+
+
+def _load_input_snapshot(
+    *,
+    dataset_path: str | Path | None,
+    evidence_path: str | Path | None,
+    provenance_path: str | Path | None,
+) -> _TraderReplayInputSnapshot:
+    dataset_bytes, dataset_source_name = _load_input_bytes(
+        path=dataset_path,
+        resource_name=_DEFAULT_DATASET_NAME,
+        label="Trader Risk Audit replay dataset",
+    )
+    evidence_bytes, _ = _load_input_bytes(
+        path=evidence_path,
+        resource_name=_DEFAULT_EVIDENCE_NAME,
+        label="Trader Risk Audit evidence export",
+    )
+    provenance_bytes, _ = _load_input_bytes(
+        path=provenance_path,
+        resource_name=_DEFAULT_PROVENANCE_NAME,
+        label="Trader Risk Audit source provenance",
+    )
+    return _TraderReplayInputSnapshot(
+        dataset_bytes=dataset_bytes,
+        dataset_source_name=dataset_source_name,
+        evidence_bytes=evidence_bytes,
+        provenance_bytes=provenance_bytes,
+    )
+
+
+def _load_input_bytes(
+    *,
+    path: str | Path | None,
+    resource_name: str,
+    label: str,
+) -> tuple[bytes, str]:
+    if path is not None:
+        source = Path(path)
+        return read_regular_file_bytes(source, label), source.name
+    resource = (
+        resources.files("eval_ground_truth_lab")
+        .joinpath("resources")
+        .joinpath("trader_risk_audit")
+        .joinpath(resource_name)
+    )
+    if not resource.is_file():
+        raise TraderRiskAuditReplayConfigurationError(
+            f"Packaged Trader Risk Audit replay resource is missing: {resource_name}"
+        )
+    return resource.read_bytes(), resource_name
+
+
+def _require_v1_dataset_coverage(dataset: Dataset) -> None:
+    if dataset.metadata.case_count != 1:
+        raise TraderRiskAuditReplayConfigurationError(
+            "Trader Risk Audit replay v1 requires exactly one dataset case; "
+            f"received {dataset.metadata.case_count}"
+        )
+
+
+def _require_adapter_snapshot_match(
+    *,
+    adapter: TraderRiskAuditEvidenceAdapter,
+    snapshot: _TraderReplayInputSnapshot,
+) -> None:
+    if (
+        adapter.evidence_bytes != snapshot.evidence_bytes
+        or adapter.provenance_bytes != snapshot.provenance_bytes
+    ):
+        raise TraderRiskAuditReplayConfigurationError(
+            "Provided adapter was not constructed from the replay input snapshots"
+        )
+
+
+def _sha256_bytes(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _require_separate_run_directory(*, pack_root: Path, run_root: Path) -> None:

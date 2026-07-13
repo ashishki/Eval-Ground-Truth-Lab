@@ -101,15 +101,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     trader_parser = subparsers.add_parser("run-trader-risk-audit-replay")
     trader_parser.add_argument(
         "--dataset",
-        default="datasets/trader_risk_audit/synthetic_quickstart_v1.jsonl",
+        help="dataset path (defaults to the packaged synthetic v1 fixture)",
     )
     trader_parser.add_argument(
         "--evidence",
-        default=("datasets/trader_risk_audit/fixtures/synthetic_quickstart_v1/eval-evidence.json"),
+        help="evidence path (defaults to the packaged synthetic v1 fixture)",
     )
     trader_parser.add_argument(
         "--provenance",
-        default="datasets/trader_risk_audit/synthetic_quickstart_v1.provenance.json",
+        help="provenance path (defaults to the packaged synthetic v1 fixture)",
     )
     trader_parser.add_argument("--evidence-dir", required=True)
     trader_parser.add_argument("--run-dir", required=True)
