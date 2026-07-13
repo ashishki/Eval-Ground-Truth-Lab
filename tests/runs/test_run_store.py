@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 
@@ -71,6 +72,23 @@ def test_completed_run_rejects_mutation(tmp_path) -> None:
             completed.run_id,
             CaseResult(case_id="case-001", output={"category": "account_access"}),
         )
+
+
+def test_complete_run_snapshot_returns_the_exact_terminal_bytes(tmp_path) -> None:
+    store = RunStore(tmp_path)
+    record = _create_run(store, "terminal-snapshot")
+
+    snapshot = store.complete_run_snapshot(record.run_id)
+
+    assert snapshot.record.status == "completed"
+    assert snapshot.record_bytes == (tmp_path / "terminal-snapshot.json").read_bytes()
+    assert snapshot.seal_bytes == (tmp_path / "terminal-snapshot.sha256").read_bytes()
+    assert (
+        snapshot.seal_bytes
+        == (
+            f"sha256:{hashlib.sha256(snapshot.record_bytes).hexdigest()}  terminal-snapshot.json\n"
+        ).encode()
+    )
 
 
 def test_duplicate_case_result_rejected(tmp_path) -> None:

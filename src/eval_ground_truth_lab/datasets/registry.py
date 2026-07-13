@@ -8,8 +8,44 @@ from typing import Any
 
 import yaml
 
+from eval_ground_truth_lab.execution_binding import EXECUTION_BINDING_SHA256
+
+LOADED_EXECUTION_BINDING_SHA256 = EXECUTION_BINDING_SHA256
+
 DEFAULT_SCHEMA_VERSION = "1.0"
 REQUIRED_CASE_FIELDS = ("id", "input", "expected")
+ALLOWED_CASE_FIELDS = frozenset({*REQUIRED_CASE_FIELDS, "metadata"})
+ALLOWED_YAML_DATASET_FIELDS = frozenset({"cases", "dataset_id", "schema_version"})
+
+
+class _DuplicateJsonKeyError(ValueError):
+    pass
+
+
+class _UniqueKeySafeLoader(yaml.SafeLoader):
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        self.flatten_mapping(node)
+        mapping: dict[Any, Any] = {}
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            try:
+                duplicate = key in mapping
+            except TypeError as exc:
+                raise yaml.constructor.ConstructorError(
+                    "while constructing a mapping",
+                    node.start_mark,
+                    "found an unhashable mapping key",
+                    key_node.start_mark,
+                ) from exc
+            if duplicate:
+                raise yaml.constructor.ConstructorError(
+                    "while constructing a mapping",
+                    node.start_mark,
+                    f"found duplicate key {key!r}",
+                    key_node.start_mark,
+                )
+            mapping[key] = self.construct_object(value_node, deep=deep)
+        return mapping
 
 
 class DatasetValidationError(ValueError):
@@ -32,6 +68,17 @@ class DatasetCase:
     def from_mapping(cls, raw: dict[str, Any], *, line_number: int | None = None) -> DatasetCase:
         case_id = _string_or_none(raw.get("id"))
         case_ref = case_id or (f"line {line_number}" if line_number is not None else None)
+
+        unknown_fields = sorted(set(raw) - ALLOWED_CASE_FIELDS)
+        if unknown_fields:
+            raise DatasetValidationError(
+                case_id=case_ref,
+                field="case",
+                message=(
+                    f"Dataset case {case_ref or '<unknown>'} contains unknown fields: "
+                    + ", ".join(unknown_fields)
+                ),
+            )
 
         for required_field in REQUIRED_CASE_FIELDS:
             if required_field not in raw:
@@ -92,10 +139,29 @@ class Dataset:
 
 def load_dataset(path: str | Path) -> Dataset:
     source_path = Path(path)
+    return load_dataset_bytes(source_path.read_bytes(), source_path=source_path)
+
+
+def load_dataset_bytes(payload: bytes, *, source_path: str | Path) -> Dataset:
+    """Load a dataset from one immutable byte snapshot.
+
+    Callers that must bind validation and later packaging to the same input can
+    read a file or package resource once and pass those exact bytes here.
+    """
+
+    source_path = Path(source_path)
+    try:
+        text = payload.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise DatasetValidationError(
+            case_id=None,
+            field="encoding",
+            message=f"Dataset {source_path} must be UTF-8",
+        ) from exc
     if source_path.suffix.lower() in {".yaml", ".yml"}:
-        dataset_id, schema_version, raw_cases = _load_yaml(source_path)
+        dataset_id, schema_version, raw_cases = _load_yaml_text(text, source_path)
     elif source_path.suffix.lower() == ".jsonl":
-        dataset_id, schema_version, raw_cases = _load_jsonl(source_path)
+        dataset_id, schema_version, raw_cases = _load_jsonl_text(text, source_path)
     else:
         raise ValueError(f"Unsupported dataset extension for {source_path}")
 
@@ -116,34 +182,39 @@ def load_dataset(path: str | Path) -> Dataset:
     )
 
 
-def _load_jsonl(path: Path) -> tuple[str, str, list[dict[str, Any]]]:
+def _load_jsonl_text(text: str, path: Path) -> tuple[str, str, list[dict[str, Any]]]:
     raw_cases: list[dict[str, Any]] = []
-    with path.open(encoding="utf-8") as dataset_file:
-        for line_number, line in enumerate(dataset_file, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            try:
-                raw = json.loads(stripped)
-            except json.JSONDecodeError as exc:
-                raise DatasetValidationError(
-                    case_id=f"line {line_number}",
-                    field="json",
-                    message=f"Dataset line {line_number} is not valid JSON: {exc.msg}",
-                ) from exc
-            if not isinstance(raw, dict):
-                raise DatasetValidationError(
-                    case_id=f"line {line_number}",
-                    field="case",
-                    message=f"Dataset line {line_number} must be a JSON object",
-                )
-            raw_cases.append(raw)
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        try:
+            raw = json.loads(stripped, object_pairs_hook=_reject_duplicate_json_keys)
+        except (json.JSONDecodeError, _DuplicateJsonKeyError) as exc:
+            raise DatasetValidationError(
+                case_id=f"line {line_number}",
+                field="json",
+                message=f"Dataset line {line_number} is not valid JSON: {exc}",
+            ) from exc
+        if not isinstance(raw, dict):
+            raise DatasetValidationError(
+                case_id=f"line {line_number}",
+                field="case",
+                message=f"Dataset line {line_number} must be a JSON object",
+            )
+        raw_cases.append(raw)
     return path.stem, DEFAULT_SCHEMA_VERSION, raw_cases
 
 
-def _load_yaml(path: Path) -> tuple[str, str, list[dict[str, Any]]]:
-    with path.open(encoding="utf-8") as dataset_file:
-        raw = yaml.safe_load(dataset_file)
+def _load_yaml_text(text: str, path: Path) -> tuple[str, str, list[dict[str, Any]]]:
+    try:
+        raw = yaml.load(text, Loader=_UniqueKeySafeLoader)
+    except yaml.YAMLError as exc:
+        raise DatasetValidationError(
+            case_id=None,
+            field="yaml",
+            message=f"Dataset {path} is not valid YAML: {exc}",
+        ) from exc
 
     if isinstance(raw, list):
         return path.stem, DEFAULT_SCHEMA_VERSION, _validate_raw_case_list(raw)
@@ -153,6 +224,14 @@ def _load_yaml(path: Path) -> tuple[str, str, list[dict[str, Any]]]:
             case_id=None,
             field="dataset",
             message="YAML dataset must be an object with a 'cases' list or a list of cases",
+        )
+
+    unknown_fields = sorted(set(raw) - ALLOWED_YAML_DATASET_FIELDS)
+    if unknown_fields:
+        raise DatasetValidationError(
+            case_id=None,
+            field="dataset",
+            message="YAML dataset contains unknown fields: " + ", ".join(unknown_fields),
         )
 
     raw_cases = raw.get("cases")
@@ -194,3 +273,12 @@ def _string_or_none(value: object) -> str | None:
     if isinstance(value, str) and value:
         return value
     return None
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    mapping: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in mapping:
+            raise _DuplicateJsonKeyError(f"duplicate key {key!r}")
+        mapping[key] = value
+    return mapping

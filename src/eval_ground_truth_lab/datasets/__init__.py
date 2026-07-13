@@ -4,6 +4,7 @@ from eval_ground_truth_lab.datasets.registry import (
     DatasetMetadata,
     DatasetValidationError,
     load_dataset,
+    load_dataset_bytes,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "DatasetMetadata",
     "DatasetValidationError",
     "load_dataset",
+    "load_dataset_bytes",
 ]

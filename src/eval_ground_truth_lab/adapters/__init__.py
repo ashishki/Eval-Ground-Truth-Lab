@@ -13,6 +13,16 @@ from eval_ground_truth_lab.adapters.gdev_normalizer import (
 )
 from eval_ground_truth_lab.adapters.http import HttpCandidateAdapter, HttpResponse
 from eval_ground_truth_lab.adapters.synthetic import SyntheticDemoAdapter
+from eval_ground_truth_lab.adapters.trader_risk_audit import (
+    SYNTHETIC_PRIVACY_CLASSIFICATION,
+    TRADER_RISK_AUDIT_ADAPTER_VERSION,
+    TRADER_RISK_AUDIT_CONTRACT_VERSION,
+    TRADER_RISK_AUDIT_PROVENANCE_SCHEMA_VERSION,
+    UNASSESSED_PRIVACY_CLASSIFICATION,
+    TraderRiskAuditEvidenceAdapter,
+    TraderRiskAuditEvidenceError,
+    TraderRiskAuditProvenance,
+)
 
 __all__ = [
     "AdapterResult",
@@ -26,6 +36,14 @@ __all__ = [
     "MissingGdevRequestNamespaceError",
     "NormalizedGdevOutput",
     "SyntheticDemoAdapter",
+    "SYNTHETIC_PRIVACY_CLASSIFICATION",
+    "TRADER_RISK_AUDIT_ADAPTER_VERSION",
+    "TRADER_RISK_AUDIT_CONTRACT_VERSION",
+    "TRADER_RISK_AUDIT_PROVENANCE_SCHEMA_VERSION",
+    "TraderRiskAuditEvidenceAdapter",
+    "TraderRiskAuditEvidenceError",
+    "TraderRiskAuditProvenance",
+    "UNASSESSED_PRIVACY_CLASSIFICATION",
     "UnsafeAdapterInputError",
     "normalize_gdev_response",
 ]

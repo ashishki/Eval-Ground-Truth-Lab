@@ -7,6 +7,7 @@ from eval_ground_truth_lab.runs.store import (
     RunMutationError,
     RunRecord,
     RunStore,
+    TerminalRunSnapshot,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "RunMutationError",
     "RunRecord",
     "RunStore",
+    "TerminalRunSnapshot",
 ]

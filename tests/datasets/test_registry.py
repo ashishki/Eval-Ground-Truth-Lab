@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from eval_ground_truth_lab.datasets import DatasetValidationError, load_dataset
+from eval_ground_truth_lab.datasets import DatasetValidationError, load_dataset, load_dataset_bytes
 
 
 def test_valid_jsonl_dataset_metadata(tmp_path) -> None:
@@ -140,3 +140,103 @@ def test_metadata_key_order_does_not_change_dataset_hash(tmp_path) -> None:
     second = load_dataset(second_path)
 
     assert first.metadata.dataset_hash == second.metadata.dataset_hash
+
+
+def test_byte_snapshot_loader_matches_path_loader(tmp_path) -> None:
+    dataset_path = tmp_path / "snapshot.jsonl"
+    payload = (
+        json.dumps(
+            {
+                "id": "snapshot-001",
+                "input": {"value": "synthetic"},
+                "expected": {"status": "ready"},
+            },
+            sort_keys=True,
+        )
+        + "\n"
+    ).encode()
+    dataset_path.write_bytes(payload)
+
+    from_path = load_dataset(dataset_path)
+    from_snapshot = load_dataset_bytes(payload, source_path=dataset_path)
+
+    assert from_snapshot == from_path
+
+
+def test_unknown_case_field_is_rejected(tmp_path) -> None:
+    dataset_path = tmp_path / "unknown.jsonl"
+    dataset_path.write_text(
+        json.dumps(
+            {
+                "id": "case-unknown",
+                "input": {},
+                "expected": {},
+                "raw_trades": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(DatasetValidationError, match="unknown fields: raw_trades"):
+        load_dataset(dataset_path)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        '{"id":"first","id":"second","input":{},"expected":{}}\n',
+        '{"id":"nested","input":{"ticket":"first","ticket":"second"},"expected":{}}\n',
+        '{"id":"nested","input":{},"expected":{"status":{"value":1,"value":2}}}\n',
+    ],
+)
+def test_jsonl_duplicate_mapping_keys_are_rejected_recursively(
+    tmp_path,
+    payload: str,
+) -> None:
+    dataset_path = tmp_path / "duplicate.jsonl"
+    dataset_path.write_text(payload, encoding="utf-8")
+
+    with pytest.raises(DatasetValidationError, match="duplicate key") as exc_info:
+        load_dataset(dataset_path)
+
+    assert exc_info.value.field == "json"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        """
+dataset_id: first
+dataset_id: second
+cases: []
+""",
+        """
+cases:
+  - id: duplicate-input
+    input:
+      ticket: first
+      ticket: second
+    expected: {}
+""",
+        """
+cases:
+  - id: duplicate-expected
+    input: {}
+    expected:
+      status:
+        value: first
+        value: second
+""",
+    ],
+)
+def test_yaml_duplicate_mapping_keys_are_rejected_recursively(
+    tmp_path,
+    payload: str,
+) -> None:
+    dataset_path = tmp_path / "duplicate.yaml"
+    dataset_path.write_text(payload, encoding="utf-8")
+
+    with pytest.raises(DatasetValidationError, match="duplicate key") as exc_info:
+        load_dataset(dataset_path)
+
+    assert exc_info.value.field == "yaml"

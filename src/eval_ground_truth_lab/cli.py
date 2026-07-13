@@ -38,6 +38,7 @@ from eval_ground_truth_lab.evidence import (
 )
 from eval_ground_truth_lab.reports import render_markdown_report
 from eval_ground_truth_lab.runs import CaseResult, RunRecord, RunStore
+from eval_ground_truth_lab.trader_replay import run_trader_risk_audit_replay
 from eval_ground_truth_lab.validators import GdevValidatorThresholds, validate_gdev_case
 from eval_ground_truth_lab.validators import gdev_agent as gdev_validator_module
 
@@ -97,6 +98,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="datasets/gdev_agent/challenge_thresholds.json",
     )
 
+    trader_parser = subparsers.add_parser("run-trader-risk-audit-replay")
+    trader_parser.add_argument(
+        "--dataset",
+        help="dataset path (defaults to the packaged synthetic v1 fixture)",
+    )
+    trader_parser.add_argument(
+        "--evidence",
+        help="evidence path (defaults to the packaged synthetic v1 fixture)",
+    )
+    trader_parser.add_argument(
+        "--provenance",
+        help="provenance path (defaults to the packaged synthetic v1 fixture)",
+    )
+    trader_parser.add_argument("--evidence-dir", required=True)
+    trader_parser.add_argument("--run-dir", required=True)
+    trader_parser.add_argument("--run-id")
+
     verify_parser = subparsers.add_parser("verify-evidence")
     verify_parser.add_argument("--manifest", required=True)
 
@@ -148,6 +166,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             run_id=args.run_id,
             run_dir=args.run_dir,
             threshold_config_path=args.threshold_config,
+        )
+    if args.command == "run-trader-risk-audit-replay":
+        return run_trader_risk_audit_replay(
+            dataset_path=args.dataset,
+            evidence_path=args.evidence,
+            provenance_path=args.provenance,
+            evidence_dir=args.evidence_dir,
+            run_dir=args.run_dir,
+            run_id=args.run_id,
         )
     if args.command == "verify-evidence":
         result = verify_evidence_manifest(args.manifest)

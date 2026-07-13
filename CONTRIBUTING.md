@@ -23,3 +23,15 @@ machine-readable output, and a verified evidence manifest.
 
 Pull requests should be small enough to review, update relevant documentation,
 and include the commands and outcomes used for verification.
+
+Changes under `src/eval_ground_truth_lab/` must refresh the generated loaded-code
+binding before tests or commits:
+
+```bash
+PYTHONPATH=src .venv/bin/python tools/update_execution_binding.py
+PYTHONPATH=src .venv/bin/python tools/update_execution_binding.py --check
+```
+
+The binding is intentionally package-wide. It prevents a long-lived Python
+process from attributing replay output to newer on-disk source that was not the
+code it loaded.

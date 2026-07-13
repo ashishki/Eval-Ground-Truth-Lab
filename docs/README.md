@@ -17,6 +17,8 @@ validation evidence for Eval Ground Truth Lab.
 - `docs/KNOWN_LIMITS.md` - explicit local and production-boundary limits.
 - `docs/HARNESS_COMPARISON.md` - harness metadata and trace completeness
   sidecar contract.
+- `docs/TRADER_RISK_AUDIT_ADAPTER.md` - separate-product sanitized export
+  import/replay contract and evidence limits.
 
 ## Current State
 
@@ -28,7 +30,9 @@ validation evidence for Eval Ground Truth Lab.
 - Current proof surface: seeded smoke gate, v1 synthetic evidence pack, a
   passing local gdev-agent integration proof, and a committed gdev-agent
   diagnostic challenge whose canonical fixed-candidate run is published as
-  FAIL, not a production eval platform or hosted SaaS claim.
+  FAIL, plus one pinned fully synthetic Trader Risk Audit compatibility replay;
+  none is a production eval platform, external-user validation, or hosted SaaS
+  claim.
 
 ## Key Decisions
 
@@ -52,6 +56,8 @@ validation evidence for Eval Ground Truth Lab.
   report.
 - `docs/evidence/releases/v0.2.0/README.md` - executed canonical local challenge
   evidence with a verified failing gate.
+- `docs/evidence/integrations/README.md` - executed Trader Risk Audit sanitized
+  export replay with a verified passing compatibility gate.
 
 ## Active Tasks
 
@@ -71,6 +77,9 @@ validation evidence for Eval Ground Truth Lab.
 - The canonical local challenge run, expected-failure summary metrics, dataset
   card, and content-addressed package are published. The fixed candidate fails
   five thresholds.
+- The Trader Risk Audit sanitized-export adapter, exact synthetic expectation,
+  CI replay, and content-addressed package are implemented without importing or
+  absorbing the Trader product.
 - Independent labels, a blind successor holdout, an externally owned adapter,
   and real-user feedback remain external-validation work and are not claimed.
 - Runtime Grid live-local proof exists as an optional operator-run path in the

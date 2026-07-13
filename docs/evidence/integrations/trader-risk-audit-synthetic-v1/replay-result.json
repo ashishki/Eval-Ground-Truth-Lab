@@ -1,0 +1,138 @@
+{
+  "cases": [
+    {
+      "case_id": "synthetic-quickstart-v1",
+      "failed_validators": [],
+      "passed": true
+    }
+  ],
+  "dataset": {
+    "case_count": 1,
+    "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
+    "dataset_id": "synthetic_quickstart_v1",
+    "raw_sha256": "be3a2718ad3c38c44be76165198a555156e2663fdde2843c6836e87b96db115f",
+    "schema_version": "1.0"
+  },
+  "gate": {
+    "failed_validator_count": 0,
+    "passed": true
+  },
+  "provenance": {
+    "dataset_trust": {
+      "fixture": true,
+      "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
+      "replay_type": "pinned_synthetic_sanitized_export",
+      "source": "packaged_byte-identical_fixture"
+    },
+    "fixture": true,
+    "harness_version": "eval-ground-truth-lab-0.2.0",
+    "implementation": {
+      "components_sha256": {
+        "adapter": "f93b99c46d0af491c18bfdfcc367857c6ea0e9c1195aa1e56c54205729a22a7d",
+        "adapter_base": "402716e7fd3f372cdd20f008a599c419cb289d741a564300798c7e27fa8f7699",
+        "dataset_parser": "08982af85e2ec54da227bcb2c8ef626ef67bb6e0f582cb89efe6a293a4c348e6",
+        "evidence_manifest": "ad0dcbd8439dcfecea1dbe76a6bb452085e75bf660f0f61603845df0ba1c046e",
+        "execution_binding": "60f86c77bc33c2121b71b037aaca2c6992037a03cc7bfae535faa31d6e6b746b",
+        "implementation_provenance": "e8fa6b98d655264a65360859ad732061c81af230e1bba576da04a4a2e69fedac",
+        "run_store": "7c9205e193e7f6df2dc3a334470e1dbf300c61ac90968ae3b65406223c2c0258",
+        "runner": "7e42444fe2eb525806e88d46a9624e18bc9d25960ee561b3fd88df6531fae9c7",
+        "source_identity": "501f614ed944e91ca0ad0ae6fc3aeca6c6946fa8af0d31dce4ca6753f5a4854c",
+        "validation_result": "cf1167522351189ac57ede0d9305382191966fb9631fd0638bc49f23d3208fce",
+        "validators": "b3fa78f1374a44bc2de5c74ff09a14a1aa6b2b6a9a57558192d01adc90adc8de"
+      },
+      "execution_binding": {
+        "schema_version": "eval-lab-loaded-execution-binding-v1",
+        "sha256": "33c0e48b7eff1fcd4656418cbb75491d408d16f01bdea1860c818997893cc5b6"
+      },
+      "package_payload": {
+        "file_count": 56,
+        "sha256": "33f9455c2ffd9ff88c9f12387ce86e402a3345cadfb3cb53051295dda37d276e"
+      },
+      "schema_version": "eval-lab-implementation-provenance-v2",
+      "source": {
+        "commit": "f810e3a7a9ef6c077371ef401c345f56da3c8c27",
+        "kind": "git_worktree",
+        "measured_package_matches_head": true,
+        "tree": "8da573207b40329f125a999165163b73f4b0e8c0"
+      }
+    },
+    "implementation_sha256": {
+      "adapter": "f93b99c46d0af491c18bfdfcc367857c6ea0e9c1195aa1e56c54205729a22a7d",
+      "adapter_base": "402716e7fd3f372cdd20f008a599c419cb289d741a564300798c7e27fa8f7699",
+      "dataset_parser": "08982af85e2ec54da227bcb2c8ef626ef67bb6e0f582cb89efe6a293a4c348e6",
+      "evidence_manifest": "ad0dcbd8439dcfecea1dbe76a6bb452085e75bf660f0f61603845df0ba1c046e",
+      "execution_binding": "60f86c77bc33c2121b71b037aaca2c6992037a03cc7bfae535faa31d6e6b746b",
+      "implementation_provenance": "e8fa6b98d655264a65360859ad732061c81af230e1bba576da04a4a2e69fedac",
+      "run_store": "7c9205e193e7f6df2dc3a334470e1dbf300c61ac90968ae3b65406223c2c0258",
+      "runner": "7e42444fe2eb525806e88d46a9624e18bc9d25960ee561b3fd88df6531fae9c7",
+      "source_identity": "501f614ed944e91ca0ad0ae6fc3aeca6c6946fa8af0d31dce4ca6753f5a4854c",
+      "validation_result": "cf1167522351189ac57ede0d9305382191966fb9631fd0638bc49f23d3208fce",
+      "validators": "b3fa78f1374a44bc2de5c74ff09a14a1aa6b2b6a9a57558192d01adc90adc8de"
+    },
+    "privacy_classification": "fully-synthetic-packaged-expectation-dataset",
+    "runtime": {
+      "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+      "python": "3.12.3",
+      "pyyaml": "6.0.3"
+    },
+    "source_trust": {
+      "evidence_source": "packaged_byte_identical_evidence",
+      "privacy_classification": "fully-synthetic-sanitized-export",
+      "privacy_reviewed": true,
+      "provenance_source": "packaged_byte_identical_provenance",
+      "reviewed": true,
+      "source_identity_proof_sha256": "0eee8d88dbc8b1ece4b4992aa3103718583b9c46124c5fbb4cdce84aced0ec21",
+      "source_identity_verified": true,
+      "status": "packaged_reviewed_source"
+    }
+  },
+  "run": {
+    "candidate_version": "trader-risk-audit-0.2.0@bf755a24450f",
+    "completed_at": "2026-07-13T18:26:16.197494+00:00",
+    "dataset_hash": "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a",
+    "record_sha256": "de971adfdac3ca723f3b18c1db25ff7b73216e9e152696e94860e10fbfc10ccf",
+    "run_id": "trader-synthetic-quickstart-v1-20260713",
+    "seal_sha256": "baee0b8bf0ce7ad07be8382b6d87f315e4a3215ed24609f7dc6626c833c2e6ed",
+    "started_at": "2026-07-13T18:26:16.171800+00:00",
+    "status": "completed",
+    "validator_version": "trader-risk-audit-exact-replay-validators-v1"
+  },
+  "schema_version": "eval-lab-trader-risk-audit-replay-v1",
+  "scope": {
+    "applies_financial_advice": false,
+    "evaluates_raw_trades": false,
+    "external_user_case_study": false,
+    "production_evidence": false,
+    "replay_type": "pinned_synthetic_sanitized_export"
+  },
+  "source_provenance": {
+    "adapter_version": "eval-lab-trader-risk-audit-adapter-v1",
+    "contract_version": "trader-risk-audit-evidence-v1",
+    "declared_privacy_classification": "fully-synthetic-sanitized-export",
+    "evidence_content_hash": "d7e6fe92f50ba410a2c23882ea617b38081a8bbe84fe66727dfaecca115eb63f",
+    "evidence_sha256": "9925144d39bd41d6fdf8f54a1bbd900c871f1bb73cd008980baa2ae1f2d51ced",
+    "package": "trader-risk-audit",
+    "package_version": "0.2.0",
+    "privacy_classification": "fully-synthetic-sanitized-export",
+    "provenance_sha256": "3cd4339892665f5ed0003856a4b251e7524733a4ce5c99fac834d84fcdf8e402",
+    "source_identity": {
+      "bundle_sha256": "2c5b36afa9b2a9847de1c97789c52c57600e1d38cfd4947458906ee3bb3992ca",
+      "git_blob_sha1": "9a64dc98e8edbe1ec39756611a6cb3b73b4994b9",
+      "git_commit": "bf755a24450ff7c17328fa6d447f36bea8ea0fe5",
+      "git_tree": "1a2c4ff91a7504642a1bae05a9487fa2e898e0b6",
+      "path": "examples/synthetic_quickstart/evidence_preview/eval-evidence.json",
+      "repository_state": "path-purged-publication-candidate",
+      "status": "packaged_git_object_chain_verified"
+    },
+    "trust": {
+      "evidence_source": "packaged_byte_identical_evidence",
+      "privacy_classification": "fully-synthetic-sanitized-export",
+      "privacy_reviewed": true,
+      "provenance_source": "packaged_byte_identical_provenance",
+      "reviewed": true,
+      "source_identity_proof_sha256": "0eee8d88dbc8b1ece4b4992aa3103718583b9c46124c5fbb4cdce84aced0ec21",
+      "source_identity_verified": true,
+      "status": "packaged_reviewed_source"
+    }
+  }
+}

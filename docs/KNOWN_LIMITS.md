@@ -36,6 +36,43 @@ production eval platform.
   Redis dedup responses from crossing eval runs. This does not clear Redis,
   validate arbitrary custom adapters, or replace gdev-agent's configured dedup
   TTL and operational lifecycle controls.
+- The Trader Risk Audit adapter replays one pinned, sanitized, fully synthetic
+  export from a separate path-purged publication candidate. It does not invoke
+  the Trader rule engine or inspect raw trades. Its PASS is contract-compatibility
+  evidence, not a financial-quality score, external case study, or user proof.
+- Trader replay v1 accepts exactly one case. Installed defaults are packaged
+  resources; explicit input paths are read once, and the validated byte snapshots
+  are the bytes sealed into the evidence pack.
+- The evidentiary Trader path rejects injected adapters, including subclasses,
+  and always reconstructs the canonical adapter from its input snapshot. Custom
+  adapter experimentation is intentionally outside this evidence writer.
+- Only the canonical-name, byte-identical packaged Trader dataset receives the
+  synthetic fixture/privacy classification. Schema-valid caller overrides are
+  diagnostic inputs marked non-fixture and not privacy-reviewed; unknown fields,
+  noncanonical metadata, and duplicate mapping keys fail before output creation.
+- Reviewed Trader source/privacy claims independently require byte identity with
+  both packaged evidence and provenance. Re-self-hashed caller overrides remain
+  unreviewed, even when they repeat canonical source ids. A matching caller
+  expectation may still produce a diagnostic PASS; the sealed run keeps those
+  values under `declared_*` and records the downgrade separately in
+  `effective_trust`.
+- The terminal run record and seal are immutable completion snapshots and their
+  identities are cross-bound in result/manifest. This remains tamper-evidence,
+  not filesystem immutability against an actor that can replace the entire pack
+  and its published content address.
+- Trader source commit/tree/path/blob are cryptographically linked by a packaged
+  offline Git-object proof derived from the protected bundle. The bundle digest
+  is bound, but the full bundle is not distributed and Eval Lab's reviewed trust
+  anchor does not authenticate an external publisher identity.
+- Eval implementation provenance does not claim whole-worktree cleanliness. A
+  `git_worktree` identity requires the exact recursive HEAD path set plus
+  byte-for-byte and executable-mode equality; hidden index flags or deletions
+  downgrade it to `installed_package`. Named components, package/HEAD identity,
+  and a generated package-wide execution digest come from one pre-execution
+  recursive capture. Every loaded Trader decision module captures that digest at
+  import, so stale loaded code or newer on-disk code fails before run creation.
+  This is a process-local execution binding, not protection against an actor
+  that can arbitrarily rewrite Python objects in memory after the check.
 - Demo-mode local cost telemetry is deterministic and reports `0.0000` cost per
   case; it is not billing reconciliation.
 - The optional OpenAI judge provider is disabled by default and tested with fake

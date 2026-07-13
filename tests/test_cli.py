@@ -21,6 +21,7 @@ def test_cli_help_includes_real_eval_commands(capsys: pytest.CaptureFixture[str]
         "dataset-inspect",
         "run-gdev-agent",
         "run-gdev-agent-challenge",
+        "run-trader-risk-audit-replay",
         "verify-evidence",
         "compare",
         "cost-rollup",

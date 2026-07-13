@@ -11,6 +11,7 @@ python -m eval_ground_truth_lab.cli seeded-smoke --help
 python -m eval_ground_truth_lab.cli dataset-inspect --help
 python -m eval_ground_truth_lab.cli run-gdev-agent --help
 python -m eval_ground_truth_lab.cli run-gdev-agent-challenge --help
+python -m eval_ground_truth_lab.cli run-trader-risk-audit-replay --help
 python -m eval_ground_truth_lab.cli verify-evidence --help
 python -m eval_ground_truth_lab.cli compare --help
 python -m eval_ground_truth_lab.cli cost-rollup --help
@@ -72,6 +73,51 @@ namespace inputs, and whether a real gdev HTTP adapter or a custom passthrough
 adapter handled the cases.
 Keep `--run-dir` outside `--evidence-dir`: the command copies the sealed terminal
 run into the evidence directory's own `run/` subdirectory during finalization.
+
+## Replay Trader Risk Audit sanitized evidence
+
+```bash
+eval-ground-truth-lab run-trader-risk-audit-replay \
+  --run-id trader-synthetic-quickstart-v1 \
+  --run-dir /tmp/eval-lab-trader-runs \
+  --evidence-dir /tmp/eval-lab-trader-evidence
+```
+
+The default dataset, evidence export, provenance, and offline Git-object proof
+are package resources for the fully synthetic quickstart fixture, so an
+installed wheel works outside a repository checkout. The command reads every
+input once and uses those exact bytes for validation, hashing, replay, and
+packaging. It requires exactly one v1 case, checks the complete sealed result
+without unknown nested fields, and writes an eight-artifact content-addressed
+evidence pack. Exact case/input and synthetic metadata allowlists, recursive
+duplicate-key rejection, and strict
+expected-payload shapes run before any output directory is created. Only the
+byte-identical packaged dataset receives fixture/privacy claims; schema-valid
+overrides are marked caller-supplied and not privacy-reviewed. A validator
+mismatch exits `1` and retains the pack; malformed, tampered, empty, or
+multi-case input fails closed without a PASS pack.
+
+Evidence/provenance overrides receive no packaged source or privacy claims,
+even if the caller recomputes every internal hash and retains canonical ids.
+Packaged source trust additionally requires the proof to bind the exact commit,
+root tree, repository path, and evidence blob. Direct adapter output preserves
+the input values only as `declared_privacy_classification` and `declared_source`
+and reports unassessed effective trust. Replay writes a separate
+`effective_trust` decision before RunStore sealing. A matching caller expectation
+can therefore PASS compatibility validators while the result, manifest, report,
+candidate identity, and sealed run remain explicitly unreviewed.
+
+The packaged terminal JSON and seal come directly from the immutable RunStore
+completion snapshot. Result and manifest bind their hashes plus run id,
+candidate, dataset, validator, and completed status. Implementation provenance
+also binds the parser, RunStore, manifest writer, remaining decision modules,
+complete package payload, and either an exact HEAD match for the recursive
+measured-package path set, bytes, and executable modes or an installed-artifact
+digest. It makes no whole-worktree cleanliness claim.
+
+This is a contract compatibility replay, not a live Trader execution, financial
+policy benchmark, external-user case study, or production evidence. See
+`docs/TRADER_RISK_AUDIT_ADAPTER.md` for the product and claim boundary.
 
 ## Verify Evidence
 

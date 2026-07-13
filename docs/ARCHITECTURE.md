@@ -129,7 +129,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | Dataset registry | `src/eval_ground_truth_lab/datasets/` | Load JSONL/YAML cases, validate schema, compute dataset hash, and expose dataset metadata. |
 | Run store | `src/eval_ground_truth_lab/runs/` | Persist baseline and candidate metadata, case results, cost, latency, terminal status, and checksum seals. |
 | Validator engine | `src/eval_ground_truth_lab/validators/` | Apply deterministic schema, policy, safety, confidence, and evidence-required checks. |
-| Adapter layer | `src/eval_ground_truth_lab/adapters/` | Invoke synthetic demo candidates and explicit gdev-agent HTTP/CLI candidates. |
+| Adapter layer | `src/eval_ground_truth_lab/adapters/` | Invoke synthetic demo and configured gdev-agent candidates; verify pinned sanitized Trader Risk Audit exports without importing Trader product code. |
 | Comparison engine | `src/eval_ground_truth_lab/compare/` | Compare baseline and candidate metrics and calculate regression deltas. |
 | Harness metadata | `src/eval_ground_truth_lab/harness/` | Store sidecar harness config/run metadata, validate trace completeness, and report harness-aware comparison context. |
 | Judge and review | `src/eval_ground_truth_lab/judging/` | Run optional budget-capped judge calls and route ambiguous outputs to human review. |
@@ -180,6 +180,7 @@ bounded, budgeted, calibrated, and routed to human review where ambiguity remain
 | LLM judge provider | Optional | API key from environment | Disabled unless budget and provider settings are configured. |
 | GitHub Actions | Yes | Repository CI token managed by GitHub | Runs lint, format, tests, and later smoke eval gates. |
 | Agent Runtime Grid | No | N/A | Optional external runtime proof layer; not required for Eval Lab v1. |
+| Trader Risk Audit sanitized export | No | None | Separate product exports verified observations; Eval Lab owns the versioned expectation and replay gate, not trade rules or raw data. |
 
 ## File Layout
 

@@ -46,6 +46,9 @@ production SLO.
 - [gdev-agent](https://github.com/ashishki/gdev-agent) is a reference workload.
   Its repository owns application behavior, tenant isolation, and candidate
   fixes.
+- Trader Risk Audit is a separate applied FinTech workload. Its path-purged
+  publication candidate owns deterministic trade-policy auditing; Eval Lab owns
+  only a pinned sanitized evidence import/replay contract.
 - [AI Workflow Playbook](https://github.com/ashishki/AI_workflow_playbook) is an
   independent governance companion, not a runtime dependency.
 - The thin umbrella pins compatible revisions and runs integration proofs; it
@@ -79,6 +82,9 @@ Candidate code remains in the system-under-test repository.
   retained rather than tuned away.
 - CI-safe mocked gdev-agent smoke that does not require Docker Compose or a live
   gdev-agent service.
+- Fail-closed Trader Risk Audit sanitized-export adapter, one fully synthetic
+  exact-expectation dataset, and a content-addressed local replay path pinned to
+  an exact Trader publication-candidate commit/tree/blob/bundle.
 - Optional judge skeleton with budget precheck and JSONL cost telemetry.
 - Optional OpenAI judge provider contract, disabled by default and tested with
   fake transport only.
@@ -92,6 +98,28 @@ Candidate code remains in the system-under-test repository.
 - V1 synthetic evidence pack with 100 cases and 5 known seeded regressions.
 
 ## 5-Minute Reviewer Path
+
+Start from a clean clone with only `git` and Python 3.12+ on `PATH`; the project
+does not assume a `python` alias exists:
+
+```bash
+git clone https://github.com/ashishki/Eval-Ground-Truth-Lab.git
+cd Eval-Ground-Truth-Lab
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt -e .
+set +e
+.venv/bin/python -m eval_ground_truth_lab.cli seeded-smoke \
+  --dataset datasets/smoke/seeded_regressions.jsonl \
+  --report /tmp/eval-lab-seeded-smoke.md
+smoke_status=$?
+set -e
+test "$smoke_status" -eq 1
+.venv/bin/python -m eval_ground_truth_lab.cli verify-evidence \
+  --manifest docs/evidence/integrations/trader-risk-audit-synthetic-v1/sha256-*.manifest.json
+```
+
+The seeded candidate is deliberately bad, so exit `1` is the expected successful
+review outcome. The final command must report `verified: true` for eight artifacts.
 
 1. Read [docs/STACK_OVERVIEW.md](docs/STACK_OVERVIEW.md) for the three-project
    system map.
@@ -194,6 +222,53 @@ failures, 58 blocking failures, and `10/10` expected faults matched. Five
 thresholds fail. This is canonical evidence of a failing fixed candidate, not a
 passing workload or production-quality claim.
 
+## Quickstart: Trader Risk Audit sanitized evidence replay
+
+This path loads a committed, fully synthetic sanitized export from the separate
+Trader Risk Audit publication candidate. Packaged trust requires byte-identical
+evidence and provenance resources plus an offline Git-object proof that binds
+commit, root tree, repository path, and evidence blob. It verifies content pins,
+applies exact deterministic expectations to every sealed export field, writes a
+sealed run, and packages the exact input bytes it validated. The default inputs
+are package resources, so the command works from an unrelated directory after
+wheel installation. It does not run a financial audit or read raw trades.
+The run JSON and seal come from the locked completion snapshot, and their
+identity is cross-bound to result and manifest. Unknown dataset fields,
+noncanonical synthetic metadata, and duplicate JSON/YAML keys fail before any
+output directory is created; caller overrides never inherit fixture/privacy
+claims merely by declaring synthetic metadata. Caller evidence/provenance
+overrides are explicitly unreviewed even when their internal hashes are
+self-consistent and they retain the packaged commit, tree, path, and case ids.
+Direct adapter output labels those values as `declared_*` and starts with
+fail-closed, unassessed effective trust. Replay replaces only `effective_trust`
+from byte identity and the packaged proof before sealing the run. Consequently,
+a matching caller-supplied expectation may produce a diagnostic PASS without
+turning its privacy declaration or source identifiers into trusted facts.
+The evidentiary replay rejects every injected adapter instance, including
+subclasses, and constructs the exact canonical implementation from the captured
+input bytes. Named component hashes, recursive package identity, and any HEAD
+match are derived from one immutable pre-execution package snapshot. Loaded
+decision modules must carry that snapshot's generated execution digest; stale
+imports or newer on-disk code fail before run/evidence output.
+
+```bash
+eval-ground-truth-lab run-trader-risk-audit-replay \
+  --run-id trader-synthetic-quickstart-v1 \
+  --run-dir /tmp/eval-lab-trader-runs \
+  --evidence-dir /tmp/eval-lab-trader-evidence
+
+eval-ground-truth-lab verify-evidence \
+  --manifest /tmp/eval-lab-trader-evidence/sha256-*.manifest.json
+```
+
+The expected gate is PASS for this one exact compatibility fixture. PASS is not
+a financial-performance result, external adapter, real-user case study, or
+production claim. See
+[docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
+[dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
+[committed replay pack](docs/evidence/integrations/README.md) verifies at content
+address `sha256:1b228a37ea3686cc9c57132c7b2d2048a49c71995fd63b4d020d619bf30f72c3`.
+
 ## Architecture
 
 The canonical architecture is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -265,7 +340,10 @@ benchmark-method package:
 12. Dataset card, provenance, hypotheses, leakage boundary, labeling/review
     protocol, and reproducible content-addressed report: complete for the public
     development set.
-13. Independently owned adapter, independent labels, a blind successor holdout,
+13. Trader Risk Audit sanitized-export adapter, exact synthetic expectation,
+    CI replay, and content-addressed evidence: complete for contract
+    compatibility; no external-user or financial-quality claim.
+14. Independently owned adapter, independent labels, a blind successor holdout,
     and real-user feedback: not claimed; these require external participants.
 
 ## License

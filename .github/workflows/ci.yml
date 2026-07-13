@@ -6,16 +6,22 @@ on:
   pull_request:
     branches: ["main", "master"]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Tests + Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
           cache: "pip"
@@ -23,23 +29,43 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt -e .
 
+      - name: Verify loaded-code execution binding
+        run: PYTHONPATH=src python tools/update_execution_binding.py --check
+
       - name: Lint
-        run: ruff check src tests
+        run: ruff check src tests tools
 
       - name: Format check
-        run: ruff format --check src tests
+        run: ruff format --check src tests tools
 
       - name: Run tests
         run: python -m pytest tests -q --tb=short
 
       - name: Build and smoke-test wheel
         run: |
-          python -m pip wheel --no-deps . -w dist
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export PYTHONHASHSEED=0
+          python -m pip wheel --no-deps --no-cache-dir . -w /tmp/eval-lab-wheel-build-a
+          python -m pip wheel --no-deps --no-cache-dir . -w /tmp/eval-lab-wheel-build-b
+          cmp /tmp/eval-lab-wheel-build-a/*.whl /tmp/eval-lab-wheel-build-b/*.whl
+          sha256sum /tmp/eval-lab-wheel-build-a/*.whl
           python -m venv /tmp/eval-lab-wheel
-          /tmp/eval-lab-wheel/bin/pip install dist/*.whl
+          /tmp/eval-lab-wheel/bin/pip install /tmp/eval-lab-wheel-build-a/*.whl
           /tmp/eval-lab-wheel/bin/pip check
           /tmp/eval-lab-wheel/bin/eval-ground-truth-lab --help
+          mkdir -p /tmp/eval-lab-wheel-cwd
+          cd /tmp/eval-lab-wheel-cwd
+          /tmp/eval-lab-wheel/bin/eval-ground-truth-lab run-trader-risk-audit-replay \
+            --run-id trader-installed-wheel-synthetic-v1 \
+            --run-dir /tmp/eval-lab-wheel-trader-runs \
+            --evidence-dir /tmp/eval-lab-wheel-trader-evidence
+          /tmp/eval-lab-wheel/bin/eval-ground-truth-lab verify-evidence \
+            --manifest /tmp/eval-lab-wheel-trader-evidence/sha256-*.manifest.json
+          cd "$GITHUB_WORKSPACE"
           /tmp/eval-lab-wheel/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+
           from eval_ground_truth_lab.reports.html import render_html_report
 
           output = render_html_report(
@@ -50,10 +76,24 @@ jobs:
               scope_label="packaging",
           )
           assert "installed wheel" in output
+          replay = json.loads(
+              Path("/tmp/eval-lab-wheel-trader-evidence/replay-result.json").read_text()
+          )
+          assert replay["provenance"]["implementation"]["source"]["kind"] == "installed_package"
+          assert replay["provenance"]["fixture"] is True
           PY
 
       - name: Mocked gdev-agent smoke
         run: python -m pytest tests/eval/test_gdev_agent_smoke.py tests/adapters/test_gdev_agent_adapter.py -q --tb=short
+
+      - name: Trader Risk Audit sanitized replay
+        run: |
+          python -m eval_ground_truth_lab.cli run-trader-risk-audit-replay \
+            --run-id trader-ci-synthetic-v1 \
+            --run-dir /tmp/eval-lab-trader-ci-runs \
+            --evidence-dir /tmp/eval-lab-trader-ci-evidence
+          python -m eval_ground_truth_lab.cli verify-evidence \
+            --manifest /tmp/eval-lab-trader-ci-evidence/sha256-*.manifest.json
 
       - name: Seeded smoke gate fixture
         run: |
