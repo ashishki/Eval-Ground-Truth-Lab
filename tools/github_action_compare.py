@@ -11,6 +11,7 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -60,6 +61,7 @@ _RATE_THRESHOLD_FIELDS = frozenset(
     }
 )
 _RUN_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
+_MAX_DECISION_MAGNITUDE = 2**53 - 1
 _MARKDOWN_STRUCTURAL_CHARACTERS = frozenset(
     {"\x00", "\r", "\n", "\v", "\f", "\x85", "\u2028", "\u2029", "`", "|"}
 )
@@ -526,6 +528,7 @@ def _read_json_object(path: Path, *, label: str) -> dict[str, Any]:
         raw = json.load(
             input_file,
             object_pairs_hook=reject_duplicate_keys,
+            parse_float=Decimal,
             parse_constant=reject_nonstandard_constant,
         )
     if not isinstance(raw, dict):
@@ -566,13 +569,24 @@ def _threshold_number(raw: Mapping[str, Any], field: str) -> float:
 
 
 def _finite_nonnegative(value: Any, *, field: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    if isinstance(value, bool) or not isinstance(value, (int, float, Decimal)):
         raise ValueError(f"{field} must be a JSON number")
-    numeric = float(value)
+    if isinstance(value, Decimal) and not value.is_finite():
+        raise ValueError(f"{field} must be finite")
+    if value < 0:
+        raise ValueError(f"{field} must be non-negative")
+    try:
+        numeric = float(value)
+    except OverflowError as exc:
+        raise ValueError(f"{field} is outside the supported numeric domain") from exc
     if not math.isfinite(numeric):
         raise ValueError(f"{field} must be finite")
-    if numeric < 0.0:
-        raise ValueError(f"{field} must be non-negative")
+    if isinstance(value, int) and int(numeric) != value:
+        raise ValueError(f"{field} integer must be exactly representable as binary64")
+    if value > _MAX_DECISION_MAGNITUDE:
+        raise ValueError(f"{field} must not exceed the supported maximum {_MAX_DECISION_MAGNITUDE}")
+    if isinstance(value, Decimal) and Decimal(str(numeric)) != value:
+        raise ValueError(f"{field} decimal must preserve its value through the binary64 round trip")
     return numeric
 
 

@@ -101,6 +101,14 @@ exactly from the complete case results. This prevents omitted cases,
 validator-result truncation, or caller-authored aggregate values from turning
 an incomplete candidate into a PASS.
 
+The supported numeric domain is bounded by the inclusive maximum
+`9007199254740991` (`2^53 - 1`). JSON integers must round-trip through binary64
+exactly. Decimal JSON tokens must preserve their numeric value when converted
+to binary64 and rendered back with Python's shortest round-trip decimal. Values
+above the maximum and decimal spellings that would collapse to another value
+(for example, integers `9007199254740992` and `9007199254740993`, or decimal
+`0.10000000000000001`) are rejected instead of being rounded into a PASS.
+
 The Action accepts only complete per-case validator receipts. Failure-only or
 sparse seeded CLI artifacts (including artifacts where both runs have an empty
 `validator_results` list) are rejected until the core CLI emits complete
@@ -121,11 +129,12 @@ a caller cannot apply an unbound relaxed policy to runs that name another
 policy version.
 
 The documented legacy gdev comparison schema remains supported with all five
-of its comparison fields and `version` required. Missing and unknown fields, booleans,
-numeric strings, negative values, non-standard `NaN`/`Infinity`, and
-floating-point overflow such as `1e309` are rejected. Accuracy, rate, and drop values must be
-within `[0, 1]`; cost and latency allowances must be finite and non-negative.
-Valid native and legacy configurations retain the CLI's comparison semantics.
+of its comparison fields and `version` required. Missing and unknown fields,
+booleans, numeric strings, negative values, non-standard `NaN`/`Infinity`, and
+floating-point overflow such as `1e309` are rejected. Accuracy, rate, and drop
+values must be within `[0, 1]`; cost and latency allowances must remain within
+the supported finite, non-negative numeric domain. Valid native and legacy
+configurations within that domain retain the CLI's comparison semantics.
 
 The Action emits:
 
@@ -138,17 +147,23 @@ so an otherwise identical decision does not embed an ephemeral runner checkout
 directory.
 
 `pass` returns status `0`. A threshold-blocked `fail` still publishes the fresh
-report and summary, then returns status `1`. Configuration or execution errors
-return status `2`, emit no report path, remove the configured target, and never
-copy a pre-existing target into `GITHUB_STEP_SUMMARY`. This makes a fixed-path
-`if: always()` artifact uploader unable to mistake an earlier PASS report for
-the current decision. An unsafe or unresolved report path is rejected without
-touching its target. If filesystem permissions deny cleanup, the Action reports
-an error and keeps its `report` output empty, but cannot guarantee deletion.
+report and summary, then returns status `1`. After the Python comparison helper
+reaches its main routine, configuration or execution errors return status `2`,
+emit no report path, remove the configured target, and never copy a pre-existing
+target into `GITHUB_STEP_SUMMARY`. An unsafe or unresolved report path is
+rejected without touching its target. If filesystem permissions deny cleanup,
+the helper reports an error and keeps its `report` output empty, but cannot
+guarantee deletion.
 
-Never upload the configured fixed path on an Action error. Artifact steps must
-use the non-empty `steps.<id>.outputs.report` value only when `conclusion` is
-exactly `pass` or `fail`; `conclusion=error` is never publishable evidence.
+The pinned `setup-python` step runs before the comparison helper. If setup fails,
+the helper cannot invalidate a previous target or emit `conclusion=error`, so
+the Action outputs may be empty while a fixed path still exists from earlier
+work. Never treat a fixed path as current evidence.
+
+Never upload the configured fixed path on an Action error or missing conclusion.
+Artifact steps must use the non-empty `steps.<id>.outputs.report` value only
+when `conclusion` is exactly `pass` or `fail`; `conclusion=error` is never
+publishable evidence.
 
 ## Security boundary
 
@@ -157,10 +172,12 @@ exactly `pass` or `fail`; `conclusion=error` is never publishable evidence.
 - Caller checkout should set `persist-credentials: false`.
 - Runner output and summary files are written directly with Python, not through
   workflow-command interpolation or generated shell fragments.
-- Existing report content is removed after path validation and never read as
-  current evidence. Only the unique report created by this invocation can be
-  published or summarized. In a writable workspace, an Action error leaves the
-  configured target absent; cleanup denial remains an error with blank output.
+- After the helper reaches its main routine, existing report content is removed
+  after path validation and never read as current evidence. Only the unique
+  report created by that helper invocation can be published or summarized. In
+  a writable workspace, a helper error leaves the configured target absent;
+  cleanup denial remains an error with blank output. Pre-helper setup failures
+  provide no such cleanup or output guarantee.
 - The report preview in `GITHUB_STEP_SUMMARY` is bounded; the full workspace
   report remains authoritative.
 

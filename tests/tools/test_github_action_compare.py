@@ -8,6 +8,8 @@ import pytest
 from eval_ground_truth_lab.cli import run_compare_command
 from tools import github_action_compare
 
+MAX_DECISION_MAGNITUDE = 2**53 - 1
+
 
 @pytest.fixture
 def action_environment(tmp_path: Path) -> tuple[Path, dict[str, str]]:
@@ -419,6 +421,87 @@ def test_high_magnitude_cost_cannot_hide_aggregate_difference(
     candidate["cost_total_usd"] = 1_000_000_000_000.0
     candidate["cost_per_case_usd"] = 1_000_000_000_000.0
     _write_json(candidate_path, candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_nonrepresentable_integer_cost_cannot_collapse_to_claimed_aggregate(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    baseline = _read_json(workspace / "baseline.json")
+    baseline["case_results"][0]["cost_usd"] = 2**53
+    baseline["cost_total_usd"] = 2**53
+    baseline["cost_per_case_usd"] = 2**53
+    _write_json(workspace / "baseline.json", baseline)
+    candidate = _read_json(workspace / "candidate.json")
+    candidate["case_results"][0]["cost_usd"] = 2**53 + 1
+    candidate["cost_total_usd"] = 2**53
+    candidate["cost_per_case_usd"] = 2**53
+    _write_json(workspace / "candidate.json", candidate)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [MAX_DECISION_MAGNITUDE, float(MAX_DECISION_MAGNITUDE)],
+    ids=["integer", "decimal-token"],
+)
+def test_supported_numeric_max_boundary_is_accepted(
+    action_environment: tuple[Path, dict[str, str]], value: int | float
+) -> None:
+    workspace, environment = action_environment
+    for filename in ("baseline.json", "candidate.json"):
+        run = _read_json(workspace / filename)
+        run["case_results"][0]["cost_usd"] = value
+        run["cost_total_usd"] = value
+        run["cost_per_case_usd"] = value
+        _write_json(workspace / filename, run)
+
+    assert github_action_compare.main(environment) == github_action_compare.PASS
+    assert _read_outputs(Path(environment["GITHUB_OUTPUT"]))["conclusion"] == "pass"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [2**53, 2**53 + 1, float(2**53)],
+    ids=["integer-2pow53", "integer-2pow53-plus-1", "decimal-token-2pow53"],
+)
+def test_numeric_magnitudes_above_supported_max_are_rejected(
+    action_environment: tuple[Path, dict[str, str]], value: int | float
+) -> None:
+    workspace, environment = action_environment
+    for filename in ("baseline.json", "candidate.json"):
+        run = _read_json(workspace / filename)
+        run["case_results"][0]["cost_usd"] = value
+        run["cost_total_usd"] = value
+        run["cost_per_case_usd"] = value
+        _write_json(workspace / filename, run)
+
+    _assert_action_error_removes_stale(workspace, environment)
+
+
+def test_noncanonical_decimal_cannot_collapse_to_same_binary64_value(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    baseline = _read_json(workspace / "baseline.json")
+    baseline["case_results"][0]["cost_usd"] = 0.1
+    baseline["cost_total_usd"] = 0.1
+    baseline["cost_per_case_usd"] = 0.1
+    _write_json(workspace / "baseline.json", baseline)
+    candidate_path = workspace / "candidate.json"
+    candidate = _read_json(candidate_path)
+    candidate["case_results"][0]["cost_usd"] = "__NONCANONICAL_DECIMAL__"
+    candidate["cost_total_usd"] = 0.1
+    candidate["cost_per_case_usd"] = 0.1
+    _write_json_with_literal(
+        candidate_path,
+        candidate,
+        marker="__NONCANONICAL_DECIMAL__",
+        literal="0.10000000000000001",
+    )
 
     _assert_action_error_removes_stale(workspace, environment)
 
