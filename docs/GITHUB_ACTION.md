@@ -92,11 +92,20 @@ already failing in the baseline is not a new regression. Candidate recovery
 from failure to pass is allowed. Missing, truncated, or malformed validator
 receipts remain configuration errors.
 
+`output` retains the released `CaseResult[Any]` JSON boundary: object, array,
+string, number, boolean, and null values are accepted. If an object contains
+`correct`, that member must be boolean. Non-object output and objects without
+`correct` keep the legacy accuracy meaning of “not counted as correct”; complete
+validator receipts remain authoritative for validator-only workflows.
+
 Run IDs must use the canonical RunStore-safe 1-128 character syntax. All
 metadata and receipt strings that can appear in the Markdown report reject line
 breaks, NUL, backticks, and table delimiters; receipt messages also reject raw
-HTML delimiters. The report artifact itself is therefore fail-closed against
-heading, code-span, table-cell, and raw-HTML injection.
+HTML delimiters. The renderer separately treats every value as untrusted:
+Markdown/autolink punctuation is entity-encoded in plain text, while newlines,
+Unicode separators, controls, and bidirectional controls are rendered as visible
+escape sequences. The report artifact is therefore fail-closed against heading,
+code-span, table-cell, link/image/autolink, directionality, and raw-HTML injection.
 
 Aggregate cost and latency values and every case-level cost/latency value must
 be JSON numbers rather than booleans or numeric strings, finite, and
@@ -104,6 +113,14 @@ non-negative. Aggregate total/per-case cost and p50/p95 latency must recompute
 exactly from the complete case results. This prevents omitted cases,
 validator-result truncation, or caller-authored aggregate values from turning
 an incomplete candidate into a PASS.
+
+Gate arithmetic does not subtract rounded aggregates. Accuracy, invalid-output,
+and unsafe-auto-approval deltas use exact integer-count fractions. Cost per case
+uses the exact rational mean of canonical case costs, and latency p95 uses the
+exact selected canonical case latency. Thresholds retain their canonical decimal
+value, including the exact complement of legacy `classification_accuracy_min`.
+The report publishes each exact delta, exact bound, comparison operator, and
+status. Binary64 cancellation and a rounded `1/3` cannot relax a gate.
 
 The supported numeric domain is bounded by the inclusive maximum
 `9007199254740991` (`2^53 - 1`). JSON integers must round-trip through binary64
@@ -113,12 +130,13 @@ above the maximum and decimal spellings that would collapse to another value
 (for example, integers `9007199254740992` and `9007199254740993`, or decimal
 `0.10000000000000001`) are rejected instead of being rounded into a PASS.
 
-The Action accepts only complete per-case validator receipts. Failure-only or
-sparse seeded CLI artifacts (including artifacts where both runs have an empty
-`validator_results` list) are rejected until the core CLI emits complete
-receipts for every evaluated case; they cannot produce an Action PASS. The
-generic receipt-regression gate is an Action-layer extension in this release;
-the shared CLI comparison continues to own the five aggregate metric gates.
+The shared comparison contract accepts only complete per-case validator
+receipts. Failure-only or sparse artifacts, including artifacts where both runs
+have an empty `validator_results` list, cannot produce an Action PASS or a CLI
+PASS.
+Seeded CLI runs now emit the complete fixed validator-ID set for every case.
+The five exact aggregate gates and the zero-tolerance generic receipt-regression
+gate are owned by the same shared `ComparisonReport` and renderer.
 
 Threshold JSON is strict and duplicate keys are rejected. The native schema
 requires exactly these five decision fields and a non-empty string `version`:
@@ -153,11 +171,11 @@ Input links recorded in the report are normalized to workspace-relative paths,
 so an otherwise identical decision does not embed an ephemeral runner checkout
 directory.
 
-When no validator receipt regresses, the Action report remains byte-identical
-to the CLI report and retains its deterministic hash. When a receipt changes
-from pass to fail, the existing metric sections still match the CLI and the
-Action appends `Validator Receipt Regressions` decision evidence before
-returning its stricter blocking result.
+For the same normalized inputs and artifact labels, the Action report remains
+byte-identical to the CLI report and retains its deterministic hash. When a
+receipt changes from pass to fail, the shared renderer appends `Validator
+Receipt Regressions` evidence and both interfaces return the same blocking
+decision.
 
 `pass` returns status `0`. A threshold-blocked `fail` still publishes the fresh
 report and summary, then returns status `1`. After the Python comparison helper

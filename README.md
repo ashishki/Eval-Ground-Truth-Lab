@@ -30,11 +30,12 @@ fixtures.
 
 ## Current Maturity
 
-Version `0.2.0` is a tested local open-source tool with an Apache-2.0 boundary,
+Version `0.2.1` is a tested local open-source tool with an Apache-2.0 boundary,
 packaged CLI, deterministic fixtures, one passing local conformance run, and one
-published canonical hard-challenge failure. Evidence is synthetic or local. The
-project has no claimed external user, production deployment, hosted service, or
-production SLO.
+published canonical hard-challenge failure. This correctness/security patch is
+not feedback-driven and does not satisfy the separate real-user-feedback
+milestone. Evidence is synthetic or local. The project has no claimed external
+user, production deployment, hosted service, or production SLO.
 
 ## Relationship to the Portfolio
 
@@ -71,6 +72,8 @@ Candidate code remains in the system-under-test repository.
 - Deterministic validators for structured output, unsafe auto-approval, cost,
   and latency.
 - Baseline/candidate comparison with CI-style exit codes.
+- Exact Fraction/decimal gate arithmetic with report-visible deltas and bounds,
+  plus a zero-tolerance generic validator pass-to-fail gate.
 - Reusable, least-privilege composite GitHub Action for baseline/candidate
   release decisions with workspace-confined paths and atomic reports.
 - Synthetic, HTTP, and CLI adapter boundaries.
@@ -290,8 +293,11 @@ a financial-performance result, external adapter, real-user case study, or
 production claim. See
 [docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
 [dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
-[committed replay pack](docs/evidence/integrations/README.md) verifies at content
-address `sha256:1b228a37ea3686cc9c57132c7b2d2048a49c71995fd63b4d020d619bf30f72c3`.
+[historical v0.2.0 replay pack](docs/evidence/integrations/README.md) verifies at
+content address
+`sha256:1b228a37ea3686cc9c57132c7b2d2048a49c71995fd63b4d020d619bf30f72c3`.
+It remains immutable evidence for the code revision recorded in that manifest;
+it is not presented as a v0.2.1 execution.
 
 ## Architecture
 

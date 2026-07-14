@@ -4,19 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from eval_ground_truth_lab import evidence as evidence_module
-from eval_ground_truth_lab import execution_binding as execution_binding_module
-from eval_ground_truth_lab import implementation_provenance as implementation_provenance_module
-from eval_ground_truth_lab import trader_replay as replay_module
-from eval_ground_truth_lab import trader_source_identity as source_identity_module
-from eval_ground_truth_lab.adapters import base as adapter_base_module
-from eval_ground_truth_lab.adapters import trader_risk_audit as adapter_module
-from eval_ground_truth_lab.datasets import registry as dataset_module
 from eval_ground_truth_lab.evidence import verify_evidence_manifest
-from eval_ground_truth_lab.implementation_provenance import build_implementation_provenance
-from eval_ground_truth_lab.runs import store as run_store_module
-from eval_ground_truth_lab.validators import result as validator_result_module
-from eval_ground_truth_lab.validators import trader_risk_audit as validator_module
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "docs/evidence/integrations/trader-risk-audit-synthetic-v1"
@@ -25,7 +13,7 @@ MANIFEST = PACK / (
 )
 
 
-def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -> None:
+def test_historical_v020_trader_replay_pack_is_verified_and_immutable() -> None:
     verification = verify_evidence_manifest(MANIFEST)
     manifest = _json(MANIFEST)
     result = _json(PACK / "replay-result.json")
@@ -38,26 +26,7 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
     assert result["dataset"]["dataset_hash"] == (
         "df201d0787c6ea31868f7f6465a2fb9895b6f14b78cb01e13e0f9ff244e5b67a"
     )
-    measured = build_implementation_provenance(
-        component_paths={
-            "adapter": Path(adapter_module.__file__),
-            "adapter_base": Path(adapter_base_module.__file__),
-            "dataset_parser": Path(dataset_module.__file__),
-            "evidence_manifest": Path(evidence_module.__file__),
-            "execution_binding": Path(execution_binding_module.__file__),
-            "implementation_provenance": Path(implementation_provenance_module.__file__),
-            "run_store": Path(run_store_module.__file__),
-            "runner": Path(replay_module.__file__),
-            "source_identity": Path(source_identity_module.__file__),
-            "validation_result": Path(validator_result_module.__file__),
-            "validators": Path(validator_module.__file__),
-        },
-        package_root=Path(replay_module.__file__).parent,
-        require_execution_binding=True,
-    )
     implementation = result["provenance"]["implementation"]
-    assert implementation["components_sha256"] == measured["components_sha256"]
-    assert implementation["package_payload"] == measured["package_payload"]
     assert implementation["source"] == {
         "commit": "f810e3a7a9ef6c077371ef401c345f56da3c8c27",
         "kind": "git_worktree",
@@ -67,6 +36,10 @@ def test_committed_trader_replay_pack_is_verified_and_pinned_to_current_code() -
     assert implementation["execution_binding"] == {
         "schema_version": "eval-lab-loaded-execution-binding-v1",
         "sha256": "33c0e48b7eff1fcd4656418cbb75491d408d16f01bdea1860c818997893cc5b6",
+    }
+    assert implementation["package_payload"] == {
+        "file_count": 56,
+        "sha256": "33f9455c2ffd9ff88c9f12387ce86e402a3345cadfb3cb53051295dda37d276e",
     }
     assert manifest["metadata"]["implementation"] == implementation
     assert result["provenance"]["implementation_sha256"] == implementation["components_sha256"]

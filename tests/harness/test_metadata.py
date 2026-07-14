@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from eval_ground_truth_lab.compare import ComparisonReport
+from eval_ground_truth_lab.compare import ComparisonReport, ValidatorReceiptRegression
 from eval_ground_truth_lab.harness.metadata import (
     HarnessConfig,
     HarnessMetadataMismatchError,
@@ -85,6 +85,48 @@ def test_harness_comparison_rejects_scorer_mismatch() -> None:
         )
 
 
+def test_harness_comparison_serializes_generic_validator_regression_reason() -> None:
+    trace = TraceCompletenessValidator(("run_start",)).validate(({"event_type": "run_start"},))
+    metric_report = _comparison_report(
+        validator_receipt_regressions=(
+            ValidatorReceiptRegression(
+                case_id="case-2",
+                validator_id="validator-z",
+                candidate_category="adapter_error",
+            ),
+            ValidatorReceiptRegression(
+                case_id="case-1",
+                validator_id="validator-a",
+                candidate_category="evidence_mismatch",
+            ),
+        )
+    )
+    report = build_harness_comparison_report(
+        metric_report=metric_report,
+        baseline_metadata=_metadata(run_id="baseline"),
+        candidate_metadata=_metadata(run_id="candidate"),
+        baseline_trace=trace,
+        candidate_trace=trace,
+    )
+
+    serialized = report.to_mapping()
+
+    assert serialized["has_blocking_failure"] is True
+    assert serialized["validator_receipt_regression_count"] == 2
+    assert serialized["validator_receipt_regressions"] == [
+        {
+            "case_id": "case-2",
+            "validator_id": "validator-z",
+            "candidate_category": "adapter_error",
+        },
+        {
+            "case_id": "case-1",
+            "validator_id": "validator-a",
+            "candidate_category": "evidence_mismatch",
+        },
+    ]
+
+
 def _metadata(
     *,
     run_id: str,
@@ -106,7 +148,10 @@ def _metadata(
     )
 
 
-def _comparison_report() -> ComparisonReport:
+def _comparison_report(
+    *,
+    validator_receipt_regressions: tuple[ValidatorReceiptRegression, ...] = (),
+) -> ComparisonReport:
     return ComparisonReport(
         baseline_run_id="baseline",
         candidate_run_id="candidate",
@@ -123,4 +168,5 @@ def _comparison_report() -> ComparisonReport:
             "latency_ms_p95_delta": "pass",
             "cost_per_case_delta": "pass",
         },
+        validator_receipt_regressions=validator_receipt_regressions,
     )

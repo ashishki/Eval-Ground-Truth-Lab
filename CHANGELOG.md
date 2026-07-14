@@ -5,6 +5,12 @@ once stable releases begin.
 
 ## Unreleased
 
+## 0.2.1 - 2026-07-14
+
+This is a correctness/security patch boundary, not a release based on external
+user feedback. It does not satisfy the separate feedback-driven maintenance
+milestone.
+
 - Add a reusable composite GitHub Action for deterministic baseline/candidate
   release gates, with full-SHA Python setup, least-privilege caller guidance,
   workspace-confined inputs, atomic fresh-report publication, safe runner
@@ -15,6 +21,13 @@ once stable releases begin.
 - Fail closed on running, interrupted, empty, partial, or duplicate-case Action
   inputs; reject non-finite, negative, inconsistent, missing, unknown, or
   incorrectly typed decision metrics and threshold fields before report output.
+- Move the Action input contract and generic validator regression gate into the
+  shared CLI comparison engine; preserve Action/CLI report and decision parity.
+- Compute all five gates with exact Fraction/decimal semantics from complete
+  case results and canonical policies, preventing high-magnitude cancellation,
+  rounded one-third boundaries, and legacy accuracy-complement relaxation.
+- Encode Markdown link/image/autolink punctuation and render controls, Unicode
+  separators, and bidi characters visibly in untrusted report text.
 - Add a fail-closed Eval-side import/replay adapter for the separate Trader Risk
   Audit sanitized evidence contract.
 - Pin a fully synthetic Trader export to an exact path-purged candidate commit,

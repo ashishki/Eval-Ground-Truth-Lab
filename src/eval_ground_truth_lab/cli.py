@@ -3,8 +3,10 @@ from __future__ import annotations
 import argparse
 import importlib.metadata
 import json
+import os
 import platform
 import re
+import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from pathlib import Path
@@ -25,7 +27,13 @@ from eval_ground_truth_lab.challenge import (
     build_challenge_result,
     render_challenge_markdown,
 )
-from eval_ground_truth_lab.compare import ComparisonReport, ThresholdConfig, compare_runs
+from eval_ground_truth_lab.compare import (
+    ComparisonReport,
+    ThresholdConfig,
+    compare_runs,
+    read_run_artifact,
+    read_threshold_config,
+)
 from eval_ground_truth_lab.cost import check_budget, load_budget_policy, rollup_telemetry
 from eval_ground_truth_lab.datasets import Dataset, load_dataset
 from eval_ground_truth_lab.evidence import (
@@ -41,6 +49,8 @@ from eval_ground_truth_lab.runs import CaseResult, RunRecord, RunStore
 from eval_ground_truth_lab.trader_replay import run_trader_risk_audit_replay
 from eval_ground_truth_lab.validators import GdevValidatorThresholds, validate_gdev_case
 from eval_ground_truth_lab.validators import gdev_agent as gdev_validator_module
+
+COMPARE_INPUT_ERROR = 2
 
 
 def comparison_exit_code(report: ComparisonReport) -> int:
@@ -495,25 +505,119 @@ def run_compare_command(
     threshold_config_path: str | Path,
     report_path: str | Path,
 ) -> int:
-    baseline = _read_run_artifact(Path(baseline_path))
-    candidate = _read_run_artifact(Path(candidate_path))
-    thresholds = _load_threshold_config(Path(threshold_config_path))
-    comparison = compare_runs(baseline=baseline, candidate=candidate, thresholds=thresholds)
-
-    report_path = Path(report_path)
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    report = render_markdown_report(
-        baseline=baseline,
-        candidate=candidate,
-        comparison=comparison,
-        raw_artifact_links={
-            "baseline run": str(baseline_path),
-            "candidate run": str(candidate_path),
-            "threshold config": str(threshold_config_path),
-        },
+    input_paths = (
+        Path(baseline_path),
+        Path(candidate_path),
+        Path(threshold_config_path),
     )
-    report_path.write_text(report, encoding="utf-8")
+    try:
+        report_target = _compare_report_target(
+            Path(report_path),
+            protected_inputs=input_paths,
+        )
+    except Exception as exc:
+        _emit_compare_error(exc)
+        return COMPARE_INPUT_ERROR
+
+    try:
+        # Once this helper owns a verified report target, a prior decision can
+        # never survive an invalid or interrupted comparison as current output.
+        report_target.unlink(missing_ok=True)
+        baseline = read_run_artifact(input_paths[0])
+        candidate = read_run_artifact(input_paths[1])
+        thresholds = read_threshold_config(input_paths[2])
+        comparison = compare_runs(baseline=baseline, candidate=candidate, thresholds=thresholds)
+        report = render_markdown_report(
+            baseline=baseline,
+            candidate=candidate,
+            comparison=comparison,
+            raw_artifact_links={
+                "baseline run": str(baseline_path),
+                "candidate run": str(candidate_path),
+                "threshold config": str(threshold_config_path),
+            },
+        )
+        _publish_compare_report(
+            report_target,
+            report,
+            protected_inputs=input_paths,
+        )
+    except Exception as exc:
+        cleanup_error: OSError | None = None
+        try:
+            report_target.unlink(missing_ok=True)
+        except OSError as report_cleanup_error:
+            cleanup_error = report_cleanup_error
+        if cleanup_error is not None:
+            exc = RuntimeError(f"{exc}; could not invalidate report target: {cleanup_error}")
+        _emit_compare_error(exc)
+        return COMPARE_INPUT_ERROR
     return comparison_exit_code(comparison)
+
+
+def _compare_report_target(
+    path: Path,
+    *,
+    protected_inputs: Sequence[Path],
+) -> Path:
+    unresolved = path.expanduser()
+    if unresolved.is_symlink():
+        raise ValueError("compare report target must not be a symbolic link")
+    try:
+        absolute = unresolved if unresolved.is_absolute() else Path.cwd() / unresolved
+        target = absolute.parent.resolve(strict=False) / absolute.name
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("compare report target cannot be safely resolved") from exc
+    if target == target.parent:
+        raise ValueError("compare report target must identify a file")
+    if target.exists() and not target.is_file():
+        raise ValueError("compare report target must be a regular file or not exist")
+
+    for input_path in protected_inputs:
+        try:
+            expanded_input = input_path.expanduser()
+            lexical_input = (
+                expanded_input if expanded_input.is_absolute() else Path.cwd() / expanded_input
+            )
+        except (OSError, RuntimeError):
+            # An unresolvable input cannot be a regular-file alias. Parsing it
+            # will fail after the already-safe stale target is invalidated.
+            continue
+        if os.path.abspath(lexical_input) == os.path.abspath(target):
+            raise ValueError("compare report target must not overwrite an input file")
+        try:
+            protected = lexical_input.resolve(strict=False)
+        except (OSError, RuntimeError):
+            continue
+        if target == protected:
+            raise ValueError("compare report target must not overwrite an input file")
+        if target.exists() and protected.exists():
+            try:
+                aliases_input = target.samefile(protected)
+            except OSError as exc:
+                raise ValueError("compare report/input alias check failed") from exc
+            if aliases_input:
+                raise ValueError("compare report target must not alias an input file")
+    return target
+
+
+def _publish_compare_report(
+    target: Path,
+    report: str,
+    *,
+    protected_inputs: Sequence[Path],
+) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    verified_target = _compare_report_target(target, protected_inputs=protected_inputs)
+    if verified_target != target:
+        raise RuntimeError("compare report writable boundary changed during execution")
+    atomic_write_text(target, report)
+
+
+def _emit_compare_error(exc: Exception) -> None:
+    message = f"{type(exc).__name__}: {exc}"
+    sanitized = message.replace("\x00", "?").replace("\r", " ").replace("\n", " ")
+    print(f"Eval comparison error: {sanitized}", file=sys.stderr)
 
 
 def run_cost_rollup_command(*, telemetry_path: str | Path, out_path: str | Path) -> int:
@@ -542,6 +646,7 @@ def _build_seeded_runs(dataset: Dataset) -> tuple[RunRecord, RunRecord]:
             CaseResult(
                 case_id=case.id,
                 output={"correct": True},
+                validator_results=_seeded_validator_receipts(),
                 cost_usd=0.01,
                 latency_ms=100.0,
             )
@@ -575,13 +680,10 @@ def _candidate_case_result(case_id: str, metadata: dict[str, Any]) -> CaseResult
         return CaseResult(
             case_id=case_id,
             output={"correct": True, "action": "approve"},
-            validator_results=(
-                {
-                    "validator_id": "safety.unsafe_auto_approval",
-                    "passed": False,
-                    "category": "unsafe_auto_approval",
-                    "message": "approved high-risk action without evidence",
-                },
+            validator_results=_seeded_validator_receipts(
+                failing_validator="safety.unsafe_auto_approval",
+                failing_category="unsafe_auto_approval",
+                failing_message="approved high-risk action without evidence",
             ),
             cost_usd=0.01,
             latency_ms=100.0,
@@ -590,13 +692,10 @@ def _candidate_case_result(case_id: str, metadata: dict[str, Any]) -> CaseResult
         return CaseResult(
             case_id=case_id,
             output={"correct": True, "rationale": "missing action"},
-            validator_results=(
-                {
-                    "validator_id": "structured_output.required_fields",
-                    "passed": False,
-                    "category": "invalid_structured_output",
-                    "message": "missing required field action",
-                },
+            validator_results=_seeded_validator_receipts(
+                failing_validator="structured_output.required_fields",
+                failing_category="invalid_structured_output",
+                failing_message="missing required field action",
             ),
             cost_usd=0.01,
             latency_ms=100.0,
@@ -605,6 +704,7 @@ def _candidate_case_result(case_id: str, metadata: dict[str, Any]) -> CaseResult
         return CaseResult(
             case_id=case_id,
             output={"correct": True},
+            validator_results=_seeded_validator_receipts(),
             cost_usd=0.10,
             latency_ms=100.0,
         )
@@ -612,15 +712,45 @@ def _candidate_case_result(case_id: str, metadata: dict[str, Any]) -> CaseResult
         return CaseResult(
             case_id=case_id,
             output={"correct": False, "category": "billing"},
+            validator_results=_seeded_validator_receipts(
+                failing_validator="eval.correctness",
+                failing_category="accuracy_regression",
+                failing_message="candidate output does not match the seeded expectation",
+            ),
             cost_usd=0.01,
             latency_ms=100.0,
         )
     return CaseResult(
         case_id=case_id,
         output={"correct": True},
+        validator_results=_seeded_validator_receipts(),
         cost_usd=0.01,
         latency_ms=100.0,
     )
+
+
+def _seeded_validator_receipts(
+    *,
+    failing_validator: str | None = None,
+    failing_category: str | None = None,
+    failing_message: str | None = None,
+) -> tuple[dict[str, Any], ...]:
+    receipts: list[dict[str, Any]] = []
+    for validator_id in (
+        "eval.correctness",
+        "structured_output.required_fields",
+        "safety.unsafe_auto_approval",
+    ):
+        failed = validator_id == failing_validator
+        receipts.append(
+            {
+                "validator_id": validator_id,
+                "passed": not failed,
+                "category": failing_category if failed else "none",
+                "message": failing_message if failed else "seeded validator passed",
+            }
+        )
+    return tuple(receipts)
 
 
 def _run_record(
@@ -655,28 +785,7 @@ def _run_record(
 
 
 def _load_threshold_config(path: Path) -> ThresholdConfig:
-    with path.open(encoding="utf-8") as config_file:
-        raw = json.load(config_file)
-    if "max_accuracy_drop" not in raw:
-        return _load_gdev_comparison_threshold_config(raw)
-    return ThresholdConfig(
-        max_accuracy_drop=float(raw["max_accuracy_drop"]),
-        max_invalid_output_rate_increase=float(raw["max_invalid_output_rate_increase"]),
-        max_unsafe_auto_approval_rate_increase=float(raw["max_unsafe_auto_approval_rate_increase"]),
-        max_latency_p95_delta_ms=float(raw["max_latency_p95_delta_ms"]),
-        max_cost_per_case_delta_usd=float(raw["max_cost_per_case_delta_usd"]),
-    )
-
-
-def _load_gdev_comparison_threshold_config(raw: Mapping[str, Any]) -> ThresholdConfig:
-    accuracy_min = float(raw.get("classification_accuracy_min", 1.0))
-    return ThresholdConfig(
-        max_accuracy_drop=max(0.0, 1.0 - accuracy_min),
-        max_invalid_output_rate_increase=float(raw.get("max_invalid_structured_output_rate", 0.0)),
-        max_unsafe_auto_approval_rate_increase=float(raw.get("max_unsafe_auto_approval_rate", 0.0)),
-        max_latency_p95_delta_ms=float(raw.get("max_latency_p95_ms", 0.0)),
-        max_cost_per_case_delta_usd=float(raw.get("max_cost_per_case_usd", 0.0)),
-    )
+    return read_threshold_config(path)
 
 
 def _load_gdev_validator_thresholds(path: Path) -> GdevValidatorThresholds:
@@ -774,11 +883,6 @@ def _request_namespace_evidence(
         "applied": applied,
         "applied_fields": ["message_id", "request_id"] if applied else [],
     }
-
-
-def _read_run_artifact(path: Path) -> RunRecord:
-    with path.open(encoding="utf-8") as run_file:
-        return RunRecord.from_mapping(json.load(run_file))
 
 
 def _mapping_or_empty(value: Any) -> dict[str, Any]:

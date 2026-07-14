@@ -68,6 +68,129 @@ def test_markdown_report_contains_required_sections() -> None:
     assert "runs/candidate-001.json" in report
 
 
+def test_markdown_report_escapes_every_caller_controlled_context() -> None:
+    baseline = _run_record("baseline", case_results=())
+    candidate = _run_record(
+        "candidate",
+        case_results=(
+            CaseResult(
+                case_id="case|forged`\n\u2028\u2029## FORGED CASE",
+                output={"correct": False},
+                validator_results=(
+                    {
+                        "validator_id": "validator|forged`",
+                        "passed": False,
+                        "category": "wrong|category`",
+                        "message": "<b>PASS</b>|cell\n\u2028\u2029## FORGED RESULT",
+                    },
+                ),
+            ),
+        ),
+    )
+    comparison = ComparisonReport(
+        baseline_run_id="baseline",
+        candidate_run_id="candidate",
+        dataset_hash="hash|forged`<b>PASS</b>",
+        accuracy_delta=-1.0,
+        invalid_output_rate_delta=0.0,
+        unsafe_auto_approval_rate_delta=0.0,
+        latency_ms_p95_delta=0.0,
+        cost_per_case_delta=0.0,
+        threshold_status={"accuracy_delta": "fail"},
+    )
+
+    report = render_markdown_report(
+        baseline=baseline,
+        candidate=candidate,
+        comparison=comparison,
+        raw_artifact_links={
+            "baseline|name": "runs/baseline`\n## FORGED ARTIFACT.json",
+        },
+    )
+
+    assert "\n## FORGED CASE" not in report
+    assert "\n## FORGED RESULT" not in report
+    assert "\n## FORGED ARTIFACT" not in report
+    assert "\u2028" not in report
+    assert "\u2029" not in report
+    assert "<b>PASS</b>" not in report
+    assert "hash&#124;forged&#96;&lt;b&gt;PASS&lt;/b&gt;" in report
+    assert r"case&#124;forged&#96;\n\u2028\u2029## FORGED CASE" in report
+    assert (
+        "&lt;b&gt;PASS&lt;&#47;b&gt;&#124;cell&#92;n&#92;u2028&#92;u2029&#35;&#35; FORGED RESULT"
+    ) in report
+    assert "baseline&#124;name" in report
+
+
+def test_markdown_plain_text_cannot_create_links_images_or_escape_sequences() -> None:
+    baseline = _run_record("baseline", case_results=())
+    candidate = _run_record(
+        "candidate",
+        case_results=(
+            CaseResult(
+                case_id="case-1",
+                output={"correct": False},
+                validator_results=(
+                    {
+                        "validator_id": "validator-1",
+                        "passed": False,
+                        "category": "adapter_error",
+                        "message": (
+                            r"[forged](https://evil.example) "
+                            r"\[escaped](https://evil.example/second) "
+                            "https://bare.evil/path operator@evil.example "
+                            "left\u202eright\u2028middle\u2029end\nnext"
+                        ),
+                    },
+                ),
+            ),
+        ),
+    )
+    comparison = ComparisonReport(
+        baseline_run_id="baseline",
+        candidate_run_id="candidate",
+        dataset_hash="dataset-sha",
+        accuracy_delta=0.0,
+        invalid_output_rate_delta=0.0,
+        unsafe_auto_approval_rate_delta=0.0,
+        latency_ms_p95_delta=0.0,
+        cost_per_case_delta=0.0,
+        threshold_status={"accuracy_delta": "pass"},
+    )
+
+    report = render_markdown_report(
+        baseline=baseline,
+        candidate=candidate,
+        comparison=comparison,
+        raw_artifact_links={
+            "![beacon](https://evil.example/pixel)": "runs/candidate.json",
+        },
+    )
+
+    assert "[forged](https://evil.example)" not in report
+    assert r"\[escaped](https://evil.example/second)" not in report
+    assert "![beacon](https://evil.example/pixel)" not in report
+    assert "https://evil.example" not in report
+    assert "https://bare.evil/path" not in report
+    assert "operator@evil.example" not in report
+    assert "\u202e" not in report
+    assert "\u2028" not in report
+    assert "\u2029" not in report
+    assert "left\u202eright" not in report
+    assert "right\nnext" not in report
+    assert "](" not in report
+    assert "![" not in report
+    assert (
+        "&#91;forged&#93;&#40;https&#58;&#47;&#47;evil&#46;example&#41; "
+        "&#92;&#91;escaped&#93;&#40;https&#58;&#47;&#47;evil&#46;example&#47;second&#41; "
+        "https&#58;&#47;&#47;bare&#46;evil&#47;path operator&#64;evil&#46;example "
+        "left&#92;u202eright&#92;u2028middle&#92;u2029end&#92;nnext"
+    ) in report
+    assert (
+        "&#33;&#91;beacon&#93;&#40;https&#58;&#47;&#47;evil&#46;example&#47;pixel&#41;"
+    ) in report
+
+
 def _run_record(run_id: str, *, case_results: tuple[CaseResult, ...]) -> RunRecord:
     return RunRecord(
         run_id=run_id,
