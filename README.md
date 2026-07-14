@@ -163,7 +163,10 @@ Inputs and the report destination are confined to `GITHUB_WORKSPACE`; caller
 values are transported through environment variables rather than inserted into
 shell source. The Action rejects incomplete runs, mismatched or duplicate case
 sets, non-finite or inconsistent decision metrics, and malformed or unbounded
-threshold schemas before publishing a fresh report.
+threshold schemas before publishing a fresh report. It also blocks any
+corresponding validator receipt that newly changes from pass to fail, including
+categories outside the five aggregate metric gates, and records the affected
+case, validator, and category in the report.
 
 Pin the Action to a reviewed full commit SHA and give the job only
 `contents: read`. See [the reusable Action guide](docs/GITHUB_ACTION.md) for the

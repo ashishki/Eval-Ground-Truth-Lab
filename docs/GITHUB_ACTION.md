@@ -83,10 +83,14 @@ case must contain a non-empty set of results with unique, non-empty
 validator-ID set for each corresponding case must match exactly across the two
 runs. Optional receipt `message` must be a string and an optional nested
 `case_id` must match its outer case. `category` is `none` exactly for passing
-receipts. A corresponding validator may change from a passing `none` receipt to
-a supported failure category; that regression is evaluated as a comparison
-FAIL rather than an Action configuration error. Missing, truncated, or
-malformed validator receipts remain configuration errors.
+receipts. Any corresponding validator that changes from `passed=true` to
+`passed=false` triggers the fail-closed `validator_receipt_regression` gate,
+regardless of the candidate failure category. The Action returns status `1`,
+emits `conclusion=fail`, and appends a deterministic report table naming every
+affected case ID, validator ID, and candidate category. A validator that was
+already failing in the baseline is not a new regression. Candidate recovery
+from failure to pass is allowed. Missing, truncated, or malformed validator
+receipts remain configuration errors.
 
 Run IDs must use the canonical RunStore-safe 1-128 character syntax. All
 metadata and receipt strings that can appear in the Markdown report reject line
@@ -112,7 +116,9 @@ above the maximum and decimal spellings that would collapse to another value
 The Action accepts only complete per-case validator receipts. Failure-only or
 sparse seeded CLI artifacts (including artifacts where both runs have an empty
 `validator_results` list) are rejected until the core CLI emits complete
-receipts for every evaluated case; they cannot produce an Action PASS.
+receipts for every evaluated case; they cannot produce an Action PASS. The
+generic receipt-regression gate is an Action-layer extension in this release;
+the shared CLI comparison continues to own the five aggregate metric gates.
 
 Threshold JSON is strict and duplicate keys are rejected. The native schema
 requires exactly these five decision fields and a non-empty string `version`:
@@ -134,7 +140,8 @@ booleans, numeric strings, negative values, non-standard `NaN`/`Infinity`, and
 floating-point overflow such as `1e309` are rejected. Accuracy, rate, and drop
 values must be within `[0, 1]`; cost and latency allowances must remain within
 the supported finite, non-negative numeric domain. Valid native and legacy
-configurations within that domain retain the CLI's comparison semantics.
+configurations within that domain retain the CLI's aggregate metric comparison
+semantics.
 
 The Action emits:
 
@@ -145,6 +152,12 @@ The Action emits:
 Input links recorded in the report are normalized to workspace-relative paths,
 so an otherwise identical decision does not embed an ephemeral runner checkout
 directory.
+
+When no validator receipt regresses, the Action report remains byte-identical
+to the CLI report and retains its deterministic hash. When a receipt changes
+from pass to fail, the existing metric sections still match the CLI and the
+Action appends `Validator Receipt Regressions` decision evidence before
+returning its stricter blocking result.
 
 `pass` returns status `0`. A threshold-blocked `fail` still publishes the fresh
 report and summary, then returns status `1`. After the Python comparison helper

@@ -9,6 +9,9 @@ once stable releases begin.
   release gates, with full-SHA Python setup, least-privilege caller guidance,
   workspace-confined inputs, atomic fresh-report publication, safe runner
   outputs/summaries, exact pass/fail propagation, and adversarial helper tests.
+- Block every new per-validator pass-to-fail receipt regression regardless of
+  category, and append deterministic case/validator/category decision evidence
+  while preserving CLI report parity when no receipt regresses.
 - Fail closed on running, interrupted, empty, partial, or duplicate-case Action
   inputs; reject non-finite, negative, inconsistent, missing, unknown, or
   incorrectly typed decision metrics and threshold fields before report output.

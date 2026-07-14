@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -229,7 +230,17 @@ def test_both_runs_with_empty_validator_results_are_rejected(
     _assert_action_error_removes_stale(workspace, environment)
 
 
-@pytest.mark.parametrize("category", ["unsafe_auto_approval", "invalid_structured_output"])
+@pytest.mark.parametrize(
+    "category",
+    [
+        "unsafe_auto_approval",
+        "invalid_structured_output",
+        "wrong_category",
+        "adapter_error",
+        "cost_regression",
+        "evidence_mismatch",
+    ],
+)
 def test_same_validator_failure_regression_returns_fresh_blocking_report(
     action_environment: tuple[Path, dict[str, str]], category: str
 ) -> None:
@@ -251,9 +262,91 @@ def test_same_validator_failure_regression_returns_fresh_blocking_report(
     assert "STALE PASS" not in report_text
     assert f"`{category}`" in report_text
     assert "`test.correctness`" in report_text
+    assert "## Validator Receipt Regressions" in report_text
+    assert "| `validator_receipt_regression` | `fail` | 1 |" in report_text
+    assert f"| `case-1` | `test.correctness` | `{category}` |" in report_text
+    if category not in {"unsafe_auto_approval", "invalid_structured_output"}:
+        for metric in (
+            "accuracy_delta",
+            "invalid_output_rate",
+            "unsafe_auto_approval_rate",
+            "latency_ms_p95_delta",
+            "cost_per_case_delta",
+        ):
+            assert f"| `{metric}` | `0` | `pass` |" in report_text
     assert "Conclusion: **FAIL**" in Path(environment["GITHUB_STEP_SUMMARY"]).read_text(
         encoding="utf-8"
     )
+
+
+def test_multiple_validator_receipt_regressions_are_reported_deterministically(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    baseline = _read_json(workspace / "baseline.json")
+    baseline["case_results"][0]["validator_results"].append(
+        {
+            "validator_id": "test.adapter",
+            "passed": True,
+            "category": "none",
+        }
+    )
+    _write_json(workspace / "baseline.json", baseline)
+    candidate = _read_json(workspace / "candidate.json")
+    candidate["case_results"][0]["validator_results"][0].update(
+        {"passed": False, "category": "wrong_category"}
+    )
+    candidate["case_results"][0]["validator_results"].append(
+        {
+            "validator_id": "test.adapter",
+            "passed": False,
+            "category": "adapter_error",
+        }
+    )
+    _write_json(workspace / "candidate.json", candidate)
+
+    assert github_action_compare.main(environment) == github_action_compare.BLOCKED
+    report = (workspace / environment["EVAL_LAB_REPORT"]).read_text(encoding="utf-8")
+    assert "| `validator_receipt_regression` | `fail` | 2 |" in report
+    adapter_row = "| `case-1` | `test.adapter` | `adapter_error` |"
+    correctness_row = "| `case-1` | `test.correctness` | `wrong_category` |"
+    assert adapter_row in report
+    assert correctness_row in report
+    assert report.index(adapter_row) < report.index(correctness_row)
+
+
+def test_baseline_known_validator_failure_is_not_a_new_regression(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    for filename in ("baseline.json", "candidate.json"):
+        run = _read_json(workspace / filename)
+        run["case_results"][0]["validator_results"][0].update(
+            {"passed": False, "category": "evidence_mismatch"}
+        )
+        _write_json(workspace / filename, run)
+
+    assert github_action_compare.main(environment) == github_action_compare.PASS
+    assert _read_outputs(Path(environment["GITHUB_OUTPUT"]))["conclusion"] == "pass"
+    report = (workspace / environment["EVAL_LAB_REPORT"]).read_text(encoding="utf-8")
+    assert "`evidence_mismatch`" in report
+    assert "## Validator Receipt Regressions" not in report
+
+
+def test_candidate_validator_recovery_is_not_a_regression(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    baseline = _read_json(workspace / "baseline.json")
+    baseline["case_results"][0]["validator_results"][0].update(
+        {"passed": False, "category": "wrong_category"}
+    )
+    _write_json(workspace / "baseline.json", baseline)
+
+    assert github_action_compare.main(environment) == github_action_compare.PASS
+    assert _read_outputs(Path(environment["GITHUB_OUTPUT"]))["conclusion"] == "pass"
+    report = (workspace / environment["EVAL_LAB_REPORT"]).read_text(encoding="utf-8")
+    assert "## Validator Receipt Regressions" not in report
 
 
 def test_duplicate_validator_ids_are_rejected(
@@ -722,7 +815,7 @@ def test_legacy_thresholds_reject_missing_and_unknown_fields(
 
 
 @pytest.mark.parametrize("correct", [True, False])
-def test_action_decision_and_report_match_compare_cli(
+def test_action_decision_and_no_regression_report_match_compare_cli(
     action_environment: tuple[Path, dict[str, str]],
     correct: bool,
     monkeypatch: pytest.MonkeyPatch,
@@ -741,7 +834,11 @@ def test_action_decision_and_report_match_compare_cli(
     )
 
     assert action_status == cli_status
-    assert (workspace / environment["EVAL_LAB_REPORT"]).read_bytes() == cli_report.read_bytes()
+    action_report = (workspace / environment["EVAL_LAB_REPORT"]).read_bytes()
+    cli_report_bytes = cli_report.read_bytes()
+    assert action_report == cli_report_bytes
+    assert b"Validator Receipt Regressions" not in action_report
+    assert hashlib.sha256(action_report).hexdigest() == hashlib.sha256(cli_report_bytes).hexdigest()
 
 
 def test_valid_legacy_thresholds_match_compare_cli(

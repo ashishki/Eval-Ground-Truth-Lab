@@ -88,6 +88,13 @@ class ActionPaths:
         return self.report.relative_to(self.workspace).as_posix()
 
 
+@dataclass(frozen=True, order=True)
+class ValidatorReceiptRegression:
+    case_id: str
+    validator_id: str
+    candidate_category: str
+
+
 def main(environment: Mapping[str, str] | None = None) -> int:
     """Run the comparison, publish a fresh report, and preserve the gate status."""
 
@@ -293,6 +300,7 @@ def _run_compare(paths: ActionPaths, temporary_report: Path) -> int:
         candidate=candidate,
         thresholds=thresholds,
     )
+    validator_receipt_regressions = _validator_receipt_regressions(baseline, candidate)
     report_text = render_markdown_report(
         baseline=baseline,
         candidate=candidate,
@@ -303,8 +311,12 @@ def _run_compare(paths: ActionPaths, temporary_report: Path) -> int:
             "threshold config": paths.thresholds.relative_to(paths.workspace).as_posix(),
         },
     )
+    report_text = _append_validator_receipt_regressions(
+        report_text,
+        validator_receipt_regressions,
+    )
     temporary_report.write_text(report_text, encoding="utf-8")
-    return BLOCKED if comparison.has_blocking_failure else PASS
+    return BLOCKED if comparison.has_blocking_failure or validator_receipt_regressions else PASS
 
 
 def _read_run(path: Path) -> RunRecord:
@@ -510,6 +522,55 @@ def _validator_ids_by_case(run: RunRecord) -> dict[str, set[str]]:
         case.case_id: {str(result["validator_id"]) for result in case.validator_results}
         for case in run.case_results
     }
+
+
+def _validator_receipt_regressions(
+    baseline: RunRecord,
+    candidate: RunRecord,
+) -> tuple[ValidatorReceiptRegression, ...]:
+    baseline_passed = {
+        case.case_id: {
+            str(result["validator_id"]): bool(result["passed"]) for result in case.validator_results
+        }
+        for case in baseline.case_results
+    }
+    regressions = (
+        ValidatorReceiptRegression(
+            case_id=case.case_id,
+            validator_id=str(result["validator_id"]),
+            candidate_category=str(result["category"]),
+        )
+        for case in candidate.case_results
+        for result in case.validator_results
+        if baseline_passed[case.case_id][str(result["validator_id"])] is True
+        and result["passed"] is False
+    )
+    return tuple(sorted(regressions))
+
+
+def _append_validator_receipt_regressions(
+    report_text: str,
+    regressions: tuple[ValidatorReceiptRegression, ...],
+) -> str:
+    if not regressions:
+        return report_text
+    lines = [
+        "## Validator Receipt Regressions",
+        "",
+        "| Gate | Status | Count |",
+        "|------|--------|-------|",
+        f"| `validator_receipt_regression` | `fail` | {len(regressions)} |",
+        "",
+        "| Case ID | Validator | Candidate category |",
+        "|---------|-----------|--------------------|",
+        *(
+            f"| `{regression.case_id}` | `{regression.validator_id}` | "
+            f"`{regression.candidate_category}` |"
+            for regression in regressions
+        ),
+    ]
+    section = "\n".join(lines)
+    return f"{report_text.rstrip()}\n\n{section}\n"
 
 
 def _read_json_object(path: Path, *, label: str) -> dict[str, Any]:
