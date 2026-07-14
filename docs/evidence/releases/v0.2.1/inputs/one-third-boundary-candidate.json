@@ -1,0 +1,79 @@
+{
+  "candidate_version": "eval-lab-0.2.1-synthetic-one-third-boundary-candidate",
+  "case_results": [
+    {
+      "case_id": "case-1",
+      "cost_usd": 0.0,
+      "latency_ms": 10.0,
+      "output": {
+        "correct": true
+      },
+      "validator_results": [
+        {
+          "case_id": "case-1",
+          "category": "none",
+          "evidence": {
+            "fixture": "fully_synthetic"
+          },
+          "message": "validator passed",
+          "passed": true,
+          "validator_id": "evidence.output_contract"
+        }
+      ]
+    },
+    {
+      "case_id": "case-2",
+      "cost_usd": 0.0,
+      "latency_ms": 10.0,
+      "output": {
+        "correct": false
+      },
+      "validator_results": [
+        {
+          "case_id": "case-2",
+          "category": "none",
+          "evidence": {
+            "fixture": "fully_synthetic"
+          },
+          "message": "validator passed",
+          "passed": true,
+          "validator_id": "evidence.output_contract"
+        }
+      ]
+    },
+    {
+      "case_id": "case-3",
+      "cost_usd": 0.0,
+      "latency_ms": 10.0,
+      "output": {
+        "correct": false
+      },
+      "validator_results": [
+        {
+          "case_id": "case-3",
+          "category": "none",
+          "evidence": {
+            "fixture": "fully_synthetic"
+          },
+          "message": "validator passed",
+          "passed": true,
+          "validator_id": "evidence.output_contract"
+        }
+      ]
+    }
+  ],
+  "completed_at": "2026-07-14T00:00:01+00:00",
+  "cost_per_case_usd": 0.0,
+  "cost_total_usd": 0.0,
+  "dataset_hash": "76e913e5c6065b130350eff33f849e64809746f587da64ab398e9340ea7f5007",
+  "interrupted_at": null,
+  "latency_ms_p50": 10.0,
+  "latency_ms_p95": 10.0,
+  "max_candidate_retries": 0,
+  "run_id": "one-third-boundary-candidate",
+  "run_type": "comparison-evidence",
+  "started_at": "2026-07-14T00:00:00+00:00",
+  "status": "completed",
+  "threshold_config_version": "v0.2.1-exact-comparison-policy",
+  "validator_version": "fail-closed-evidence-validators-v1"
+}

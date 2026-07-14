@@ -120,11 +120,15 @@ smoke_status=$?
 set -e
 test "$smoke_status" -eq 1
 .venv/bin/python -m eval_ground_truth_lab.cli verify-evidence \
-  --manifest docs/evidence/integrations/trader-risk-audit-synthetic-v1/sha256-*.manifest.json
+  --manifest docs/evidence/integrations/trader-risk-audit-synthetic-v2/sha256-*.manifest.json
+.venv/bin/python -m eval_ground_truth_lab.cli verify-evidence \
+  --manifest docs/evidence/releases/v0.2.1/sha256-*.manifest.json
 ```
 
 The seeded candidate is deliberately bad, so exit `1` is the expected successful
-review outcome. The final command must report `verified: true` for eight artifacts.
+review outcome. The final two commands must report `verified: true` for the
+Trader replay (eight artifacts) and the fail-closed comparison pack
+(17 artifacts).
 
 1. Read [docs/STACK_OVERVIEW.md](docs/STACK_OVERVIEW.md) for the three-project
    system map.
@@ -137,8 +141,10 @@ review outcome. The final command must report `verified: true` for eight artifac
 5. Review the harder diagnostic challenge set:
    [docs/GDEV_AGENT_CHALLENGE_SET.md](docs/GDEV_AGENT_CHALLENGE_SET.md)
    and its [v0.2.0 executed evidence](docs/evidence/releases/v0.2.0/README.md).
-6. Check the evidence map in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
-7. Check known limits in [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md).
+6. Review the current
+   [v0.2.1 fail-closed evidence](docs/evidence/releases/v0.2.1/README.md).
+7. Check the evidence map in [docs/EVIDENCE_INDEX.md](docs/EVIDENCE_INDEX.md).
+8. Check known limits in [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md).
 
 ## Quickstart: Seeded Smoke
 
@@ -293,11 +299,15 @@ a financial-performance result, external adapter, real-user case study, or
 production claim. See
 [docs/TRADER_RISK_AUDIT_ADAPTER.md](docs/TRADER_RISK_AUDIT_ADAPTER.md) and the
 [dataset card](datasets/trader_risk_audit/synthetic_quickstart_v1_CARD.md). The
-[historical v0.2.0 replay pack](docs/evidence/integrations/README.md) verifies at
+[current v2 replay pack](docs/evidence/integrations/README.md) verifies at
 content address
+`sha256:b8269aa9b416f78817a0c69848c6a4bd24957f7016e2d1c4951dee9cb7430496`
+and binds the exact v0.2.1 implementation commit recorded in its manifest. The
+historical v1 pack remains byte-preserved at
 `sha256:1b228a37ea3686cc9c57132c7b2d2048a49c71995fd63b4d020d619bf30f72c3`.
 It remains immutable evidence for the code revision recorded in that manifest;
-it is not presented as a v0.2.1 execution.
+it is not relabeled as a v0.2.1 execution. Both use the same fully synthetic
+Trader v1 fixture and make no external-user or production claim.
 
 ## Architecture
 
@@ -319,6 +329,8 @@ committed scope report in
 [reports/gdev-agent/challenge_report.md](reports/gdev-agent/challenge_report.md).
 The executed challenge artifacts and verifier manifest are in
 [docs/evidence/releases/v0.2.0/](docs/evidence/releases/v0.2.0/).
+The v0.2.1 exact-comparison and CLI `0/1/2` execution receipts are in
+[docs/evidence/releases/v0.2.1/](docs/evidence/releases/v0.2.1/).
 Known gaps are tracked in [Known Gaps](#known-gaps).
 
 Core shape:

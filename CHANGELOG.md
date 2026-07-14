@@ -26,10 +26,15 @@ milestone.
 - Compute all five gates with exact Fraction/decimal semantics from complete
   case results and canonical policies, preventing high-magnitude cancellation,
   rounded one-third boundaries, and legacy accuracy-complement relaxation.
+- Publish a 17-artifact content-addressed local evidence pack covering CLI
+  statuses `0/1/2`, generic validator regression, exact decimal and rational
+  boundaries, and stale-report removal from the exact reviewed implementation.
 - Encode Markdown link/image/autolink punctuation and render controls, Unicode
   separators, and bidi characters visibly in untrusted report text.
 - Add a fail-closed Eval-side import/replay adapter for the separate Trader Risk
   Audit sanitized evidence contract.
+- Publish the current eight-artifact Trader synthetic replay v2 from the exact
+  v0.2.1 implementation while retaining the historical replay v1 byte-for-byte.
 - Pin a fully synthetic Trader export to an exact path-purged candidate commit,
   tree, Git blob, bundle digest, file SHA-256, and evidence content hash.
 - Add exact deterministic validators, a sealed CLI replay, content-addressed

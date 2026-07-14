@@ -1,0 +1,135 @@
+{
+  "artifacts": [
+    {
+      "path": "README.md",
+      "sha256": "6c8acf8b6c2e1541cabba94c41fba196ccc52dc6ed2e80ae979530f0ab7ed673",
+      "size_bytes": 2553
+    },
+    {
+      "path": "inputs/common-passing-baseline.json",
+      "sha256": "56fc3d8023259bfdb27c55b76693733d1fb31838888473ecd686b0ce2a962816",
+      "size_bytes": 1131
+    },
+    {
+      "path": "inputs/generic-validator-regression-candidate.json",
+      "sha256": "ed20dacba71e85ffcedbe424d17f73b4be89bd567ae0e6136041027fd008bce2",
+      "size_bytes": 1209
+    },
+    {
+      "path": "inputs/high-magnitude-decimal-baseline.json",
+      "sha256": "78051fed42681e4621b04afed6a83073a5f66ed80e94af4ddd03b7ecfe963ce3",
+      "size_bytes": 1175
+    },
+    {
+      "path": "inputs/high-magnitude-decimal-candidate.json",
+      "sha256": "507c0b4a3aa55f81e57e53c825cfa71537dc50bfda32a83777493cc387a2ea26",
+      "size_bytes": 1177
+    },
+    {
+      "path": "inputs/high-magnitude-decimal-thresholds.json",
+      "sha256": "a3baf35615496a259bac1b6de2dedcdd9deb789c6801f9d59cb5b028f5a9cf94",
+      "size_bytes": 247
+    },
+    {
+      "path": "inputs/invalid-duplicate-key-candidate.json",
+      "sha256": "9083eeeb5329041c4be2f88bd474a50d68cc195b9960e861d9776fc691af4c8d",
+      "size_bytes": 1263
+    },
+    {
+      "path": "inputs/one-third-boundary-baseline.json",
+      "sha256": "d353b361ba6ad65e137db541a794d236eb3456f01db1522a0f7aa6c62b80ac45",
+      "size_bytes": 2044
+    },
+    {
+      "path": "inputs/one-third-boundary-candidate.json",
+      "sha256": "58d72b4cf72b703927ef6c2c48bfe71271da43c5ea84dacc0fd2aed066e709a0",
+      "size_bytes": 2047
+    },
+    {
+      "path": "inputs/one-third-boundary-thresholds.json",
+      "sha256": "d7231941d1461a3e77bbcaca98942f9c5fe81dde2302e538f1e895b33b352c88",
+      "size_bytes": 258
+    },
+    {
+      "path": "inputs/stale-report-seed.md",
+      "sha256": "f888e5450a60cd47803a753023046569adc93bf4ea7539b079314378a54d926c",
+      "size_bytes": 42
+    },
+    {
+      "path": "inputs/zero-thresholds.json",
+      "sha256": "b7a462ad727fd17bdeb907889ee3fe6a470e14a0fbdc641cfe99bf3948f96586",
+      "size_bytes": 243
+    },
+    {
+      "path": "receipts/command-results.json",
+      "sha256": "15a15027553df7449e3d1481a2d07bb164f9f4d56e0ab422ae91ff38e6701610",
+      "size_bytes": 9806
+    },
+    {
+      "path": "reports/exact-one-third-boundary.md",
+      "sha256": "478bbe631825d8878fce3b6f8666bfa8af1cd5a14946631edb5c7593f49499e6",
+      "size_bytes": 1307
+    },
+    {
+      "path": "reports/generic-validator-regression.md",
+      "sha256": "2caf6363f167e8badaed5ea4a20c7181f6b0b56496ae34baead1516d27b22fa6",
+      "size_bytes": 1803
+    },
+    {
+      "path": "reports/high-magnitude-decimal-cancellation.md",
+      "sha256": "bb3a84803b66471e2bf692f549eec9291def23e3b93d80b211faf57e0f241c32",
+      "size_bytes": 1318
+    },
+    {
+      "path": "reports/valid-no-regression.md",
+      "sha256": "11997da7d123db91bc976c339dfb9c74513e8f3e5653ee484d84a7d392c1e731",
+      "size_bytes": 1202
+    }
+  ],
+  "content_address": "sha256:c07918b3d598e30840ad14f04fe4bc434c7dd71f9e72a83fe294a7bbdf20a2c6",
+  "metadata": {
+    "claim_boundary": {
+      "external_feedback_maintenance_evidence": false,
+      "external_user_evidence": false,
+      "production_evidence": false,
+      "synthetic_local_execution": true
+    },
+    "implementation": {
+      "components_sha256": {
+        "cli": "f2e087fdb8669bf5e72e8f9ee977030fa4062db74a1407600628066308a6a0bd",
+        "comparison": "5241cf7f50fba35b9293fa4f3646248fb04aa92a253e37b4eec1a7bec752f8d8",
+        "comparison_contracts": "4dd600371c6641736899fce24cd855e00403034bd130457377423449f88af59b",
+        "evidence_manifest": "ad0dcbd8439dcfecea1dbe76a6bb452085e75bf660f0f61603845df0ba1c046e",
+        "execution_binding": "095900d434f8ddc591b743d8aa2b30e11b9c969a5ad372a4ec5fbd4c29dd293f",
+        "implementation_provenance": "e8fa6b98d655264a65360859ad732061c81af230e1bba576da04a4a2e69fedac",
+        "markdown_renderer": "ce37d8d252da2b78eddcd8881c3168e2153ad0512db01c72c12eb795a070a2b7",
+        "run_store": "7c9205e193e7f6df2dc3a334470e1dbf300c61ac90968ae3b65406223c2c0258"
+      },
+      "execution_binding": {
+        "schema_version": "eval-lab-loaded-execution-binding-v1",
+        "sha256": "423d9bc2bf89438b147485f88b4b251b6c872d62b00fea998c97904828da15b3"
+      },
+      "package_payload": {
+        "file_count": 57,
+        "sha256": "be2e0c25bdc25334646a595744285419756ec91064bd6d94049666d8d1fbaf4a"
+      },
+      "schema_version": "eval-lab-implementation-provenance-v2",
+      "source": {
+        "commit": "31120c809cc4935c9f5ffbb2cb539a3018d38d92",
+        "kind": "git_worktree",
+        "measured_package_matches_head": true,
+        "tree": "8cbbff195bbae0ee5309d94c38ad27e8215c755e"
+      }
+    },
+    "release_classification": "internal_correctness_and_security_patch",
+    "release_version": "0.2.1",
+    "scenario_exit_codes": {
+      "exact_one_third_boundary": 1,
+      "generic_validator_pass_to_fail": 1,
+      "high_magnitude_decimal_cancellation": 1,
+      "invalid_input_stale_report_invalidation": 2,
+      "valid_no_regression": 0
+    }
+  },
+  "schema_version": "eval-lab-evidence-v1"
+}

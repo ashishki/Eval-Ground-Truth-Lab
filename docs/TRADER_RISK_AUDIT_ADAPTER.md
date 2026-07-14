@@ -186,6 +186,11 @@ external adoption, or the audit report's usefulness to a real user. A real
 external adapter/case study and real design-partner validation remain separate
 milestones that cannot be satisfied by this repository-authored fixture.
 
-The committed 2026-07-13 replay is indexed at
+The current 2026-07-14 replay v2 is indexed at
 `docs/evidence/integrations/README.md` and verifies at content address
-`sha256:1b228a37ea3686cc9c57132c7b2d2048a49c71995fd63b4d020d619bf30f72c3`.
+`sha256:b8269aa9b416f78817a0c69848c6a4bd24957f7016e2d1c4951dee9cb7430496`.
+It binds the exact v0.2.1 implementation commit, tree, package payload, named
+components, and loaded-code execution digest recorded in its manifest. The
+2026-07-13 v1 replay remains byte-preserved at content address
+`sha256:1b228a37ea3686cc9c57132c7b2d2048a49c71995fd63b4d020d619bf30f72c3`
+and is not relabeled as a current execution.
