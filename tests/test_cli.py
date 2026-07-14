@@ -113,6 +113,7 @@ def test_compare_command_returns_one_on_blocking_regression(tmp_path: Path) -> N
                 "max_unsafe_auto_approval_rate_increase": 0.0,
                 "max_latency_p95_delta_ms": 0.0,
                 "max_cost_per_case_delta_usd": 0.0,
+                "version": "thresholds-v1",
             }
         )
         + "\n",
@@ -210,6 +211,23 @@ def _write_run(path: Path, run: RunRecord) -> Path:
 
 
 def _run_record(*, run_id: str, case_results: tuple[CaseResult, ...]) -> RunRecord:
+    completed_cases = tuple(
+        CaseResult(
+            case_id=case.case_id,
+            output=case.output,
+            validator_results=case.validator_results
+            or (
+                {
+                    "validator_id": "test.correctness",
+                    "passed": True,
+                    "category": "none",
+                },
+            ),
+            cost_usd=case.cost_usd,
+            latency_ms=case.latency_ms,
+        )
+        for case in case_results
+    )
     return RunRecord(
         run_id=run_id,
         run_type="candidate",
@@ -220,5 +238,5 @@ def _run_record(*, run_id: str, case_results: tuple[CaseResult, ...]) -> RunReco
         status="completed",
         started_at="2026-06-12T00:00:00+00:00",
         completed_at="2026-06-12T00:00:01+00:00",
-        case_results=case_results,
+        case_results=completed_cases,
     )

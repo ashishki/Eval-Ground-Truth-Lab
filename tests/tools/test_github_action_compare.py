@@ -266,14 +266,15 @@ def test_same_validator_failure_regression_returns_fresh_blocking_report(
     assert "| `validator_receipt_regression` | `fail` | 1 |" in report_text
     assert f"| `case-1` | `test.correctness` | `{category}` |" in report_text
     if category not in {"unsafe_auto_approval", "invalid_structured_output"}:
-        for metric in (
-            "accuracy_delta",
-            "invalid_output_rate",
-            "unsafe_auto_approval_rate",
-            "latency_ms_p95_delta",
-            "cost_per_case_delta",
-        ):
-            assert f"| `{metric}` | `0` | `pass` |" in report_text
+        expected_gate_rules = {
+            "accuracy_delta": "delta ≥ 0",
+            "invalid_output_rate": "delta ≤ 0",
+            "unsafe_auto_approval_rate": "delta ≤ 0",
+            "latency_ms_p95_delta": "delta ≤ 0",
+            "cost_per_case_delta": "delta ≤ 0",
+        }
+        for metric, gate_rule in expected_gate_rules.items():
+            assert f"| `{metric}` | `0` | `{gate_rule}` | `pass` |" in report_text
     assert "Conclusion: **FAIL**" in Path(environment["GITHUB_STEP_SUMMARY"]).read_text(
         encoding="utf-8"
     )
@@ -480,6 +481,37 @@ def test_validator_message_cannot_inject_markdown_or_html(
     _assert_action_error_removes_stale(workspace, environment)
 
 
+def test_validator_message_markdown_links_and_autolinks_render_as_inert_text(
+    action_environment: tuple[Path, dict[str, str]],
+) -> None:
+    workspace, environment = action_environment
+    candidate = _read_json(workspace / "candidate.json")
+    receipt = candidate["case_results"][0]["validator_results"][0]
+    receipt.update(
+        {
+            "passed": False,
+            "category": "adapter_error",
+            "message": (
+                r"[forged](https://evil.example) "
+                r"\[escaped](https://evil.example/second) "
+                "operator@evil.example"
+            ),
+        }
+    )
+    _write_json(workspace / "candidate.json", candidate)
+
+    assert github_action_compare.main(environment) == github_action_compare.BLOCKED
+    report = (workspace / environment["EVAL_LAB_REPORT"]).read_text(encoding="utf-8")
+    assert "[forged](https://evil.example)" not in report
+    assert "https://evil.example" not in report
+    assert "operator@evil.example" not in report
+    assert (
+        "&#91;forged&#93;&#40;https&#58;&#47;&#47;evil&#46;example&#41; "
+        "&#92;&#91;escaped&#93;&#40;https&#58;&#47;&#47;evil&#46;example&#47;second&#41; "
+        "operator&#64;evil&#46;example"
+    ) in report
+
+
 def test_mismatched_run_types_are_rejected(
     action_environment: tuple[Path, dict[str, str]],
 ) -> None:
@@ -516,6 +548,110 @@ def test_high_magnitude_cost_cannot_hide_aggregate_difference(
     _write_json(candidate_path, candidate)
 
     _assert_action_error_removes_stale(workspace, environment)
+
+
+@pytest.mark.parametrize(
+    ("metric", "case_field", "aggregate_fields", "threshold_field"),
+    [
+        (
+            "cost_per_case_delta",
+            "cost_usd",
+            ("cost_total_usd", "cost_per_case_usd"),
+            "max_cost_per_case_delta_usd",
+        ),
+        (
+            "latency_ms_p95_delta",
+            "latency_ms",
+            ("latency_ms_p50", "latency_ms_p95"),
+            "max_latency_p95_delta_ms",
+        ),
+    ],
+)
+def test_exact_high_magnitude_delta_blocks_in_action(
+    action_environment: tuple[Path, dict[str, str]],
+    metric: str,
+    case_field: str,
+    aggregate_fields: tuple[str, str],
+    threshold_field: str,
+) -> None:
+    workspace, environment = action_environment
+    for filename, value in (
+        ("baseline.json", 1_000_000_000_000.0),
+        ("candidate.json", 1_000_000_000_000.1),
+    ):
+        run = _read_json(workspace / filename)
+        run["case_results"][0][case_field] = value
+        for aggregate_field in aggregate_fields:
+            run[aggregate_field] = value
+        _write_json(workspace / filename, run)
+    thresholds = _read_json(workspace / "thresholds.json")
+    thresholds[threshold_field] = 0.09999
+    _write_json(workspace / "thresholds.json", thresholds)
+
+    assert github_action_compare.main(environment) == github_action_compare.BLOCKED
+    report = (workspace / environment["EVAL_LAB_REPORT"]).read_text(encoding="utf-8")
+    assert f"| `{metric}` | `0.1` | `delta ≤ 0.09999` | `fail` |" in report
+    assert "## Validator Receipt Regressions" not in report
+
+
+@pytest.mark.parametrize(
+    ("metric", "category", "expected_delta", "threshold_field", "gate"),
+    [
+        (
+            "accuracy_delta",
+            None,
+            "-1/3",
+            "max_accuracy_drop",
+            "delta ≥ -0.3333333333333333",
+        ),
+        (
+            "invalid_output_rate",
+            "invalid_structured_output",
+            "1/3",
+            "max_invalid_output_rate_increase",
+            "delta ≤ 0.3333333333333333",
+        ),
+        (
+            "unsafe_auto_approval_rate",
+            "unsafe_auto_approval",
+            "1/3",
+            "max_unsafe_auto_approval_rate_increase",
+            "delta ≤ 0.3333333333333333",
+        ),
+    ],
+)
+def test_exact_one_third_rate_boundary_blocks_in_action(
+    action_environment: tuple[Path, dict[str, str]],
+    metric: str,
+    category: str | None,
+    expected_delta: str,
+    threshold_field: str,
+    gate: str,
+) -> None:
+    workspace, environment = action_environment
+    baseline = _expand_run_to_three_cases(_read_json(workspace / "baseline.json"))
+    candidate = _expand_run_to_three_cases(_read_json(workspace / "candidate.json"))
+    if metric == "accuracy_delta":
+        baseline["case_results"][2]["output"]["correct"] = False
+        candidate["case_results"][1]["output"]["correct"] = False
+        candidate["case_results"][2]["output"]["correct"] = False
+    else:
+        baseline["case_results"][0]["validator_results"][0].update(
+            {"passed": False, "category": "baseline_known_failure"}
+        )
+        candidate["case_results"][0]["validator_results"][0].update(
+            {"passed": False, "category": category}
+        )
+    _write_json(workspace / "baseline.json", baseline)
+    _write_json(workspace / "candidate.json", candidate)
+    thresholds = _read_json(workspace / "thresholds.json")
+    thresholds[threshold_field] = 0.3333333333333333
+    _write_json(workspace / "thresholds.json", thresholds)
+
+    assert github_action_compare.main(environment) == github_action_compare.BLOCKED
+    report = (workspace / environment["EVAL_LAB_REPORT"]).read_text(encoding="utf-8")
+    assert f"| `{metric}` | `{expected_delta}` | `{gate}` | `fail` |" in report
+    assert "## Validator Receipt Regressions" not in report
 
 
 def test_nonrepresentable_integer_cost_cannot_collapse_to_claimed_aggregate(
@@ -841,6 +977,32 @@ def test_action_decision_and_no_regression_report_match_compare_cli(
     assert hashlib.sha256(action_report).hexdigest() == hashlib.sha256(cli_report_bytes).hexdigest()
 
 
+@pytest.mark.parametrize("output", ["plain text", ["list", 1], None])
+def test_non_object_json_outputs_preserve_action_cli_parity(
+    action_environment: tuple[Path, dict[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+    output: object,
+) -> None:
+    workspace, environment = action_environment
+    for filename in ("baseline.json", "candidate.json"):
+        run = _read_json(workspace / filename)
+        run["case_results"][0]["output"] = output
+        _write_json(workspace / filename, run)
+
+    action_status = github_action_compare.main(environment)
+    cli_report = workspace / "reports/non-object-cli-report.md"
+    monkeypatch.chdir(workspace)
+    cli_status = run_compare_command(
+        baseline_path="baseline.json",
+        candidate_path="candidate.json",
+        threshold_config_path="thresholds.json",
+        report_path=cli_report,
+    )
+
+    assert action_status == cli_status == github_action_compare.PASS
+    assert (workspace / environment["EVAL_LAB_REPORT"]).read_bytes() == cli_report.read_bytes()
+
+
 def test_valid_legacy_thresholds_match_compare_cli(
     action_environment: tuple[Path, dict[str, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -859,6 +1021,48 @@ def test_valid_legacy_thresholds_match_compare_cli(
 
     assert action_status == cli_status == github_action_compare.PASS
     assert (workspace / environment["EVAL_LAB_REPORT"]).read_bytes() == cli_report.read_bytes()
+
+
+def test_tiny_legacy_accuracy_minimum_blocks_with_exact_action_cli_gate(
+    action_environment: tuple[Path, dict[str, str]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace, environment = action_environment
+    candidate = _read_json(workspace / "candidate.json")
+    candidate["case_results"][0]["output"]["correct"] = False
+    _write_json(workspace / "candidate.json", candidate)
+    _write_json(
+        workspace / "thresholds.json",
+        {
+            "classification_accuracy_min": 1e-30,
+            "max_cost_per_case_usd": 0.0,
+            "max_invalid_structured_output_rate": 0.0,
+            "max_latency_p95_ms": 0.0,
+            "max_unsafe_auto_approval_rate": 0.0,
+            "version": "test-v1",
+        },
+    )
+
+    action_status = github_action_compare.main(environment)
+    action_report = workspace / environment["EVAL_LAB_REPORT"]
+    action_text = action_report.read_text(encoding="utf-8")
+
+    assert action_status == github_action_compare.BLOCKED
+    assert "## Validator Receipt Regressions" not in action_text
+    assert (
+        "| `accuracy_delta` | `-1` | `delta ≥ -0.999999999999999999999999999999` | `fail` |"
+    ) in action_text
+
+    cli_report = workspace / "reports/tiny-legacy-cli-report.md"
+    monkeypatch.chdir(workspace)
+    cli_status = run_compare_command(
+        baseline_path="baseline.json",
+        candidate_path="candidate.json",
+        threshold_config_path="thresholds.json",
+        report_path=cli_report,
+    )
+
+    assert cli_status == github_action_compare.BLOCKED
+    assert action_report.read_bytes() == cli_report.read_bytes()
 
 
 def test_compare_error_removes_stale_target_before_any_uploader_can_publish_it(
@@ -1240,3 +1444,17 @@ def _write_run(path: Path, *, run_id: str, correct: bool) -> None:
         + "\n",
         encoding="utf-8",
     )
+
+
+def _expand_run_to_three_cases(run: dict) -> dict:
+    first = run["case_results"][0]
+    for index in (2, 3):
+        case = json.loads(json.dumps(first))
+        case["case_id"] = f"case-{index}"
+        run["case_results"].append(case)
+    run["cost_total_usd"] = sum(case["cost_usd"] for case in run["case_results"])
+    run["cost_per_case_usd"] = run["cost_total_usd"] / len(run["case_results"])
+    latencies = sorted(case["latency_ms"] for case in run["case_results"])
+    run["latency_ms_p50"] = latencies[1]
+    run["latency_ms_p95"] = latencies[-1]
+    return run

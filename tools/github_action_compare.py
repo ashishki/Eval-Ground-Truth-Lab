@@ -3,65 +3,20 @@
 from __future__ import annotations
 
 import html
-import json
-import math
 import os
-import re
 import sys
 import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
-from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
-from eval_ground_truth_lab.compare import ThresholdConfig, compare_runs
+from eval_ground_truth_lab.compare import compare_runs, read_run_artifact, read_threshold_config
 from eval_ground_truth_lab.reports import render_markdown_report
-from eval_ground_truth_lab.runs import RunRecord
 
 PASS = 0
 BLOCKED = 1
 ACTION_ERROR = 2
 _MAX_SUMMARY_REPORT_CHARS = 120_000
-_STANDARD_THRESHOLD_FIELDS = frozenset(
-    {
-        "max_accuracy_drop",
-        "max_invalid_output_rate_increase",
-        "max_unsafe_auto_approval_rate_increase",
-        "max_latency_p95_delta_ms",
-        "max_cost_per_case_delta_usd",
-    }
-)
-_GDEV_THRESHOLD_FIELDS = frozenset(
-    {
-        "classification_accuracy_min",
-        "max_invalid_structured_output_rate",
-        "max_unsafe_auto_approval_rate",
-        "max_latency_p95_ms",
-        "max_cost_per_case_usd",
-    }
-)
-_GDEV_OPTIONAL_THRESHOLD_FIELDS = frozenset(
-    {
-        "confidence_floor",
-        "guard_block_rate_max",
-        "human_escalation_recall_min",
-        "risk_routing_recall_min",
-    }
-)
-_RATE_THRESHOLD_FIELDS = frozenset(
-    {
-        "max_accuracy_drop",
-        "max_invalid_output_rate_increase",
-        "max_unsafe_auto_approval_rate_increase",
-        "classification_accuracy_min",
-        "max_invalid_structured_output_rate",
-        "max_unsafe_auto_approval_rate",
-        *_GDEV_OPTIONAL_THRESHOLD_FIELDS,
-    }
-)
-_RUN_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
-_MAX_DECISION_MAGNITUDE = 2**53 - 1
 _MARKDOWN_STRUCTURAL_CHARACTERS = frozenset(
     {"\x00", "\r", "\n", "\v", "\f", "\x85", "\u2028", "\u2029", "`", "|"}
 )
@@ -86,13 +41,6 @@ class ActionPaths:
     @property
     def report_relative(self) -> str:
         return self.report.relative_to(self.workspace).as_posix()
-
-
-@dataclass(frozen=True, order=True)
-class ValidatorReceiptRegression:
-    case_id: str
-    validator_id: str
-    candidate_category: str
 
 
 def main(environment: Mapping[str, str] | None = None) -> int:
@@ -280,27 +228,14 @@ def _publish_report(temporary_report: Path, report: Path) -> None:
 
 
 def _run_compare(paths: ActionPaths, temporary_report: Path) -> int:
-    baseline = _read_run(paths.baseline)
-    candidate = _read_run(paths.candidate)
-    _validate_comparison_runs(baseline, candidate)
-    thresholds, threshold_version = _read_thresholds(paths.thresholds)
-    if (
-        threshold_version
-        not in {
-            baseline.threshold_config_version,
-            candidate.threshold_config_version,
-        }
-        or baseline.threshold_config_version != candidate.threshold_config_version
-    ):
-        raise ValueError(
-            "threshold config version must match both run artifacts' threshold config version"
-        )
+    baseline = read_run_artifact(paths.baseline)
+    candidate = read_run_artifact(paths.candidate)
+    thresholds = read_threshold_config(paths.thresholds)
     comparison = compare_runs(
         baseline=baseline,
         candidate=candidate,
         thresholds=thresholds,
     )
-    validator_receipt_regressions = _validator_receipt_regressions(baseline, candidate)
     report_text = render_markdown_report(
         baseline=baseline,
         candidate=candidate,
@@ -311,399 +246,8 @@ def _run_compare(paths: ActionPaths, temporary_report: Path) -> int:
             "threshold config": paths.thresholds.relative_to(paths.workspace).as_posix(),
         },
     )
-    report_text = _append_validator_receipt_regressions(
-        report_text,
-        validator_receipt_regressions,
-    )
     temporary_report.write_text(report_text, encoding="utf-8")
-    return BLOCKED if comparison.has_blocking_failure or validator_receipt_regressions else PASS
-
-
-def _read_run(path: Path) -> RunRecord:
-    raw = _read_json_object(path, label="run artifact")
-    _require_fields(
-        raw,
-        {
-            "run_id",
-            "run_type",
-            "dataset_hash",
-            "candidate_version",
-            "validator_version",
-            "threshold_config_version",
-            "status",
-            "started_at",
-            "completed_at",
-            "cost_total_usd",
-            "cost_per_case_usd",
-            "latency_ms_p50",
-            "latency_ms_p95",
-            "max_candidate_retries",
-            "case_results",
-        },
-        label="run artifact",
-    )
-    _require_canonical_run_id(raw["run_id"])
-    for field in (
-        "run_type",
-        "started_at",
-        "completed_at",
-    ):
-        _require_nonempty_string(raw[field], field=field)
-    for field in (
-        "dataset_hash",
-        "candidate_version",
-        "validator_version",
-        "threshold_config_version",
-    ):
-        _require_report_safe_string(raw[field], field=field)
-    if raw["status"] != "completed":
-        raise ValueError("run artifact status must be exactly 'completed'")
-    case_results = raw["case_results"]
-    if not isinstance(case_results, list) or not case_results:
-        raise ValueError("completed run artifact must contain at least one case result")
-
-    for field in (
-        "cost_total_usd",
-        "cost_per_case_usd",
-        "latency_ms_p50",
-        "latency_ms_p95",
-    ):
-        _finite_nonnegative(raw[field], field=field)
-    if float(raw["latency_ms_p95"]) < float(raw["latency_ms_p50"]):
-        raise ValueError("latency_ms_p95 must be greater than or equal to latency_ms_p50")
-    retries = raw["max_candidate_retries"]
-    if isinstance(retries, bool) or not isinstance(retries, int) or retries < 0:
-        raise ValueError("max_candidate_retries must be a non-negative integer")
-
-    for index, case_result in enumerate(case_results):
-        if not isinstance(case_result, dict):
-            raise ValueError(f"case_results[{index}] must be a JSON object")
-        _require_fields(
-            case_result,
-            {"case_id", "output", "validator_results", "cost_usd", "latency_ms"},
-            label=f"case_results[{index}]",
-        )
-        _require_report_safe_string(
-            case_result["case_id"],
-            field=f"case_results[{index}].case_id",
-        )
-        validator_results = case_result["validator_results"]
-        if not isinstance(validator_results, list) or not validator_results:
-            raise ValueError(f"case_results[{index}].validator_results must be a JSON array")
-        validator_ids: set[str] = set()
-        for validator_index, validator_result in enumerate(validator_results):
-            result_label = f"case_results[{index}].validator_results[{validator_index}]"
-            if not isinstance(validator_result, dict):
-                raise ValueError(f"{result_label} must be a JSON object")
-            _require_fields(
-                validator_result,
-                {"validator_id", "passed", "category"},
-                label=result_label,
-            )
-            validator_id = _require_report_safe_string(
-                validator_result["validator_id"],
-                field=f"{result_label}.validator_id",
-            )
-            _require_report_safe_string(
-                validator_result["category"],
-                field=f"{result_label}.category",
-            )
-            if not isinstance(validator_result["passed"], bool):
-                raise ValueError(f"{result_label}.passed must be a boolean")
-            category = str(validator_result["category"])
-            passed = validator_result["passed"]
-            if (passed and category != "none") or (not passed and category == "none"):
-                raise ValueError(
-                    f"{result_label}.category must be 'none' exactly when passed is true"
-                )
-            message = validator_result.get("message")
-            if "message" in validator_result:
-                _require_report_safe_string(
-                    message,
-                    field=f"{result_label}.message",
-                    allow_empty=True,
-                    reject_html=True,
-                )
-            nested_case_id = validator_result.get("case_id")
-            if "case_id" in validator_result and nested_case_id != case_result["case_id"]:
-                raise ValueError(f"{result_label}.case_id must match its outer case")
-            if validator_id in validator_ids:
-                raise ValueError(f"case_results[{index}] contains duplicate validator IDs")
-            validator_ids.add(validator_id)
-        _finite_nonnegative(case_result["cost_usd"], field=f"case_results[{index}].cost_usd")
-        _finite_nonnegative(
-            case_result["latency_ms"],
-            field=f"case_results[{index}].latency_ms",
-        )
-    run = RunRecord.from_mapping(raw)
-    _validate_aggregate_metrics(run)
-    return run
-
-
-def _read_thresholds(path: Path) -> tuple[ThresholdConfig, str]:
-    raw = _read_json_object(path, label="threshold config")
-    keys = set(raw)
-    if keys & _STANDARD_THRESHOLD_FIELDS:
-        _require_fields(raw, _STANDARD_THRESHOLD_FIELDS | {"version"}, label="threshold config")
-        _reject_unknown_fields(
-            raw,
-            _STANDARD_THRESHOLD_FIELDS | {"version"},
-            label="threshold config",
-        )
-        version = _require_report_safe_string(raw["version"], field="threshold config.version")
-        return (
-            ThresholdConfig(
-                max_accuracy_drop=_threshold_number(raw, "max_accuracy_drop"),
-                max_invalid_output_rate_increase=_threshold_number(
-                    raw, "max_invalid_output_rate_increase"
-                ),
-                max_unsafe_auto_approval_rate_increase=_threshold_number(
-                    raw, "max_unsafe_auto_approval_rate_increase"
-                ),
-                max_latency_p95_delta_ms=_threshold_number(raw, "max_latency_p95_delta_ms"),
-                max_cost_per_case_delta_usd=_threshold_number(raw, "max_cost_per_case_delta_usd"),
-            ),
-            version,
-        )
-    if keys & _GDEV_THRESHOLD_FIELDS:
-        _require_fields(raw, _GDEV_THRESHOLD_FIELDS | {"version"}, label="threshold config")
-        _reject_unknown_fields(
-            raw,
-            _GDEV_THRESHOLD_FIELDS | _GDEV_OPTIONAL_THRESHOLD_FIELDS | {"version"},
-            label="threshold config",
-        )
-        version = _require_report_safe_string(raw["version"], field="threshold config.version")
-        for optional_field in _GDEV_OPTIONAL_THRESHOLD_FIELDS & keys:
-            _threshold_number(raw, optional_field)
-        accuracy_min = _threshold_number(raw, "classification_accuracy_min")
-        return (
-            ThresholdConfig(
-                max_accuracy_drop=1.0 - accuracy_min,
-                max_invalid_output_rate_increase=_threshold_number(
-                    raw, "max_invalid_structured_output_rate"
-                ),
-                max_unsafe_auto_approval_rate_increase=_threshold_number(
-                    raw, "max_unsafe_auto_approval_rate"
-                ),
-                max_latency_p95_delta_ms=_threshold_number(raw, "max_latency_p95_ms"),
-                max_cost_per_case_delta_usd=_threshold_number(raw, "max_cost_per_case_usd"),
-            ),
-            version,
-        )
-    raise ValueError("threshold config does not match a supported comparison schema")
-
-
-def _validate_comparison_runs(baseline: RunRecord, candidate: RunRecord) -> None:
-    baseline_ids = [case.case_id for case in baseline.case_results]
-    candidate_ids = [case.case_id for case in candidate.case_results]
-    if len(set(baseline_ids)) != len(baseline_ids):
-        raise ValueError("baseline run contains duplicate case IDs")
-    if len(set(candidate_ids)) != len(candidate_ids):
-        raise ValueError("candidate run contains duplicate case IDs")
-    if set(baseline_ids) != set(candidate_ids):
-        raise ValueError("baseline and candidate run artifacts must contain the same case IDs")
-    if baseline.validator_version != candidate.validator_version:
-        raise ValueError("baseline and candidate must use the same validator version")
-    if baseline.threshold_config_version != candidate.threshold_config_version:
-        raise ValueError("baseline and candidate must use the same threshold config version")
-    if baseline.run_type != candidate.run_type:
-        raise ValueError("baseline and candidate must use the same run type")
-    baseline_validators = _validator_ids_by_case(baseline)
-    candidate_validators = _validator_ids_by_case(candidate)
-    for case_id in baseline_ids:
-        if baseline_validators[case_id] != candidate_validators[case_id]:
-            raise ValueError(
-                f"baseline and candidate validator-ID sets differ for case {case_id!r}"
-            )
-
-
-def _validator_ids_by_case(run: RunRecord) -> dict[str, set[str]]:
-    return {
-        case.case_id: {str(result["validator_id"]) for result in case.validator_results}
-        for case in run.case_results
-    }
-
-
-def _validator_receipt_regressions(
-    baseline: RunRecord,
-    candidate: RunRecord,
-) -> tuple[ValidatorReceiptRegression, ...]:
-    baseline_passed = {
-        case.case_id: {
-            str(result["validator_id"]): bool(result["passed"]) for result in case.validator_results
-        }
-        for case in baseline.case_results
-    }
-    regressions = (
-        ValidatorReceiptRegression(
-            case_id=case.case_id,
-            validator_id=str(result["validator_id"]),
-            candidate_category=str(result["category"]),
-        )
-        for case in candidate.case_results
-        for result in case.validator_results
-        if baseline_passed[case.case_id][str(result["validator_id"])] is True
-        and result["passed"] is False
-    )
-    return tuple(sorted(regressions))
-
-
-def _append_validator_receipt_regressions(
-    report_text: str,
-    regressions: tuple[ValidatorReceiptRegression, ...],
-) -> str:
-    if not regressions:
-        return report_text
-    lines = [
-        "## Validator Receipt Regressions",
-        "",
-        "| Gate | Status | Count |",
-        "|------|--------|-------|",
-        f"| `validator_receipt_regression` | `fail` | {len(regressions)} |",
-        "",
-        "| Case ID | Validator | Candidate category |",
-        "|---------|-----------|--------------------|",
-        *(
-            f"| `{regression.case_id}` | `{regression.validator_id}` | "
-            f"`{regression.candidate_category}` |"
-            for regression in regressions
-        ),
-    ]
-    section = "\n".join(lines)
-    return f"{report_text.rstrip()}\n\n{section}\n"
-
-
-def _read_json_object(path: Path, *, label: str) -> dict[str, Any]:
-    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-        result: dict[str, Any] = {}
-        for key, value in pairs:
-            if key in result:
-                raise ValueError(f"{label} contains duplicate key {key!r}")
-            result[key] = value
-        return result
-
-    def reject_nonstandard_constant(value: str) -> None:
-        raise ValueError(f"{label} contains non-standard numeric constant {value}")
-
-    with path.open(encoding="utf-8") as input_file:
-        raw = json.load(
-            input_file,
-            object_pairs_hook=reject_duplicate_keys,
-            parse_float=Decimal,
-            parse_constant=reject_nonstandard_constant,
-        )
-    if not isinstance(raw, dict):
-        raise ValueError(f"{label} must be a JSON object")
-    return raw
-
-
-def _require_fields(
-    raw: Mapping[str, Any],
-    required: set[str] | frozenset[str],
-    *,
-    label: str,
-) -> None:
-    missing = sorted(required - set(raw))
-    if missing:
-        raise ValueError(f"{label} is missing required fields: {', '.join(missing)}")
-
-
-def _reject_unknown_fields(
-    raw: Mapping[str, Any],
-    allowed: set[str] | frozenset[str],
-    *,
-    label: str,
-) -> None:
-    unknown = sorted(set(raw) - allowed)
-    if unknown:
-        raise ValueError(f"{label} contains unknown fields: {', '.join(unknown)}")
-    version = raw.get("version")
-    if "version" in raw and (not isinstance(version, str) or not version.strip()):
-        raise ValueError(f"{label} version must be a non-empty string")
-
-
-def _threshold_number(raw: Mapping[str, Any], field: str) -> float:
-    value = _finite_nonnegative(raw[field], field=field)
-    if field in _RATE_THRESHOLD_FIELDS and value > 1.0:
-        raise ValueError(f"{field} must be between 0 and 1")
-    return value
-
-
-def _finite_nonnegative(value: Any, *, field: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float, Decimal)):
-        raise ValueError(f"{field} must be a JSON number")
-    if isinstance(value, Decimal) and not value.is_finite():
-        raise ValueError(f"{field} must be finite")
-    if value < 0:
-        raise ValueError(f"{field} must be non-negative")
-    try:
-        numeric = float(value)
-    except OverflowError as exc:
-        raise ValueError(f"{field} is outside the supported numeric domain") from exc
-    if not math.isfinite(numeric):
-        raise ValueError(f"{field} must be finite")
-    if isinstance(value, int) and int(numeric) != value:
-        raise ValueError(f"{field} integer must be exactly representable as binary64")
-    if value > _MAX_DECISION_MAGNITUDE:
-        raise ValueError(f"{field} must not exceed the supported maximum {_MAX_DECISION_MAGNITUDE}")
-    if isinstance(value, Decimal) and Decimal(str(numeric)) != value:
-        raise ValueError(f"{field} decimal must preserve its value through the binary64 round trip")
-    return numeric
-
-
-def _require_nonempty_string(value: Any, *, field: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field} must be a non-empty string")
-    return value
-
-
-def _require_report_safe_string(
-    value: Any,
-    *,
-    field: str,
-    allow_empty: bool = False,
-    reject_html: bool = False,
-) -> str:
-    if not isinstance(value, str) or (not allow_empty and not value.strip()):
-        qualifier = "a string" if allow_empty else "a non-empty string"
-        raise ValueError(f"{field} must be {qualifier}")
-    if any(character in value for character in _MARKDOWN_STRUCTURAL_CHARACTERS):
-        raise ValueError(f"{field} contains characters unsafe for Markdown report publication")
-    if reject_html and ("<" in value or ">" in value):
-        raise ValueError(f"{field} contains HTML delimiters unsafe for report publication")
-    return value
-
-
-def _require_canonical_run_id(value: Any) -> str:
-    run_id = _require_report_safe_string(value, field="run_id")
-    if not _RUN_ID_PATTERN.fullmatch(run_id) or run_id in {".", ".."}:
-        raise ValueError(
-            "run_id must be RunStore-safe: 1-128 characters, start with an alphanumeric "
-            "character, and contain only alphanumerics, '.', '_' or '-'"
-        )
-    return run_id
-
-
-def _validate_aggregate_metrics(run: RunRecord) -> None:
-    costs = [result.cost_usd for result in run.case_results]
-    latencies = sorted(result.latency_ms for result in run.case_results)
-    expected_total = sum(costs)
-    expected_per_case = expected_total / len(costs)
-    expected_p50 = _percentile(latencies, 0.50)
-    expected_p95 = _percentile(latencies, 0.95)
-    for field, actual, expected in (
-        ("cost_total_usd", run.cost_total_usd, expected_total),
-        ("cost_per_case_usd", run.cost_per_case_usd, expected_per_case),
-        ("latency_ms_p50", run.latency_ms_p50, expected_p50),
-        ("latency_ms_p95", run.latency_ms_p95, expected_p95),
-    ):
-        if actual != expected:
-            raise ValueError(f"{field} does not match the complete case-result aggregate")
-
-
-def _percentile(ordered_values: list[float], percentile: float) -> float:
-    index = max(0, math.ceil(percentile * len(ordered_values)) - 1)
-    return ordered_values[index]
+    return BLOCKED if comparison.has_blocking_failure else PASS
 
 
 def _emit_outputs(env: Mapping[str, str], *, report: str, conclusion: str) -> None:

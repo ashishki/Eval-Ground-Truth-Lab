@@ -1,0 +1,39 @@
+{
+  "candidate_version": "eval-lab-0.2.1-synthetic-generic-validator-regression-candidate",
+  "case_results": [
+    {
+      "case_id": "case-1",
+      "cost_usd": 0.0,
+      "latency_ms": 10.0,
+      "output": {
+        "correct": true
+      },
+      "validator_results": [
+        {
+          "case_id": "case-1",
+          "category": "arbitrary_validator_regression",
+          "evidence": {
+            "fixture": "fully_synthetic"
+          },
+          "message": "candidate validator changed from pass to fail",
+          "passed": false,
+          "validator_id": "evidence.output_contract"
+        }
+      ]
+    }
+  ],
+  "completed_at": "2026-07-14T00:00:01+00:00",
+  "cost_per_case_usd": 0.0,
+  "cost_total_usd": 0.0,
+  "dataset_hash": "1f3321f4b7512bf34ab19c661cdaded83d5b9403d6f56bb29ee0ba71f0cacabd",
+  "interrupted_at": null,
+  "latency_ms_p50": 10.0,
+  "latency_ms_p95": 10.0,
+  "max_candidate_retries": 0,
+  "run_id": "generic-validator-regression-candidate",
+  "run_type": "comparison-evidence",
+  "started_at": "2026-07-14T00:00:00+00:00",
+  "status": "completed",
+  "threshold_config_version": "v0.2.1-exact-comparison-policy",
+  "validator_version": "fail-closed-evidence-validators-v1"
+}

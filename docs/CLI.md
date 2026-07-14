@@ -140,6 +140,50 @@ python -m eval_ground_truth_lab.cli compare \
 ```
 
 The command exits `1` when comparison thresholds have a blocking failure.
+It exits `0` only for a valid non-blocking comparison, `1` only for a valid
+blocking decision, and `2` for invalid input or report-generation failure.
+Invalid input is reported on stderr as an Eval comparison error; it is never
+presented as an ordinary threshold failure.
+
+Both run artifacts must be completed and non-empty, contain the same unique
+case IDs, and carry the same non-empty validator-ID set for each case. Run type,
+validator version, run threshold-policy version, and the threshold file's
+declared version must agree. Validator outcomes and categories may change: that
+is decision evidence, not a schema mismatch. A candidate `passed: true` to
+`passed: false` validator transition is blocking regardless of category;
+baseline-known failures are not new regressions and candidate recoveries are
+allowed.
+
+Run and policy JSON rejects duplicate keys recursively. Decision metrics must be
+finite and non-negative, match the complete case-result aggregates, and stay at
+or below `2^53 - 1`. Integer values must be exactly representable in that
+domain; decimal values must use a lossless shortest-round-trip spelling before
+conversion. Rate/drop thresholds are additionally limited to `[0, 1]`.
+Native delta thresholds and the documented legacy gdev threshold schema remain
+supported, but missing, mixed, or unknown threshold fields fail closed.
+
+Gate status uses exact arithmetic after validation: count-derived accuracy and
+failure rates are rational fractions; cost per case is the exact rational mean
+of canonical case costs; latency p95 is the exact selected canonical case value;
+and policy decimals retain their exact value, including the complement of the
+legacy accuracy minimum. Reports show the exact delta and exact gate expression,
+so high-magnitude subtraction and a finite decimal approximation of `1/3`
+cannot round a blocking regression into PASS. Float delta attributes remain
+presentation-compatible views, not the source of gate authority.
+
+`output` may be any JSON value. `output.correct` remains optional when output is
+an object: when absent, or when output is non-object, it retains the established
+comparison meaning of "not counted as correct"; when present, it must be a
+boolean. Validator receipts, rather than an invented accuracy value, remain
+authoritative for validator-only outcomes.
+
+When `run_compare_command` has verified that `--report` is a regular-file
+target that does not alias an input, it removes any stale target before reading
+the comparison inputs. Success and valid blocking failure publish through a
+same-directory fsync/atomic-replace write. Any later input or execution error
+leaves no report at that target. A report symlink or input alias is rejected
+without modifying the linked/input file. Failures before the helper is invoked
+are outside this cleanup guarantee.
 
 ## Cost Rollup
 

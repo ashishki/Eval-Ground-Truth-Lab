@@ -1,0 +1,39 @@
+{
+  "candidate_version": "eval-lab-0.2.1-synthetic-high-magnitude-decimal-candidate",
+  "case_results": [
+    {
+      "case_id": "case-1",
+      "cost_usd": 1000000000000.1,
+      "latency_ms": 10.0,
+      "output": {
+        "correct": true
+      },
+      "validator_results": [
+        {
+          "case_id": "case-1",
+          "category": "none",
+          "evidence": {
+            "fixture": "fully_synthetic"
+          },
+          "message": "validator passed",
+          "passed": true,
+          "validator_id": "evidence.output_contract"
+        }
+      ]
+    }
+  ],
+  "completed_at": "2026-07-14T00:00:01+00:00",
+  "cost_per_case_usd": 1000000000000.1,
+  "cost_total_usd": 1000000000000.1,
+  "dataset_hash": "1f3321f4b7512bf34ab19c661cdaded83d5b9403d6f56bb29ee0ba71f0cacabd",
+  "interrupted_at": null,
+  "latency_ms_p50": 10.0,
+  "latency_ms_p95": 10.0,
+  "max_candidate_retries": 0,
+  "run_id": "high-magnitude-decimal-candidate",
+  "run_type": "comparison-evidence",
+  "started_at": "2026-07-14T00:00:00+00:00",
+  "status": "completed",
+  "threshold_config_version": "v0.2.1-exact-comparison-policy",
+  "validator_version": "fail-closed-evidence-validators-v1"
+}

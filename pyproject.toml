@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eval-ground-truth-lab"
-version = "0.2.0"
+version = "0.2.1"
 description = "Regression evaluation platform for LLM and agent workflows."
 readme = "README.md"
 license = "Apache-2.0"

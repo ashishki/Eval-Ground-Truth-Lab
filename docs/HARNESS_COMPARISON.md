@@ -46,7 +46,9 @@ events where applicable.
 - dataset hashes do not match the metric report
 - baseline and candidate scorer versions differ
 
-The resulting report includes metric thresholds, harness versions, trace
-completeness, and budget delta. This keeps model/prompt comparisons from hiding
-tool, memory, permission, or environment drift.
-
+The resulting report includes exact metric deltas and threshold values, harness
+versions, trace completeness, and budget delta. It also serializes every new
+validator pass-to-fail transition with its case, validator, and candidate
+category, so a downstream consumer cannot observe a blocking boolean without
+the corresponding reason. This keeps model/prompt comparisons from hiding
+metric rounding, validator, tool, memory, permission, or environment drift.

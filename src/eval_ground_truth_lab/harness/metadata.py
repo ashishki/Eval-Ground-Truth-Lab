@@ -164,6 +164,19 @@ class HarnessComparisonReport:
             "baseline_trace": self.baseline_trace.to_mapping(),
             "candidate_trace": self.candidate_trace.to_mapping(),
             "threshold_status": self.metric_report.threshold_status,
+            "exact_deltas": dict(self.metric_report.exact_deltas),
+            "exact_thresholds": dict(self.metric_report.exact_thresholds),
+            "validator_receipt_regression_count": len(
+                self.metric_report.validator_receipt_regressions
+            ),
+            "validator_receipt_regressions": [
+                {
+                    "case_id": regression.case_id,
+                    "validator_id": regression.validator_id,
+                    "candidate_category": regression.candidate_category,
+                }
+                for regression in self.metric_report.validator_receipt_regressions
+            ],
             "has_blocking_failure": self.has_blocking_failure,
         }
 

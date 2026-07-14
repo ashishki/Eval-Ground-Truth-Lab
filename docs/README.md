@@ -58,8 +58,12 @@ validation evidence for Eval Ground Truth Lab.
   report.
 - `docs/evidence/releases/v0.2.0/README.md` - executed canonical local challenge
   evidence with a verified failing gate.
+- `docs/evidence/releases/v0.2.1/README.md` - content-addressed exact-comparison
+  receipts covering valid PASS, three valid blocking decisions, invalid input,
+  and stale-report removal across CLI statuses `0/1/2`.
 - `docs/evidence/integrations/README.md` - executed Trader Risk Audit sanitized
-  export replay with a verified passing compatibility gate.
+  export replays: current v2 at the v0.2.1 implementation boundary plus the
+  byte-preserved historical v1 pack.
 
 ## Active Tasks
 
