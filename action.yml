@@ -1,0 +1,44 @@
+name: Eval Ground Truth release gate
+description: Compare baseline and candidate run artifacts with deterministic release thresholds.
+
+inputs:
+  baseline:
+    description: Workspace-relative path to a completed, non-empty baseline RunRecord JSON.
+    required: true
+  candidate:
+    description: Workspace-relative path to a completed, non-empty candidate RunRecord JSON.
+    required: true
+  threshold-config:
+    description: Workspace-relative path to the comparison threshold JSON.
+    required: true
+  report:
+    description: Workspace-relative destination for the Markdown decision report.
+    required: false
+    default: .eval-lab/release-gate.md
+
+outputs:
+  report:
+    description: Normalized workspace-relative path to the fresh decision report.
+    value: ${{ steps.release-gate.outputs.report }}
+  conclusion:
+    description: Deterministic gate conclusion (pass, fail, or error).
+    value: ${{ steps.release-gate.outputs.conclusion }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      with:
+        python-version: "3.12"
+
+    - name: Compare release candidate
+      id: release-gate
+      shell: bash
+      env:
+        EVAL_LAB_BASELINE: ${{ inputs.baseline }}
+        EVAL_LAB_CANDIDATE: ${{ inputs.candidate }}
+        EVAL_LAB_THRESHOLD_CONFIG: ${{ inputs.threshold-config }}
+        EVAL_LAB_REPORT: ${{ inputs.report }}
+        PYTHONPATH: ${{ github.action_path }}/src
+      run: python "$GITHUB_ACTION_PATH/tools/github_action_compare.py"

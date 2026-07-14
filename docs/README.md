@@ -19,6 +19,8 @@ validation evidence for Eval Ground Truth Lab.
   sidecar contract.
 - `docs/TRADER_RISK_AUDIT_ADAPTER.md` - separate-product sanitized export
   import/replay contract and evidence limits.
+- `docs/GITHUB_ACTION.md` - reusable baseline/candidate GitHub release gate,
+  path-safety contract, and caller permissions.
 
 ## Current State
 
